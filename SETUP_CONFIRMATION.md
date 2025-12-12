@@ -1,55 +1,45 @@
 # Prescription Request Application - Setup Confirmation
 
-This document outlines the required configuration to ensure the Prescription Request Application functions correctly. The application consists of a Frontend (HTML Form) and a Backend (Google Apps Script linked to a Google Sheet).
+This document outlines the required configuration to ensure the Prescription Request Application functions correctly.
 
-## 1. Google Form & Spreadsheet Setup
+## 1. Web App & Spreadsheet Setup
 
-The application relies on a Google Form linked to a specific Google Sheet.
+The application has been upgraded to use a Google Apps Script Web App for more robust data handling, replacing the previous Google Form integration.
 
-### Google Form
-*   **Form ID:** `1FAIpQLSepUNc9-xIpDf_UaM3-OwFFRdZozUoZC3jHRCas0b-gc1NStg` (Found in `prescription_form.html`)
-*   **Submission URL:** `https://docs.google.com/forms/d/e/1FAIpQLSepUNc9-xIpDf_UaM3-OwFFRdZozUoZC3jHRCas0b-gc1NStg/formResponse`
-*   **Required Form Fields:** The Google Form must be configured to accept the following entries, which map to specific IDs:
-    *   `entry.1775196617`: Patient Name
-    *   `entry.2008110253`: Patient Email
-    *   `entry.1011602497`: Patient Date of Birth
-    *   `entry.1572836613`: Patient Address
-    *   `entry.1516294764`: Patient Phone Number
-    *   `entry.1118271783`: Chosen Pharmacy
-    *   `entry.274147264`: Communication Preference
-    *   `entry.607030324`: Medication List (Formatted string)
+### Google Apps Script Web App
+*   **Deployment ID:** `AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL`
+*   **Web App URL:** `https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec`
+*   **Access Setting:** The Web App must be deployed with access set to **"Anyone"** (or "Anyone with Google account" if strictly internal, but "Anyone" is needed for a public-facing patient form).
+*   **Execute As:** User accessing the web app (if "Anyone with Google account") OR **"Me" (owner)** (recommended for public forms so patients don't need to log in).
 
 ### Google Spreadsheet
-The Google Form must be linked to a Google Spreadsheet. The script `Code.gs` expects the following structure in the destination sheet:
+The script `Code.gs` writes data to the following sheet:
 
-*   **Sheet Name:** `Form responses 1` (Standard default for Google Forms)
-*   **Column Mapping:** The script identifies data based on the following column indices (A=1, B=2, etc.):
-    *   **Column 2 (B):** Patient Email
-    *   **Column 3 (C):** Chosen Pharmacy
-    *   **Column 4 (D):** Patient Full Name
-    *   **Column 6 (F):** Contact Number
-    *   **Column 8 (H):** Medication List
-    *   **Column 9 (I):** Communication Preference
-    *   **Column 10 (J):** Status (Used by script for workflow)
-    *   **Column 11 (K):** Notification Sent (Used by script for logging)
-
-*Note: The columns E (5) and G (7) are present in the form submission (likely DOB and Address based on the HTML form) but are not explicitly used by the `Code.gs` backend logic for automation, though they will be recorded in the sheet.*
+*   **Sheet Name:** `Form responses 1`
+*   **Column Mapping:** The script automatically appends data in the following order:
+    *   **Column A (1):** Timestamp
+    *   **Column B (2):** Patient Email
+    *   **Column C (3):** Chosen Pharmacy
+    *   **Column D (4):** Patient Full Name
+    *   **Column E (5):** Patient Address
+    *   **Column F (6):** Contact Number
+    *   **Column G (7):** Date of Birth
+    *   **Column H (8):** Medication List (Formatted)
+    *   **Column I (9):** Communication Preference
+    *   **Column J (10):** Status (Initial state: Empty)
+    *   **Column K (11):** Notification Sent (Logs processing timestamp)
 
 ## 2. Google Apps Script Setup (`Code.gs`)
 
-The following triggers must be manually set up in the Apps Script project associated with the Spreadsheet:
+### Manual Triggers
+While the primary data entry is now handled by the `doPost` Web App function, the following time-based trigger is still recommended:
 
-### Trigger 1: Form Submission Handler
-*   **Function:** `onFormSubmit`
-*   **Event Source:** From spreadsheet
-*   **Event Type:** On form submit
-*   **Purpose:** Sends confirmation email to patient, formats the medication list, and sets initial status.
-
-### Trigger 2: Archive Manager
 *   **Function:** `archiveOldRequests`
 *   **Event Source:** Time-driven
 *   **Event Type:** Week timer (Recommended: Every Monday, 1am to 2am)
-*   **Purpose:** Moves old, processed requests to an 'Archive' sheet to keep the main view clean.
+*   **Purpose:** Moves old, processed requests to an 'Archive' sheet.
+
+*Note: The `onFormSubmit` trigger is NO LONGER REQUIRED for new submissions, as the `doPost` function now handles the processing logic directly.*
 
 ### Environment Variables (Hardcoded in Script)
 Ensure these constants in `Code.gs` match the practice's details:
@@ -57,6 +47,7 @@ Ensure these constants in `Code.gs` match the practice's details:
 *   `YOUR_PHONE_NUMBER`: "074-93-74242"
 *   `ADMIN_EMAIL`: "patricknoone+surgery@gmail.com"
 
-## 3. Frontend Deployment
-*   The file `prescription_form.html` is designed to be hosted on any static web server (e.g., GitHub Pages).
-*   It submits data directly to Google Forms via a cross-origin POST request (`mode: 'no-cors'`).
+## 3. Frontend Configuration
+The file `prescription_form.html` has been updated to submit data to the Web App URL.
+*   **Variable:** `SCRIPT_WEB_APP_URL` contains the deployment URL.
+*   **Submission Method:** Standard HTTP POST with a JSON payload.

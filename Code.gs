@@ -17,6 +17,79 @@ const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
 
+// --- WEB APP HANDLERS ---
+
+/**
+ * Handles HTTP POST requests to the script (Web App).
+ * Receives JSON data from the frontend form and appends it to the spreadsheet.
+ */
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+    // Validate essential data
+    if (!data.patientDetails.name || !data.patientDetails.email) {
+       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const timestamp = new Date();
+
+    // Format Medication List
+    let medicationString = "";
+    if (data.medicationList && Array.isArray(data.medicationList)) {
+       medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
+    }
+
+    // Append to Sheet (Order must match Columns defined at top, roughly)
+    // Sheet Structure assumed: Timestamp, Email, Pharmacy, Name, Address, Phone, DOB, Meds, CommPref, Status, Notification
+    // Note: The original Google Form might have had a specific column order. We will map to the known columns constants.
+    // However, appendRow adds to the end. We need to respect the visual layout.
+    // Based on constants:
+    // A(1): Timestamp (Standard form)
+    // B(2): Email (EMAIL_COL)
+    // C(3): Pharmacy (PHARMACY_COL)
+    // D(4): Name (NAME_COL)
+    // E(5): Address (Assumed based on HTML form, but not in constants)
+    // F(6): Phone (PHONE_COL)
+    // G(7): DOB (Assumed)
+    // H(8): Meds (MEDS_COL)
+    // I(9): CommPref (COMM_PREF_COL)
+    // J(10): Status (STATUS_COL)
+    // K(11): Notification (NOTIFICATION_COL)
+
+    const newRow = [];
+    newRow[0] = timestamp; // Col A
+    newRow[EMAIL_COL - 1] = data.patientDetails.email;
+    newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
+    newRow[NAME_COL - 1] = data.patientDetails.name;
+    newRow[4] = data.patientDetails.address; // Col E (Index 4)
+    newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
+    newRow[6] = data.patientDetails.dob; // Col G (Index 6)
+    newRow[MEDS_COL - 1] = medicationString;
+    newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
+    newRow[STATUS_COL - 1] = ""; // Initial Status Empty
+    newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+
+    sheet.appendRow(newRow);
+    const row = sheet.getLastRow();
+
+    // Send Confirmation
+    sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
+
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    reportError('doPost', err, null);
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // --- CORE, AUTOMATED FUNCTIONS ---
 
 /**
