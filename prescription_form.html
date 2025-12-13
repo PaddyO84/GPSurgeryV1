@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prescription Request Form - Carndonagh Health Centre Style</title>
+    <title>Prescription Request Form - Carndonagh Health Centre</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -186,7 +186,7 @@
 </head>
 <body>
     <header class="site-header">
-        <h1>Carndonagh Health Centre</h1>
+        <h1>Carndonagh Health Centre -- UPDATED</h1>
         <button class="mobile-menu-icon" onclick="toggleMobileMenu(true)">&#9776;</button>
     </header>
 
@@ -506,9 +506,15 @@
     }
     
     function generateReferenceNumber() {
-        const d = new Date();
-        const yyyymmdd = d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2);
-        const hhmmss = ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2);
+        // Use window.Date to force correct context and avoid conflicts
+        const now = new window.Date();
+        
+        // Helper to add a zero if needed (e.g. 9 -> 09)
+        const pad = (num) => String(num).padStart(2, '0');
+        
+        const yyyymmdd = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate());
+        const hhmmss = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+        
         return `CHC-${yyyymmdd}-${hhmmss}`;
     }
 
