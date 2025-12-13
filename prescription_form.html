@@ -213,10 +213,11 @@
             <div class="notification" id="desktop-notification-area"></div>
         </div>
         <div class="form-content" id="formContainer">
-            <h2>Repeat Prescription Request</h2>
-            <div class="info-box"><p><strong>Welcome!</strong> Please fill out your details and requested medications. Your request is automatically saved as you type.</p></div>
-            <div id="patientDetailsSection">
-                <h3>Patient Details</h3>
+            <div id="prescriptionForm">
+                <h2>Repeat Prescription Request</h2>
+                <div class="info-box"><p><strong>Welcome!</strong> Please fill out your details and requested medications. Your request is automatically saved as you type.</p></div>
+                <div id="patientDetailsSection">
+                    <h3>Patient Details</h3>
                 <div class="form-group"><label for="patientName">Full Name</label><input type="text" id="patientName" required><div class="error-message" id="patientName-error"></div></div>
                 <div class="form-group"><label for="patientEmail">Email Address</label><input type="email" id="patientEmail" required><div class="error-message" id="patientEmail-error"></div></div>
                 <div class="form-group"><label for="patientPhone">Phone Number</label><input type="tel" id="patientPhone" required><div class="error-message" id="patientPhone-error"></div></div>
@@ -248,6 +249,8 @@
             </table>
             <br>
             <button class="submit-btn" onclick="showSummary()">Review & Submit Request</button>
+            </div>
+            <div id="successMessage" style="display: none;"></div>
         </div>
     </div>
     <div class="modal-overlay" id="summaryModal" role="dialog" aria-modal="true" aria-labelledby="summaryModalTitle">
@@ -431,14 +434,19 @@
            const ref = generateReferenceNumber();
 
            // Show Success Message
-           document.getElementById('formContainer').innerHTML = `
+           document.getElementById('prescriptionForm').style.display = 'none';
+           const successDiv = document.getElementById('successMessage');
+           successDiv.innerHTML = `
                <div class="success-message">
                    <h2>Thank You!</h2>
                    <p>Your prescription request has been submitted.</p>
                    <p>Your reference number is: <strong>${ref}</strong></p>
                    <p>Please keep this for your records.</p>
+                   <br>
+                   <button onclick="resetForNewSubmission()">Submit Another Prescription</button>
                </div>
            `;
+           successDiv.style.display = 'block';
            localStorage.removeItem('prescriptionFormData');
         })
         .catch(error => {
