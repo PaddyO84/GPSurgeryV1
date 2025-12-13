@@ -393,6 +393,14 @@
         populateFormFromData({ patientDetails: {}, medicationList: [] });
         document.getElementById('successMessage').style.display = 'none';
         document.getElementById('prescriptionForm').style.display = 'block';
+
+        // Reset the confirm button in the modal
+        const confirmBtn = document.querySelector('.btn-confirm');
+        if(confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "Confirm & Submit";
+        }
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
