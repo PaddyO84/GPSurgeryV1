@@ -389,6 +389,13 @@
         }
     }
 
+    window.resetForNewSubmission = function() {
+        populateFormFromData({ patientDetails: {}, medicationList: [] });
+        document.getElementById('successMessage').style.display = 'none';
+        document.getElementById('prescriptionForm').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     function showSummary() {
         if (!validateForm()) return;
 
