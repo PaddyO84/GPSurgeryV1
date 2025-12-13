@@ -415,9 +415,14 @@
 
         fetch(SCRIPT_WEB_APP_URL, {
             method: 'POST',
+            mode: 'no-cors', // Important for GAS Web Apps
+            headers: {
+                'Content-Type': 'text/plain' // Avoids CORS preflight
+            },
             body: JSON.stringify(payload)
         })
         .then(response => {
+           // With no-cors, response is opaque (status 0). We assume success.
            console.log("Request sent successfully");
 
            document.getElementById('summaryModal').style.display = 'none';
@@ -491,7 +496,7 @@
     }
     
     function generateReferenceNumber() {
-        const d = new new Date();
+        const d = new Date();
         const yyyymmdd = d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2);
         const hhmmss = ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2);
         return `CHC-${yyyymmdd}-${hhmmss}`;
