@@ -402,31 +402,35 @@
         }
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        // Construct the payload to match what Code.gs expects
         const payload = {
             patientDetails: patientDetails,
             medicationList: medicationList
         };
 
-        // Use standard fetch POST with JSON
-        // Note: Apps Script Web Apps require 'no-cors' or a redirect handling if called from client-side JS on another domain
-        // However, standard text/plain POST is often handled best to avoid preflight options check issues with CORS
-        // We will try sending stringified JSON as body text.
+        // Disable button to prevent double-clicks
+        const confirmBtn = document.querySelector('.btn-confirm');
+        if(confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Sending...";
+        }
 
         fetch(SCRIPT_WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors', // Important for GAS Web Apps
+            mode: 'no-cors',
             headers: {
-                'Content-Type': 'text/plain' // Avoids CORS preflight
+                'Content-Type': 'text/plain'
             },
             body: JSON.stringify(payload)
         })
         .then(response => {
-           // With no-cors, response is opaque (status 0). We assume success.
            console.log("Request sent successfully");
 
            document.getElementById('summaryModal').style.display = 'none';
+           
+           // Generate Reference Number
            const ref = generateReferenceNumber();
+
+           // Show Success Message
            document.getElementById('formContainer').innerHTML = `
                <div class="success-message">
                    <h2>Thank You!</h2>
@@ -441,6 +445,12 @@
             console.error('Error:', error);
             showNotification('An error occurred while submitting. Please try again.');
             document.getElementById('summaryModal').style.display = 'none';
+            
+            // Re-enable button on error
+            if(confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "Confirm & Submit";
+            }
         });
     }
 
