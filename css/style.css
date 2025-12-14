@@ -184,8 +184,6 @@ header {
     height: 70px; /* Increased logo size */
     width: auto;
     object-fit: contain;
-    /* Negative margins to reduce whitespace perception if the image has it */
-    margin: -5px 0;
 }
 
 nav ul {
