@@ -3,12 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="View the price list for services at Carndonagh Health Centre, including private consultations, procedures, and medicals.">
-    <title>Prices - Carndonagh Health Centre</title>
+    <meta name="description" content="View the price list and payment options for services at Carndonagh Health Centre.">
+    <title>Fees & Payment - Carndonagh Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .price-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+        .price-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .price-val {
+            font-weight: bold;
+            color: #555;
+        }
+        .gms-badge {
+            font-size: 0.8em;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -35,13 +72,11 @@
                         <a href="#">Patient Info ▾</a>
                         <div class="dropdown-content">
                             <a href="appointments.html">Appointments</a>
-                            <a href="prices.html">Price List</a>
+                            <a href="prices.html">Fees & Payment</a>
                             <a href="prescriptions.html">Prescriptions</a>
                             <a href="test-results.html">Test Results</a>
                             <a href="new-patients.html">New Patients</a>
                             <a href="sick-notes.html">Sick Notes/Certification</a>
-                            <a href="prices.html">Payment</a>
-                            <a href="payment.html">Payment</a>
                             <a href="confidentiality.html">Confidentiality</a>
                             <a href="zero-tolerance.html">Unacceptable Behaviour</a>
                         </div>
@@ -61,195 +96,88 @@
     </header>
 
     <div class="container">
-        <h2 class="section-title">Price List</h2>
+        <h2 class="section-title">Fees & Payment Policy</h2>
+
+        <!-- Payment Policy Section -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3>Payment Policy</h3>
+            <div class="grid-3" style="grid-template-columns: 2fr 1fr; align-items: start;">
+                <div>
+                    <p>We require all payments to be settled <strong>at the time of consultation</strong>.</p>
+                    <p style="margin-top: 10px;"><strong>Accepted Methods:</strong> Cash, Cheque, Credit/Debit Cards.</p>
+                </div>
+                <div style="text-align: center; background: #f8f9fa; padding: 1rem; border-radius: 4px;">
+                    <h4 style="margin-bottom: 10px;">Pay Online</h4>
+                    <p style="font-size: 0.9em; margin-bottom: 10px;">Secure payment via Billink</p>
+                    <a href="https://billinkpayments.com/" target="_blank" class="button">Make a Payment</a>
+                </div>
+            </div>
+        </div>
+
         <div class="alert-card" style="text-align: center; margin-bottom: 2rem;">
-            <h3>Note on Fees</h3>
-            <p>From the 1st January 2024 private fees will increase.</p>
+            <p><strong>Note:</strong> Private fees increased as of 1st January 2024.</p>
         </div>
 
-        <div style="overflow-x: auto;">
-            <table class="price-table">
-                <thead>
-                    <tr>
-                        <th style="width: 50%;">Service</th>
-                        <th style="width: 25%;">Private Patients</th>
-                        <th style="width: 25%;">GMS Patients</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Consultations -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Consultations</td>
-                    </tr>
-                    <tr>
-                        <td>Doctor Visit</td>
-                        <td>€60</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Repeat Visit</td>
-                        <td>€40</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Nurse Visit</td>
-                        <td>€40</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Did Not Attend (DNA) Charge</td>
-                        <td>€20</td>
-                        <td>€20</td>
-                    </tr>
+        <div class="pricing-grid">
+            <!-- Consultations -->
+            <div class="price-card">
+                <h4>Consultations</h4>
+                <div class="price-item"><span>Doctor Visit</span><span class="price-val">€60</span></div>
+                <div class="price-item"><span>Repeat Visit</span><span class="price-val">€40</span></div>
+                <div class="price-item"><span>Nurse Visit</span><span class="price-val">€40</span></div>
+                <div class="price-item"><span>Missed Appointment (DNA)</span><span class="price-val">€20</span></div>
+            </div>
 
-                    <!-- Procedures -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Procedures & Tests</td>
-                    </tr>
-                    <tr>
-                        <td>ABPM (Blood Pressure Monitor)</td>
-                        <td>€50</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Warfarin Monitoring</td>
-                        <td>€10</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Venesection</td>
-                        <td>€40</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Injections (B12, Prolia etc.)</td>
-                        <td>€30</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Suturing</td>
-                        <td>€100</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Ear Syringing</td>
-                        <td>€50</td>
-                        <td>€30</td>
-                    </tr>
-                    <tr>
-                        <td>ECG (Heart Tracing)</td>
-                        <td>€20</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Nebuliser</td>
-                        <td>€20</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Cryotherapy</td>
-                        <td>€20</td>
-                        <td>-</td>
-                    </tr>
+            <!-- Procedures -->
+            <div class="price-card">
+                <h4>Procedures</h4>
+                <div class="price-item"><span>Blood Pressure Monitor (ABPM)</span><span class="price-val">€50</span></div>
+                <div class="price-item"><span>Warfarin Monitoring</span><span class="price-val">€10</span></div>
+                <div class="price-item"><span>Venesection</span><span class="price-val">€40</span></div>
+                <div class="price-item"><span>Injections (B12, Prolia)</span><span class="price-val">€30</span></div>
+                <div class="price-item"><span>Suturing</span><span class="price-val">€100</span></div>
+                <div class="price-item"><span>Ear Syringing <span class="gms-badge">GMS €30</span></span><span class="price-val">€50</span></div>
+                <div class="price-item"><span>ECG (Heart Tracing)</span><span class="price-val">€20</span></div>
+                <div class="price-item"><span>Cryotherapy / Nebuliser</span><span class="price-val">€20</span></div>
+            </div>
 
-                    <!-- Women's Health -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Women's Health</td>
-                    </tr>
-                    <tr>
-                        <td>Mirena coil & Implanon (First fitting)</td>
-                        <td>€100</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Mirena coil & Implanon (Refitting)</td>
-                        <td>€130</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Implanon removal</td>
-                        <td>€100</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Mirena coil removal</td>
-                        <td>€50</td>
-                        <td>-</td>
-                    </tr>
+            <!-- Women's Health -->
+            <div class="price-card">
+                <h4>Women's Health</h4>
+                <div class="price-item"><span>Mirena/Implanon (First fitting)</span><span class="price-val">€100</span></div>
+                <div class="price-item"><span>Mirena/Implanon (Refitting)</span><span class="price-val">€130</span></div>
+                <div class="price-item"><span>Implanon removal</span><span class="price-val">€100</span></div>
+                <div class="price-item"><span>Mirena removal</span><span class="price-val">€50</span></div>
+            </div>
 
-                    <!-- Medicals -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Medicals</td>
-                    </tr>
-                    <tr>
-                        <td>Driving Medical (10 years)</td>
-                        <td>€60</td>
-                        <td>€50</td>
-                    </tr>
-                    <tr>
-                        <td>Driving Medical (3 years or provisional)</td>
-                        <td>€30</td>
-                        <td>€30</td>
-                    </tr>
-                    <tr>
-                        <td>Boxing Medical (Minors must be accompanied by adult)</td>
-                        <td>€40</td>
-                        <td>€30</td>
-                    </tr>
-                    <tr>
-                        <td>Full Medical (Health Check)</td>
-                        <td>€100</td>
-                        <td>-</td>
-                    </tr>
+            <!-- Medicals -->
+            <div class="price-card">
+                <h4>Medicals</h4>
+                <div class="price-item"><span>Driving Medical (10yr) <span class="gms-badge">GMS €50</span></span><span class="price-val">€60</span></div>
+                <div class="price-item"><span>Driving Medical (3yr) <span class="gms-badge">GMS €30</span></span><span class="price-val">€30</span></div>
+                <div class="price-item"><span>Boxing Medical <span class="gms-badge">GMS €30</span></span><span class="price-val">€40</span></div>
+                <div class="price-item"><span>Full Medical Check</span><span class="price-val">€100</span></div>
+            </div>
 
-                    <!-- Documentation -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Documentation & Prescriptions</td>
-                    </tr>
-                    <tr>
-                        <td>Private Prescriptions (6 months, ordered by phone)</td>
-                        <td>€30</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Private Prescriptions (1 month, ordered by phone)</td>
-                        <td>€20</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Letters requested for non-medical purposes</td>
-                        <td>€20</td>
-                        <td>€20</td>
-                    </tr>
-                    <tr>
-                        <td>Private Work Certificate (White Cert)</td>
-                        <td>€20</td>
-                        <td>€20</td>
-                    </tr>
-                    <tr>
-                        <td>Receipt Documentation</td>
-                        <td>€20 (per patient) / €50 (per family)</td>
-                        <td>-</td>
-                    </tr>
+            <!-- Documentation -->
+            <div class="price-card">
+                <h4>Admin & Scripts</h4>
+                <div class="price-item"><span>Private Prescription (6m)</span><span class="price-val">€30</span></div>
+                <div class="price-item"><span>Private Prescription (1m)</span><span class="price-val">€20</span></div>
+                <div class="price-item"><span>Letters (Non-medical) <span class="gms-badge">GMS €20</span></span><span class="price-val">€20</span></div>
+                <div class="price-item"><span>Work Cert (Private) <span class="gms-badge">GMS €20</span></span><span class="price-val">€20</span></div>
+                <div class="price-item"><span>Receipt History (per patient)</span><span class="price-val">€20</span></div>
+            </div>
 
-                    <!-- Other -->
-                    <tr>
-                        <td colspan="3" style="background-color: #e9ecef; font-weight: bold;">Other</td>
-                    </tr>
-                    <tr>
-                        <td>Minor Operations</td>
-                        <td>POA</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Travel Vaccines</td>
-                        <td>POA</td>
-                        <td>-</td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Other -->
+            <div class="price-card">
+                <h4>Other Services</h4>
+                <div class="price-item"><span>Minor Operations</span><span class="price-val">POA</span></div>
+                <div class="price-item"><span>Travel Vaccines</span><span class="price-val">POA</span></div>
+            </div>
         </div>
-        <p><em>* POA: Price on Application. Prices subject to change.</em></p>
+
+        <p style="margin-top: 1rem; font-size: 0.9em; color: #666;"><em>Note: GMS prices listed where a charge applies to medical card holders. POA = Price on Application.</em></p>
     </div>
 
     <footer>
@@ -268,8 +196,8 @@
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Cookie Policy</a>
+                <a href="confidentiality.html">Privacy Policy</a>
+                <a href="confidentiality.html">Cookie Policy</a>
                 <a href="#">Accessibility</a>
             </div>
         </div>
