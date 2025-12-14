@@ -710,6 +710,17 @@
         function toggleRow(row, event) {
             // Only toggle on mobile view (check width or rely on CSS classes)
             if (window.innerWidth <= 900) {
+                // If the row is currently collapsed (about to be expanded)
+                if (row.classList.contains('med-row-collapsed')) {
+                    // Find any currently expanded rows and collapse them
+                    const expandedRows = document.querySelectorAll('.med-table tr.expanded');
+                    expandedRows.forEach(expandedRow => {
+                        expandedRow.classList.remove('expanded');
+                        expandedRow.classList.add('med-row-collapsed');
+                    });
+                }
+
+                // Toggle the clicked row
                 row.classList.toggle('expanded');
                 row.classList.toggle('med-row-collapsed');
             }
