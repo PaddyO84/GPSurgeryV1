@@ -907,7 +907,7 @@
         function printSummary() {
             const { patientDetails, medicationList } = getFormDataAsObject();
             const w = window.open('', '_blank');
-            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    <script src="js/theme.js"></script>
+            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
 </head><body>
             <h1>Prescription Request</h1>
             <p><strong>Name:</strong> ${patientDetails.name}</p>
@@ -940,7 +940,12 @@
                     populateFormFromData(JSON.parse(evt.target.result));
                     saveToLocalStorage();
                     showNotification("Loaded successfully.");
-                } catch(err) { alert("Invalid file."); }
+                } catch(err) {
+                    console.error(err);
+                    alert("Invalid file.");
+                }
+                // Clear the input value to allow re-uploading the same file
+                e.target.value = '';
             };
             r.readAsText(file);
         }
