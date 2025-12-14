@@ -170,6 +170,21 @@
             color: white;
         }
 
+        .edit-btn {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn:hover {
+            background: #1565c0;
+            color: white;
+        }
+
         .submit-area {
             margin-top: 2rem;
             padding-top: 2rem;
@@ -278,16 +293,60 @@
                 border-radius: var(--border-radius);
                 background: var(--gray-50);
                 padding: 0.5rem;
+                cursor: pointer;
+                transition: background 0.2s;
             }
+            .med-table tr:hover {
+                background: var(--gray-100);
+            }
+
+            /* Accordion Logic */
+            .med-table tr.med-row-collapsed td:not(:first-child) {
+                display: none;
+            }
+
+            .med-table tr.med-row-collapsed td:first-child::after {
+                content: '▼';
+                float: right;
+                font-size: 0.8rem;
+                margin-left: 10px;
+            }
+
+            .med-table tr.expanded td:first-child::after {
+                content: '▲';
+                float: right;
+                font-size: 0.8rem;
+                margin-left: 10px;
+            }
+
+            .med-table tr.expanded {
+                background: #e8f5e9; /* Light green highlight when expanded */
+                border-color: var(--primary-color);
+            }
+
             .med-table td {
                 text-align: right;
                 padding-left: 50%;
                 position: relative;
                 border-bottom: 1px solid var(--gray-200);
             }
+
+            /* Ensure first cell (Header) always looks like a header */
+            .med-table td:first-child {
+                font-weight: bold;
+                color: var(--primary-color);
+                border-bottom: none; /* Separator not needed if collapsed */
+            }
+            .med-table tr.expanded td:first-child {
+                border-bottom: 1px solid var(--gray-200);
+            }
+
             .med-table td:last-child {
                 border-bottom: none;
+                padding-top: 15px; /* Add space for buttons */
+                padding-bottom: 10px;
             }
+
             .med-table td::before {
                 content: attr(data-label);
                 position: absolute;
@@ -615,22 +674,67 @@
         function createMedicationRow(name, dosage, freq) {
             const tableBody = document.getElementById('medicationList');
             const row = tableBody.insertRow();
+
+            // Add click handler for accordion toggle on mobile
+            row.onclick = (e) => toggleRow(row, e);
+            row.className = "med-row-collapsed"; // Start collapsed
+
             row.insertCell().textContent = name;
             row.insertCell().textContent = dosage;
             row.insertCell().textContent = freq;
             const actionCell = row.insertCell();
+
+            // Edit Button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.textContent = 'Edit';
+            editBtn.style.marginRight = '5px';
+            editBtn.onclick = (e) => { e.stopPropagation(); editMedication(editBtn); };
+
+            // Remove Button
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn';
             removeBtn.textContent = 'Remove';
-            removeBtn.onclick = () => removeMedication(removeBtn);
+            removeBtn.onclick = (e) => { e.stopPropagation(); removeMedication(removeBtn); };
+
+            actionCell.appendChild(editBtn);
+            actionCell.appendChild(removeBtn);
 
             // Add data attributes for responsive CSS
             Array.from(row.cells).forEach((cell, index) => {
                 const labels = ["Medication Name", "Dosage", "Frequency", "Action"];
                 cell.setAttribute('data-label', labels[index]);
             });
+        }
 
-            actionCell.appendChild(removeBtn);
+        function toggleRow(row, event) {
+            // Only toggle on mobile view (check width or rely on CSS classes)
+            if (window.innerWidth <= 900) {
+                row.classList.toggle('expanded');
+                row.classList.toggle('med-row-collapsed');
+            }
+        }
+
+        function editMedication(button) {
+            const row = button.closest('tr');
+            const cells = row.cells;
+
+            const name = cells[0].textContent;
+            const dosage = cells[1].textContent;
+            const freq = cells[2].textContent;
+
+            // Populate form
+            document.getElementById('medName').value = name;
+            document.getElementById('medDosage').value = dosage;
+            document.getElementById('medFreq').value = freq;
+
+            // Remove row
+            row.remove();
+            saveToLocalStorage();
+
+            // Focus and notify
+            document.getElementById('medName').focus();
+            showNotification("Medication loaded for editing.");
         }
 
         function removeMedication(button) {
