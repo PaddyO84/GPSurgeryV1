@@ -358,6 +358,7 @@
             }
         }
     </style>
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <header>
@@ -906,7 +907,8 @@
         function printSummary() {
             const { patientDetails, medicationList } = getFormDataAsObject();
             const w = window.open('', '_blank');
-            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style></head><body>
+            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    <script src="js/theme.js"></script>
+</head><body>
             <h1>Prescription Request</h1>
             <p><strong>Name:</strong> ${patientDetails.name}</p>
             <p><strong>DOB:</strong> ${patientDetails.dob}</p>
