@@ -13,17 +13,17 @@
         /* Specific styles for the prescription form application */
         .form-app-container {
             display: flex;
-            gap: var(--spacing-md);
+            gap: var(--space-4);
             max-width: 1400px; /* Wider for the app layout */
-            margin: var(--spacing-md) auto;
-            padding: 0 var(--spacing-md);
+            margin: var(--space-4) auto;
+            padding: 0 var(--space-4);
         }
 
         .sidebar {
             width: 250px;
             flex-shrink: 0;
             background: var(--white);
-            padding: var(--spacing-md);
+            padding: var(--space-4);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             height: fit-content;
@@ -35,8 +35,8 @@
             font-size: 1.1rem;
             color: var(--secondary-color);
             border-bottom: 2px solid var(--gray-200);
-            padding-bottom: var(--spacing-xs);
-            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--space-2);
+            margin-bottom: var(--space-4);
         }
 
         .sidebar button {
@@ -74,7 +74,7 @@
         .main-form-area {
             flex-grow: 1;
             background: var(--white);
-            padding: var(--spacing-lg);
+            padding: var(--space-6);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
         }
@@ -103,6 +103,7 @@
             font-size: 1rem;
             font-family: var(--font-main);
             background: var(--gray-100);
+            box-sizing: border-box; /* Ensure padding doesn't overflow width */
         }
 
         input:focus, textarea:focus, select:focus {
@@ -188,6 +189,13 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: background 0.3s;
+            width: 100%; /* Default full width on mobile, auto on desktop via query */
+        }
+
+        @media (min-width: 600px) {
+            .submit-btn {
+                width: auto;
+            }
         }
 
         .submit-btn:hover {
@@ -220,14 +228,74 @@
         @media (max-width: 900px) {
             .form-app-container {
                 flex-direction: column;
+                padding: 0 var(--space-2);
             }
             .sidebar {
                 width: 100%;
                 position: static;
                 margin-bottom: 2rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
             }
+            .sidebar h3 {
+                grid-column: 1 / -1;
+                margin-bottom: 0;
+            }
+            .sidebar button {
+                margin-bottom: 0;
+                text-align: center;
+            }
+            /* Make Clear Form full width if odd number of buttons or just primarily */
+            .sidebar button.clear-btn {
+                grid-column: 1 / -1;
+                margin-top: 0;
+            }
+
+            .main-form-area {
+                padding: var(--space-4);
+            }
+
             .add-med-group {
                 grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr !important; /* Force single column */
+            }
+
+            /* Responsive Table (Cards) */
+            .med-table thead {
+                display: none;
+            }
+            .med-table, .med-table tbody, .med-table tr, .med-table td {
+                display: block;
+                width: 100%;
+            }
+            .med-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--gray-200);
+                border-radius: var(--border-radius);
+                background: var(--gray-50);
+                padding: 0.5rem;
+            }
+            .med-table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border-bottom: 1px solid var(--gray-200);
+            }
+            .med-table td:last-child {
+                border-bottom: none;
+            }
+            .med-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                text-align: left;
+                font-weight: bold;
+                color: var(--secondary-color);
             }
         }
     </style>
@@ -235,12 +303,14 @@
 <body>
     <header>
         <div class="top-bar">
-            <div class="contact-top">
-                <span>📞 (074) 93 74262</span> |
-                <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
-            </div>
-            <div class="emergency-top">
-                Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+            <div class="top-bar-content">
+                <div class="contact-top">
+                    <span>📞 (074) 93 74262</span> |
+                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
+                </div>
+                <div class="emergency-top">
+                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+                </div>
             </div>
         </div>
         <div class="nav-container">
@@ -291,7 +361,7 @@
             <button type="button" onclick="printSummary()">🖨️ Print Summary</button>
             <button type="button" class="clear-btn" onclick="clearAllFields()">❌ Clear Form</button>
             <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json" style="display: none;">
-            <div id="notification-area" style="margin-top: 15px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
+            <div id="notification-area" style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
         </div>
 
         <!-- Main Form -->
@@ -553,6 +623,13 @@
             removeBtn.className = 'remove-btn';
             removeBtn.textContent = 'Remove';
             removeBtn.onclick = () => removeMedication(removeBtn);
+
+            // Add data attributes for responsive CSS
+            Array.from(row.cells).forEach((cell, index) => {
+                const labels = ["Medication Name", "Dosage", "Frequency", "Action"];
+                cell.setAttribute('data-label', labels[index]);
+            });
+
             actionCell.appendChild(removeBtn);
         }
 
