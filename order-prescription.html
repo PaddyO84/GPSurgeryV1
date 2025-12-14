@@ -473,9 +473,11 @@
                     </div>
 
                     <div class="form-group">
-                        <label style="display: inline-block; margin-right: 15px;">Preferred Contact Method:</label>
-                        <input type="radio" id="prefEmail" name="communicationPref" value="Email" checked> <label for="prefEmail" style="display:inline; margin-right: 15px;">Email</label>
-                        <input type="radio" id="prefWhatsapp" name="communicationPref" value="WhatsApp"> <label for="prefWhatsapp" style="display:inline;">WhatsApp</label>
+                        <label for="communicationPref">Preferred Contact Method</label>
+                        <select id="communicationPref">
+                            <option value="Email">Email</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                        </select>
                     </div>
                 </div>
 
@@ -622,7 +624,7 @@
                     dob: document.getElementById('patientDOB').value,
                     address: document.getElementById('patientAddress').value,
                     pharmacy: document.getElementById('chosenPharmacy').value,
-                    commPref: document.querySelector('input[name="communicationPref"]:checked').value
+                    commPref: document.getElementById('communicationPref').value
                 },
                 medicationList: Array.from(document.getElementById('medicationList').rows).map(row => ({
                     name: row.cells[0].textContent,
@@ -641,9 +643,7 @@
             document.getElementById('patientDOB').value = details.dob || '';
             document.getElementById('patientAddress').value = details.address || '';
             document.getElementById('chosenPharmacy').value = details.pharmacy || '';
-            const commPref = details.commPref || 'Email';
-            const commPrefEl = document.getElementById(commPref.toLowerCase() === 'whatsapp' ? 'prefWhatsapp' : 'prefEmail');
-            if(commPrefEl) commPrefEl.checked = true;
+            document.getElementById('communicationPref').value = details.commPref || 'Email';
 
             const tableBody = document.getElementById('medicationList');
             tableBody.innerHTML = "";
