@@ -1,21 +1,22 @@
 :root {
-    --primary-color: #005eb8; /* NHS Blue - standard medical color */
-    --secondary-color: #003087; /* Darker blue for interactions */
-    --accent-color: #ffb81c; /* Warning/Notice color */
+    --primary-color: #106b40; /* Carndonagh Deep Green */
+    --secondary-color: #05220e; /* Darkest Green for contrasts */
+    --accent-color: #4f964a; /* Mid Green for highlights */
+    --warning-color: #ffb81c; /* Kept for specific alerts if needed */
     --text-color: #333333;
     --light-text: #ffffff;
-    --background-color: #f8f9fa;
+    --background-color: #fdfdfc; /* Off-white from logo analysis */
     --white: #ffffff;
-    --gray-100: #f8f9fa;
+    --gray-100: #f4f6f4; /* Green-tinted gray */
     --gray-200: #e9ecef;
     --gray-600: #6c757d;
-    --font-main: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-main: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; /* Modern, clean font stack */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 2rem;
     --spacing-lg: 4rem;
     --border-radius: 8px;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 12px rgba(16, 107, 64, 0.15); /* Green-tinted shadow */
 }
 
 * {
@@ -38,7 +39,7 @@ a {
 }
 
 a:hover {
-    color: var(--secondary-color);
+    color: var(--accent-color);
 }
 
 /* Header & Nav */
@@ -51,7 +52,7 @@ header {
 }
 
 .top-bar {
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
     color: var(--light-text);
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: 0.9rem;
@@ -63,6 +64,12 @@ header {
 
 .top-bar a {
     color: var(--light-text);
+    opacity: 0.9;
+}
+
+.top-bar a:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 .nav-container {
@@ -75,7 +82,7 @@ header {
 }
 
 .logo img {
-    max-height: 80px;
+    max-height: 90px; /* Slightly larger for the new logo */
     width: auto;
 }
 
@@ -88,13 +95,28 @@ nav ul {
 nav a {
     color: var(--text-color);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.05rem;
     padding: var(--spacing-xs) 0;
+    position: relative;
 }
 
 nav a:hover {
     color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color);
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s;
+}
+
+nav a:hover::after {
+    width: 100%;
 }
 
 /* Dropdown */
@@ -106,24 +128,35 @@ nav a:hover {
     display: none;
     position: absolute;
     background-color: var(--white);
-    min-width: 200px;
+    min-width: 220px;
     box-shadow: var(--shadow);
     border-radius: var(--border-radius);
     padding: var(--spacing-xs) 0;
     top: 100%;
     left: 0;
     z-index: 1001;
+    border-top: 3px solid var(--primary-color);
 }
 
 .dropdown:hover .dropdown-content {
     display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .dropdown-content a {
     display: block;
     padding: var(--spacing-xs) var(--spacing-sm);
     color: var(--text-color);
-    border-bottom: none;
+    font-size: 0.95rem;
+}
+
+.dropdown-content a::after {
+    display: none;
 }
 
 .dropdown-content a:hover {
@@ -133,32 +166,37 @@ nav a:hover {
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(rgba(0, 94, 184, 0.7), rgba(0, 48, 135, 0.7)), url('https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/1602410620888-N20X659714Z759714Z75/WV_banner_Inishowen_beach.jpg?format=2500w'); /* Fallback or guessed URL */
+    background: linear-gradient(rgba(16, 107, 64, 0.85), rgba(5, 34, 14, 0.85)), url('https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/1602410620888-N20X659714Z759714Z75/WV_banner_Inishowen_beach.jpg?format=2500w');
     background-size: cover;
     background-position: center;
     color: var(--light-text);
-    padding: 6rem 2rem;
+    padding: 8rem 2rem;
     text-align: center;
+    border-bottom: 5px solid var(--accent-color);
 }
 
 .hero h1 {
-    font-size: 3rem;
+    font-size: 3.5rem;
     margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .hero p {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     max-width: 800px;
     margin: 0 auto;
+    font-weight: 300;
 }
 
 /* Important Notices */
 .notices {
     background-color: var(--accent-color);
-    color: var(--text-color);
+    color: var(--white);
     padding: var(--spacing-sm);
     text-align: center;
-    font-weight: bold;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .alert-section {
@@ -172,9 +210,14 @@ nav a:hover {
 .alert-card {
     background: var(--white);
     padding: var(--spacing-md);
-    border-left: 5px solid var(--accent-color);
+    border-left: 6px solid var(--accent-color);
     box-shadow: var(--shadow);
     border-radius: var(--border-radius);
+    transition: transform 0.2s ease;
+}
+
+.alert-card:hover {
+    transform: translateY(-2px);
 }
 
 /* Main Content */
@@ -186,14 +229,27 @@ nav a:hover {
 
 .section-title {
     color: var(--primary-color);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
     text-align: center;
-    font-size: 2rem;
+    font-size: 2.2rem;
+    position: relative;
+    padding-bottom: var(--spacing-sm);
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: var(--accent-color);
 }
 
 .grid-3 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: var(--spacing-md);
 }
 
@@ -202,11 +258,36 @@ nav a:hover {
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    border-top: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    border-top-color: var(--primary-color);
+    transform: translateY(-5px);
 }
 
 .card h3 {
-    color: var(--secondary-color);
+    color: var(--primary-color);
     margin-bottom: var(--spacing-sm);
+    font-size: 1.4rem;
+}
+
+.btn {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin-top: var(--spacing-sm);
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--accent-color);
+    color: var(--white);
+    text-decoration: none;
 }
 
 /* Staff List */
@@ -223,6 +304,7 @@ nav a:hover {
     border-bottom: 2px solid var(--gray-200);
     padding-bottom: var(--spacing-xs);
     margin-bottom: var(--spacing-sm);
+    font-size: 1.3rem;
 }
 
 /* Prices Table */
@@ -232,21 +314,30 @@ nav a:hover {
     margin: var(--spacing-md) 0;
     background: var(--white);
     box-shadow: var(--shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
 }
 
 .price-table th, .price-table td {
-    padding: var(--spacing-sm);
-    border: 1px solid var(--gray-200);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--gray-200);
     text-align: left;
 }
 
 .price-table th {
     background-color: var(--primary-color);
     color: var(--light-text);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
 }
 
 .price-table tr:nth-child(even) {
     background-color: var(--gray-100);
+}
+
+.price-table tr:hover {
+    background-color: #e8f5e9; /* Light green hover */
 }
 
 /* Accordion */
@@ -254,7 +345,7 @@ nav a:hover {
     background-color: var(--white);
     color: var(--text-color);
     cursor: pointer;
-    padding: 18px;
+    padding: 20px;
     width: 100%;
     border: none;
     text-align: left;
@@ -275,10 +366,11 @@ nav a:hover {
 
 .accordion:after {
     content: '\002B';
-    color: var(--gray-600);
+    color: var(--accent-color);
     font-weight: bold;
     float: right;
     margin-left: 5px;
+    font-size: 1.5rem;
 }
 
 .active:after {
@@ -286,11 +378,12 @@ nav a:hover {
 }
 
 .panel {
-    padding: 0 18px;
-    background-color: white;
+    padding: 0 20px;
+    background-color: var(--white);
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.2s ease-out;
+    transition: max-height 0.3s ease-out;
+    border-left: 4px solid var(--accent-color);
 }
 
 .panel p {
@@ -303,6 +396,7 @@ footer {
     color: var(--light-text);
     padding: var(--spacing-lg) 0;
     margin-top: var(--spacing-lg);
+    border-top: 5px solid var(--accent-color);
 }
 
 .footer-content {
@@ -311,18 +405,28 @@ footer {
     padding: 0 var(--spacing-md);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
 }
 
 .footer-section h4 {
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
     color: var(--accent-color);
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .footer-section p, .footer-section a {
-    color: #e0e0e0;
+    color: #cbd5e0;
     margin-bottom: var(--spacing-xs);
     display: block;
+    line-height: 1.8;
+}
+
+.footer-section a:hover {
+    color: var(--white);
+    text-decoration: none;
+    padding-left: 5px;
 }
 
 .copyright {
@@ -330,26 +434,30 @@ footer {
     margin-top: var(--spacing-md);
     padding-top: var(--spacing-md);
     border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.9rem;
+    color: #a0aec0;
 }
 
 /* Mobile Nav */
 .menu-toggle {
     display: none;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     cursor: pointer;
+    color: var(--primary-color);
 }
 
 @media (max-width: 768px) {
     .nav-container {
         flex-direction: column;
         align-items: flex-start;
+        padding: var(--spacing-sm);
     }
 
     .menu-toggle {
         display: block;
         position: absolute;
-        top: var(--spacing-sm);
-        right: var(--spacing-md);
+        top: 25px;
+        right: 20px;
     }
 
     nav ul {
@@ -357,10 +465,20 @@ footer {
         flex-direction: column;
         width: 100%;
         gap: 0;
+        margin-top: var(--spacing-sm);
     }
 
     nav ul.show {
         display: flex;
+    }
+
+    nav a {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    nav a::after {
+        display: none;
     }
 
     .dropdown-content {
@@ -368,13 +486,14 @@ footer {
         box-shadow: none;
         background-color: var(--gray-100);
         padding-left: var(--spacing-sm);
+        border-top: none;
     }
 
     .hero {
-        padding: 3rem 1rem;
+        padding: 4rem 1rem;
     }
 
     .hero h1 {
-        font-size: 2rem;
+        font-size: 2.2rem;
     }
 }
