@@ -104,9 +104,29 @@
                     </ul>
                 </div>
 
-                <div style="text-align: center; margin-top: 2rem;">
-                    <a href="https://form.jotform.com/221983001080344" target="_blank" class="button">Complete Sickness Cert Form Online</a>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">(Opens in a new secure window)</p>
+                <div style="margin-top: 2rem; width: 100%;">
+                    <iframe
+                      id="JotFormIFrame-221983001080344"
+                      title="Sickness Certification Form"
+                      onload="window.parent.scrollTo(0,0)"
+                      allowtransparency="true"
+                      allowfullscreen="true"
+                      allow="geolocation; microphone; camera"
+                      src="https://form.jotform.com/221983001080344"
+                      frameborder="0"
+                      style="min-width: 100%; height:800px; border:none;"
+                      scrolling="yes"
+                    >
+                    </iframe>
+                    <script type="text/javascript">
+                        var ifr = document.getElementById("JotFormIFrame-221983001080344");
+                        if (window.handleIFrameMessage) {
+                          window.handleIFrameMessage(ifr);
+                        } else {
+                           // Fallback or external script loading could go here if needed,
+                           // but standard iframe is robust enough for basic embedding.
+                        }
+                    </script>
                 </div>
             </div>
         </div>
