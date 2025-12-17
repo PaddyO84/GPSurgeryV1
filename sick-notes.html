@@ -220,6 +220,18 @@
                             <label for="returnDate">Return to Work Date</label>
                             <input type="date" id="returnDate">
                         </div>
+
+                        <!-- Signature Section -->
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <label for="signatureCanvas">Patient Signature</label>
+                            <div style="border: 1px solid var(--gray-200); background: #f9f9f9; border-radius: 4px; position: relative;">
+                                <canvas id="signatureCanvas" width="500" height="200" style="width: 100%; touch-action: none; cursor: crosshair;"></canvas>
+                                <div style="position: absolute; bottom: 5px; right: 5px; font-size: 0.8rem; color: #999; pointer-events: none;">Sign above</div>
+                            </div>
+                            <button type="button" onclick="clearSignature()" style="margin-top: 5px; font-size: 0.85rem; color: #d32f2f; background: none; border: 1px solid #d32f2f; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Clear Signature</button>
+                            <input type="hidden" id="signatureData" required>
+                            <span class="error-message" id="signature-error"></span>
+                        </div>
                     </div>
 
                     <!-- Section 3: Declaration -->
@@ -282,6 +294,65 @@
 
     <script src="js/main.js"></script>
     <script>
+        // --- Signature Logic ---
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let hasSigned = false;
+
+        function resizeCanvas() {
+            // Make canvas responsive
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        // Initial sizing deferred to ensure DOM is ready
+        setTimeout(resizeCanvas, 100);
+
+        function startPosition(e) {
+            isDrawing = true;
+            draw(e);
+        }
+        function endPosition() {
+            isDrawing = false;
+            ctx.beginPath();
+            if(hasSigned) document.getElementById('signatureData').value = canvas.toDataURL();
+        }
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // Prevent scrolling on touch
+
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+
+            ctx.lineTo(clientX - rect.left, clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(clientX - rect.left, clientY - rect.top);
+            hasSigned = true;
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasSigned = false;
+            document.getElementById('signatureData').value = '';
+        }
+
         function togglePPS(show) {
             const ppsGroup = document.getElementById('ppsGroup');
             const ppsInput = document.getElementById('ppsNumber');
@@ -298,6 +369,7 @@
         function clearForm() {
             if(confirm("Clear all fields?")) {
                 document.getElementById('sickNoteForm').reset();
+                clearSignature();
                 togglePPS(false);
                 document.getElementById('returnDateGroup').style.display='none';
             }
@@ -305,6 +377,19 @@
 
         function showSummary() {
             const form = document.getElementById('sickNoteForm');
+
+            // Check Signature
+            const sigError = document.getElementById('signature-error');
+            if (!hasSigned) {
+                sigError.textContent = "Please sign the declaration.";
+                // Scroll to signature
+                document.getElementById('signatureCanvas').scrollIntoView({behavior: 'smooth'});
+                return;
+            } else {
+                sigError.textContent = "";
+                document.getElementById('signatureData').value = canvas.toDataURL(); // Ensure updated
+            }
+
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
@@ -334,6 +419,7 @@
                 <p><strong>Condition:</strong> ${data.condition}</p>
                 <p><strong>Dates:</strong> ${data.dates}</p>
                 <p><strong>Return to Work:</strong> ${data.returnToWork}</p>
+                <p><strong>Signature:</strong> <span style="color:green">✔ Signed</span></p>
                 <p style="margin-top:10px; font-size:0.9rem; color:#666;"><i>Please ensure all details are correct.</i></p>
             `;
 
@@ -345,8 +431,8 @@
             btn.disabled = true;
             btn.textContent = "Processing...";
 
-            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+            // DEPLOYED URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
 
             const data = {
                 formType: 'sick-note', // Discriminator for Backend
@@ -360,7 +446,8 @@
                 condition: document.getElementById('condition').value,
                 dates: `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`,
                 returnToWork: document.querySelector('input[name="returnToWork"]:checked').value === 'Yes' ?
-                              `Yes (${document.getElementById('returnDate').value})` : 'No'
+                              `Yes (${document.getElementById('returnDate').value})` : 'No',
+                signature: document.getElementById('signatureData').value
             };
 
             fetch(SCRIPT_WEB_APP_URL, {

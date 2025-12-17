@@ -249,7 +249,7 @@ function handleSickNoteSubmission(data) {
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(SICK_SHEET_NAME);
     // Add Headers
-    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Address", "Cert Type", "PPS", "Condition", "Dates", "Return to Work", "Notification Sent"]);
+    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Address", "Cert Type", "PPS", "Condition", "Dates", "Return to Work", "Signature", "Notification Sent"]);
     sheet.setFrozenRows(1);
   }
 
@@ -267,6 +267,7 @@ function handleSickNoteSubmission(data) {
     data.condition,
     data.dates,
     data.returnToWork,
+    data.signature || "Not Provided", // Base64 Signature
     "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
   ];
 
