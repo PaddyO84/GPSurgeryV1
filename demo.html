@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Demo - Carndonagh Health Centre Redesign</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
+    <style>
+        .demo-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            text-align: center;
+            padding: 2rem;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .theme-card {
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+            background: white;
+            border: 2px solid transparent;
+        }
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        .theme-preview {
+            height: 60px;
+            width: 60px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>Website Redesign Themes</h1>
+        <p>Select a theme below to view the full website with the chosen color palette.</p>
+
+        <div class="demo-grid">
+            <div class="theme-card">
+                <div class="theme-preview" style="background: #106b40;"></div>
+                <h3>Original Green</h3>
+                <p>The standard brand identity.</p>
+                <a href="index.html?theme=default" class="btn" style="background: #106b40;">Launch Demo</a>
+            </div>
+
+            <div class="theme-card">
+                <div class="theme-preview" style="background: #005eb8;"></div>
+                <h3>NHS Blue</h3>
+                <p>Professional and clinical look.</p>
+                <a href="index.html?theme=blue" class="btn" style="background: #005eb8;">Launch Demo</a>
+            </div>
+
+            <div class="theme-card">
+                <div class="theme-preview" style="background: #00897b;"></div>
+                <h3>Modern Teal</h3>
+                <p>Clean and approachable.</p>
+                <a href="index.html?theme=teal" class="btn" style="background: #00897b;">Launch Demo</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

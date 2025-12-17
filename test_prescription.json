@@ -1,0 +1,23 @@
+{
+  "patientDetails": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "0871234567",
+    "dob": "1980-01-01",
+    "address": "123 Main St, Donegal",
+    "pharmacy": "Inish Pharmacy, Carndonagh",
+    "commPref": "WhatsApp"
+  },
+  "medicationList": [
+    {
+      "name": "Paracetamol",
+      "dosage": "500mg",
+      "freq": "As needed"
+    },
+    {
+      "name": "Ibuprofen",
+      "dosage": "400mg",
+      "freq": "Twice a day"
+    }
+  ]
+}

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Order repeat prescriptions online from Carndonagh Health Centre. Secure and convenient.">
+    <title>Order Repeat Prescription - Carndonagh Health Centre</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Specific styles for the prescription form application */
+
+        .add-med-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+            background: var(--gray-100);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .add-med-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .add-med-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .med-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .med-table th, .med-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-200);
+            text-align: left;
+        }
+
+        .med-table th {
+            background: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .remove-btn {
+            background: #ffebee;
+            color: #d32f2f;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .edit-btn {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn:hover {
+            background: #1565c0;
+            color: white;
+        }
+
+        @media (max-width: 900px) {
+            .add-med-group {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr !important; /* Force single column */
+            }
+
+            /* Responsive Table (Cards) */
+            .med-table thead {
+                display: none;
+            }
+            .med-table, .med-table tbody, .med-table tr, .med-table td {
+                display: block;
+                width: 100%;
+            }
+            .med-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--gray-200);
+                border-radius: var(--border-radius);
+                background: var(--gray-50);
+                padding: 0.5rem;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .med-table tr:hover {
+                background: var(--gray-100);
+            }
+
+            /* Accordion Logic */
+            .med-table tr.med-row-collapsed td:not(:first-child) {
+                display: none;
+            }
+
+            .med-table tr.med-row-collapsed td:first-child::after {
+                content: '▼';
+                float: right;
+                font-size: 0.8rem;
+                margin-left: 10px;
+            }
+
+            .med-table tr.expanded td:first-child::after {
+                content: '▲';
+                float: right;
+                font-size: 0.8rem;
+                margin-left: 10px;
+            }
+
+            .med-table tr.expanded {
+                background: #e8f5e9; /* Light green highlight when expanded */
+                border-color: var(--primary-color);
+            }
+
+            .med-table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            /* Ensure first cell (Header) always looks like a header */
+            .med-table td:first-child {
+                font-weight: bold;
+                color: var(--primary-color);
+                border-bottom: none; /* Separator not needed if collapsed */
+            }
+            .med-table tr.expanded td:first-child {
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            .med-table td:last-child {
+                border-bottom: none;
+                padding-top: 15px; /* Add space for buttons */
+                padding-bottom: 10px;
+            }
+
+            .med-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                text-align: left;
+                font-weight: bold;
+                color: var(--secondary-color);
+            }
+        }
+    </style>
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <header>
+        <div class="top-bar">
+            <div class="top-bar-content">
+                <div class="contact-top">
+                    <span>📞 (074) 93 74262</span> |
+                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
+                </div>
+                <div class="emergency-top">
+                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+                </div>
+            </div>
+        </div>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/logo.png" alt="Carndonagh Health Centre Logo">
+                </a>
+            </div>
+            <div class="menu-toggle">☰</div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#">Patient Info ▾</a>
+                        <div class="dropdown-content">
+                            <a href="appointments.html">Appointments</a>
+                            <a href="prices.html">Fees & Payment</a>
+                            <a href="prescriptions.html">Prescriptions</a>
+                            <a href="test-results.html">Test Results</a>
+                            <a href="new-patients.html">New Patients</a>
+                            <a href="sick-notes.html">Sick Notes/Certification</a>
+
+
+                            <a href="confidentiality.html">Confidentiality</a>
+                            <a href="zero-tolerance.html">Unacceptable Behaviour</a>
+                        </div>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#">Online Services ▾</a>
+                        <div class="dropdown-content">
+                            <a href="order-prescription.html">Repeat Prescriptions</a>
+                            <a href="sick-notes.html">Sickness Certification</a>
+                        </div>
+                    </li>
+                    <li><a href="forms.html">Useful Forms</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="form-app-container">
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+            <h3>Actions</h3>
+            <button type="button" onclick="document.getElementById('loadFile').click()">📂 Load Saved Request</button>
+            <button type="button" onclick="saveRequestToFile()">💾 Save Request to File</button>
+            <button type="button" onclick="printSummary()">🖨️ Print Summary</button>
+            <button type="button" class="clear-btn" onclick="clearAllFields()">❌ Clear Form</button>
+            <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json" style="display: none;">
+            <div id="notification-area" style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="main-form-area" id="formContainer">
+            <div id="prescriptionForm">
+                <h2 style="color: var(--primary-color); border-bottom: 2px solid var(--gray-200); padding-bottom: 10px; margin-bottom: 20px;">Repeat Prescription Request</h2>
+
+                <div class="alert-card" style="margin-bottom: 2rem;">
+                    <p><strong>Important:</strong> Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection, please contact reception.</p>
+                </div>
+
+                <div class="form-section">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">1. Patient Details</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="patientName">Full Name</label>
+                            <input type="text" id="patientName" required>
+                            <span class="error-message" id="patientName-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientDOB">Date of Birth</label>
+                            <input type="date" id="patientDOB" required>
+                            <span class="error-message" id="patientDOB-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="patientPhone">Phone Number</label>
+                            <input type="tel" id="patientPhone" required>
+                            <span class="error-message" id="patientPhone-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientEmail">Email Address</label>
+                            <input type="email" id="patientEmail" required>
+                            <span class="error-message" id="patientEmail-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patientAddress">Home Address</label>
+                        <textarea id="patientAddress" rows="3" required></textarea>
+                        <span class="error-message" id="patientAddress-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chosenPharmacy">Chosen Pharmacy</label>
+                        <select id="chosenPharmacy" required></select>
+                        <span class="error-message" id="chosenPharmacy-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="communicationPref">Preferred Contact Method</label>
+                        <select id="communicationPref">
+                            <option value="Email">Email</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section" style="margin-top: 2rem;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">2. Add Medications</h3>
+
+                    <div class="add-med-group">
+                        <div>
+                            <label for="medName">Medication Name</label>
+                            <input type="text" id="medName" list="medication-list" placeholder="Start typing...">
+                        </div>
+                        <div>
+                            <label for="medDosage">Dosage</label>
+                            <input type="text" id="medDosage" placeholder="e.g., 20mg">
+                        </div>
+                        <div>
+                            <label for="medFreq">Frequency</label>
+                            <select id="medFreq"></select>
+                        </div>
+                        <div>
+                            <button type="button" class="add-med-btn" onclick="addMedication()">+ Add</button>
+                        </div>
+                    </div>
+                    <span class="error-message" id="medication-error" style="margin-bottom: 1rem;"></span>
+
+                    <table class="med-table" id="medicationTable">
+                        <thead>
+                            <tr>
+                                <th>Medication Name</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="medicationList">
+                            <!-- Rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="submit-area">
+                    <button class="submit-btn" onclick="showSummary()">Review & Submit Request</button>
+                </div>
+            </div>
+
+            <div id="successMessage" style="display: none; text-align: center; padding: 2rem;">
+                <!-- Success message will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Review -->
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary-color);">Confirm Your Request</h3>
+            <div id="summaryDetails" style="margin: 1.5rem 0;"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="document.getElementById('summaryModal').style.display='none'">Cancel</button>
+                <button class="btn-confirm" onclick="submitToGoogleForm()">Confirm & Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <datalist id="medication-list"></datalist>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Carndonagh Health Centre</h4>
+                <p>Derry Rd, Carndonagh</p>
+                <p>Co. Donegal</p>
+                <p>F93 EW7T</p>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><a href="tel:0749374208">(074) 93 74208</a></p>
+                <p><a href="tel:0749374262">(074) 93 74262</a></p>
+                <p><a href="mailto:reception@carndonaghhealthcentre.ie">reception@carndonaghhealthcentre.ie</a></p>
+            </div>
+            <div class="footer-section">
+                <h4>Links</h4>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Cookie Policy</a>
+                <a href="#">Accessibility</a>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2024 Carndonagh Health Centre. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
+        // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
+        const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
+        const pharmacyOptions = { "Tierney's Healthwise Pharmacy, Buncrana": "Tierney's Healthwise Pharmacy, Buncrana", "Inish Pharmacy, Buncrana": "Inish Pharmacy, Buncrana", "Duffy's Pharmacy, Buncrana": "Duffy's Pharmacy, Buncrana", "Brennan's Pharmacy, Buncrana": "Brennan's Pharmacy, Buncrana", "Hannon's Pharmacy, Moville": "Hannon's Pharmacy, Moville", "Foyle Pharmacy, Moville": "Foyle Pharmacy, Moville", "Brennan's Pharmacy, Clonmany": "Brennan's Pharmacy, Clonmany", "Inish Pharmacy, Muff": "Inish Pharmacy, Muff", "Mullans Pharmacy, Carndonagh": "Mullans Pharmacy, Carndonagh", "Carn Pharmacy, Carndonagh": "Carn Pharmacy, Carndonagh", "McNeill's Pharmacy, Carndonagh": "McNeill's Pharmacy, Carndonagh", "Inish Pharmacy, Carndonagh": "Inish Pharmacy, Carndonagh" };
+        const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateDatalist('medication-list', commonMedications);
+            populateSelect('chosenPharmacy', pharmacyOptions);
+            populateSelect('medFreq', frequencyOptions);
+            loadFromLocalStorage();
+
+            // Auto-save on input
+            const inputs = document.querySelectorAll('#prescriptionForm input, #prescriptionForm textarea, #prescriptionForm select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    clearError(input.id);
+                    saveToLocalStorage();
+                });
+            });
+        });
+
+        function populateDatalist(id, options) {
+            const datalist = document.getElementById(id);
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                datalist.appendChild(optionElement);
+            });
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            if (id === 'chosenPharmacy') {
+                select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
+            }
+            for (const [value, text] of Object.entries(options)) {
+                const optionElement = document.createElement('option');
+                optionElement.value = value;
+                optionElement.textContent = text;
+                select.appendChild(optionElement);
+            }
+        }
+
+        function getFormDataAsObject() {
+            return {
+                patientDetails: {
+                    name: document.getElementById('patientName').value,
+                    email: document.getElementById('patientEmail').value,
+                    phone: document.getElementById('patientPhone').value,
+                    dob: document.getElementById('patientDOB').value,
+                    address: document.getElementById('patientAddress').value,
+                    pharmacy: document.getElementById('chosenPharmacy').value,
+                    commPref: document.getElementById('communicationPref').value
+                },
+                medicationList: Array.from(document.getElementById('medicationList').rows).map(row => ({
+                    name: row.cells[0].textContent,
+                    dosage: row.cells[1].textContent,
+                    freq: row.cells[2].textContent
+                }))
+            };
+        }
+
+        function populateFormFromData(data) {
+            if (!data) return;
+            const details = data.patientDetails || {};
+            document.getElementById('patientName').value = details.name || '';
+            document.getElementById('patientEmail').value = details.email || '';
+            document.getElementById('patientPhone').value = details.phone || '';
+            document.getElementById('patientDOB').value = details.dob || '';
+            document.getElementById('patientAddress').value = details.address || '';
+            document.getElementById('chosenPharmacy').value = details.pharmacy || '';
+            document.getElementById('communicationPref').value = details.commPref || 'Email';
+
+            const tableBody = document.getElementById('medicationList');
+            tableBody.innerHTML = "";
+            if (data.medicationList && Array.isArray(data.medicationList)) {
+                data.medicationList.forEach(med => createMedicationRow(med.name, med.dosage, med.freq));
+            }
+        }
+
+        function addMedication() {
+            clearError('medication');
+            const nameInput = document.getElementById('medName');
+            const dosageInput = document.getElementById('medDosage');
+            const freq = document.getElementById('medFreq').value;
+            const name = nameInput.value.trim();
+            const dosage = dosageInput.value.trim();
+
+            if (name === "" || dosage === "") {
+                showError('medication', "Please fill in both medication name and dosage.");
+                return;
+            }
+            createMedicationRow(name, dosage, freq);
+            nameInput.value = "";
+            dosageInput.value = "";
+            saveToLocalStorage();
+            nameInput.focus();
+        }
+
+        function createMedicationRow(name, dosage, freq) {
+            const tableBody = document.getElementById('medicationList');
+            const row = tableBody.insertRow();
+
+            // Add click handler for accordion toggle on mobile
+            row.onclick = (e) => toggleRow(row, e);
+            row.className = "med-row-collapsed"; // Start collapsed
+
+            row.insertCell().textContent = name;
+            row.insertCell().textContent = dosage;
+            row.insertCell().textContent = freq;
+            const actionCell = row.insertCell();
+
+            // Edit Button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.textContent = 'Edit';
+            editBtn.style.marginRight = '5px';
+            editBtn.onclick = (e) => { e.stopPropagation(); editMedication(editBtn); };
+
+            // Remove Button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = (e) => { e.stopPropagation(); removeMedication(removeBtn); };
+
+            actionCell.appendChild(editBtn);
+            actionCell.appendChild(removeBtn);
+
+            // Add data attributes for responsive CSS
+            Array.from(row.cells).forEach((cell, index) => {
+                const labels = ["Medication Name", "Dosage", "Frequency", "Action"];
+                cell.setAttribute('data-label', labels[index]);
+            });
+        }
+
+        function toggleRow(row, event) {
+            // Only toggle on mobile view (check width or rely on CSS classes)
+            if (window.innerWidth <= 900) {
+                // If the row is currently collapsed (about to be expanded)
+                if (row.classList.contains('med-row-collapsed')) {
+                    // Find any currently expanded rows and collapse them
+                    const expandedRows = document.querySelectorAll('.med-table tr.expanded');
+                    expandedRows.forEach(expandedRow => {
+                        expandedRow.classList.remove('expanded');
+                        expandedRow.classList.add('med-row-collapsed');
+                    });
+                }
+
+                // Toggle the clicked row
+                row.classList.toggle('expanded');
+                row.classList.toggle('med-row-collapsed');
+            }
+        }
+
+        function editMedication(button) {
+            const row = button.closest('tr');
+            const cells = row.cells;
+
+            const name = cells[0].textContent;
+            const dosage = cells[1].textContent;
+            const freq = cells[2].textContent;
+
+            // Populate form
+            document.getElementById('medName').value = name;
+            document.getElementById('medDosage').value = dosage;
+            document.getElementById('medFreq').value = freq;
+
+            // Remove row
+            row.remove();
+            saveToLocalStorage();
+
+            // Focus and notify
+            document.getElementById('medName').focus();
+            showNotification("Medication loaded for editing.");
+        }
+
+        function removeMedication(button) {
+            button.closest('tr').remove();
+            saveToLocalStorage();
+        }
+
+        function clearAllFields() {
+            if (confirm("Are you sure you want to clear the entire form?")) {
+                populateFormFromData({ patientDetails: {}, medicationList: [] });
+                localStorage.removeItem('prescriptionFormData');
+                showNotification("Form cleared.");
+            }
+        }
+
+        function showSummary() {
+            if (!validateForm()) return;
+            const { patientDetails, medicationList } = getFormDataAsObject();
+
+            const container = document.getElementById('summaryDetails');
+            container.innerHTML = ''; // Clear previous content
+
+            const div = document.createElement('div');
+            div.style.textAlign = 'left';
+
+            // Helper to create p elements
+            const addDetail = (label, value) => {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                p.appendChild(strong);
+                p.appendChild(document.createTextNode(value));
+                div.appendChild(p);
+            };
+
+            addDetail('Name', patientDetails.name);
+            addDetail('Email', patientDetails.email);
+            addDetail('Phone', patientDetails.phone);
+            addDetail('Date of Birth', patientDetails.dob);
+            addDetail('Pharmacy', patientDetails.pharmacy);
+
+            const hr = document.createElement('hr');
+            hr.style.margin = '10px 0';
+            hr.style.border = '0';
+            hr.style.borderTop = '1px solid #eee';
+            div.appendChild(hr);
+
+            const h4 = document.createElement('h4');
+            h4.textContent = 'Medications:';
+            div.appendChild(h4);
+
+            const ul = document.createElement('ul');
+            ul.style.paddingLeft = '20px';
+
+            medicationList.forEach(med => {
+                const li = document.createElement('li');
+                li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+
+            container.appendChild(div);
+            document.getElementById('summaryModal').style.display = 'flex';
+        }
+
+        function submitToGoogleForm() {
+            const confirmBtn = document.querySelector('.btn-confirm');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Sending...";
+
+            // DEPLOYED URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
+
+            const { patientDetails, medicationList } = getFormDataAsObject();
+            // Added formType for Backend Discrimination
+            const payload = {
+                formType: 'prescription',
+                patientDetails,
+                medicationList
+            };
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                document.getElementById('summaryModal').style.display = 'none';
+                const ref = generateReferenceNumber();
+                document.getElementById('prescriptionForm').style.display = 'none';
+                const successDiv = document.getElementById('successMessage');
+                successDiv.innerHTML = `
+                    <h2 style="color: green;">Request Submitted Successfully!</h2>
+                    <p>Your reference number is: <strong>${ref}</strong></p>
+                    <p>Please allow 48 hours for processing.</p>
+                    <br>
+                    <button class="submit-btn" onclick="location.reload()">Submit Another Request</button>
+                `;
+                successDiv.style.display = 'block';
+                localStorage.removeItem('prescriptionFormData');
+            })
+            .catch(error => {
+                console.error("Submission Error:", error);
+                alert("An error occurred. Please try again.");
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "Confirm & Submit";
+            });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const fields = [
+                { id: 'patientName', msg: 'Name required' },
+                { id: 'patientEmail', msg: 'Email required' },
+                { id: 'patientPhone', msg: 'Phone required' },
+                { id: 'patientDOB', msg: 'DOB required' },
+                { id: 'patientAddress', msg: 'Address required' },
+                { id: 'chosenPharmacy', msg: 'Pharmacy required' }
+            ];
+
+            fields.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (!el.value) {
+                    isValid = false;
+                    showError(f.id, f.msg);
+                } else {
+                    clearError(f.id);
+                }
+            });
+
+            if (document.getElementById('medicationList').rows.length === 0) {
+                isValid = false;
+                showError('medication', "Add at least one medication.");
+            }
+
+            return isValid;
+        }
+
+        function showError(id, message) {
+            const el = document.getElementById(`${id}-error`);
+            if (el) el.textContent = message;
+        }
+
+        function clearError(id) {
+            const el = document.getElementById(`${id}-error`);
+            if (el) el.textContent = '';
+        }
+
+        function showNotification(msg) {
+            const n = document.getElementById('notification-area');
+            n.textContent = msg;
+            n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 3000);
+        }
+
+        function saveToLocalStorage() { localStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject())); }
+        function loadFromLocalStorage() {
+            const d = localStorage.getItem('prescriptionFormData');
+            if (d) populateFormFromData(JSON.parse(d));
+        }
+
+        function generateReferenceNumber() {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `CHC-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+        }
+
+        function printSummary() {
+            const { patientDetails, medicationList } = getFormDataAsObject();
+            const w = window.open('', '_blank');
+            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
+</head><body>
+            <h1>Prescription Request</h1>
+            <p><strong>Name:</strong> ${patientDetails.name}</p>
+            <p><strong>DOB:</strong> ${patientDetails.dob}</p>
+            <p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p>
+            <h3>Medications</h3>
+            <table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>
+            ${medicationList.map(m => `<tr><td>${m.name}</td><td>${m.dosage}</td><td>${m.freq}</td></tr>`).join('')}
+            </tbody></table></body></html>`);
+            w.document.close();
+            w.print();
+        }
+
+        function saveRequestToFile() {
+            const data = getFormDataAsObject();
+             if (!data.patientDetails.name) { alert("Please enter a name first."); return; }
+             const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+             const a = document.createElement('a');
+             a.href = URL.createObjectURL(blob);
+             a.download = `prescription_${data.patientDetails.name.replace(/\s+/g,'_')}.json`;
+             a.click();
+        }
+
+        function loadRequestFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = (evt) => {
+                try {
+                    populateFormFromData(JSON.parse(evt.target.result));
+                    saveToLocalStorage();
+                    showNotification("Loaded successfully.");
+                } catch(err) {
+                    console.error(err);
+                    alert("Invalid file.");
+                }
+                // Clear the input value to allow re-uploading the same file
+                e.target.value = '';
+            };
+            r.readAsText(file);
+        }
+    </script>
+</body>
+</html>
