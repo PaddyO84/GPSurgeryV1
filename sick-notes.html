@@ -345,12 +345,39 @@
             btn.disabled = true;
             btn.textContent = "Processing...";
 
-            // Mock Submission
-            setTimeout(() => {
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+
+            const data = {
+                formType: 'sick-note', // Discriminator for Backend
+                name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                type: document.querySelector('input[name="certType"]:checked').value,
+                pps: document.getElementById('ppsNumber').value || 'N/A',
+                condition: document.getElementById('condition').value,
+                dates: `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`,
+                returnToWork: document.querySelector('input[name="returnToWork"]:checked').value === 'Yes' ?
+                              `Yes (${document.getElementById('returnDate').value})` : 'No'
+            };
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Essential for Google Apps Script
+                headers: {
+                    'Content-Type': 'text/plain' // Essential to avoid CORS preflight
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                // Because mode is 'no-cors', we get an opaque response and cannot check .ok or .status
+                // We assume success if the fetch completes.
                 document.getElementById('summaryModal').style.display = 'none';
                 document.getElementById('sickNoteFormContainer').style.display = 'none';
 
-                const ref = 'SN-' + Math.floor(Math.random() * 100000);
+                const ref = 'SN-' + Math.floor(Math.random() * 100000); // Generate client-side ref for display
 
                 const successDiv = document.getElementById('successMessage');
                 successDiv.innerHTML = `
@@ -362,7 +389,13 @@
                     <button class="submit-btn" onclick="location.reload()">Submit Another</button>
                 `;
                 successDiv.style.display = 'block';
-            }, 1500);
+            })
+            .catch(error => {
+                console.error("Submission Error:", error);
+                alert("There was a problem submitting your request. Please try again or contact the surgery.");
+                btn.disabled = false;
+                btn.textContent = "Confirm & Submit";
+            });
         }
     </script>
 </body>

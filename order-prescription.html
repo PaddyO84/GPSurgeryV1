@@ -631,13 +631,26 @@
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
 
-            const { patientDetails, medicationList } = getFormDataAsObject();
-            const payload = { patientDetails, medicationList };
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
 
-            // Mock Submission (Simulate Network Delay)
-            new Promise(resolve => setTimeout(resolve, 1500))
+            const { patientDetails, medicationList } = getFormDataAsObject();
+            // Added formType for Backend Discrimination
+            const payload = {
+                formType: 'prescription',
+                patientDetails,
+                medicationList
+            };
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify(payload)
+            })
             .then(() => {
-                console.log("Mock Submission Payload:", payload); // Log for demonstration
                 document.getElementById('summaryModal').style.display = 'none';
                 const ref = generateReferenceNumber();
                 document.getElementById('prescriptionForm').style.display = 'none';
@@ -653,7 +666,7 @@
                 localStorage.removeItem('prescriptionFormData');
             })
             .catch(error => {
-                console.error(error);
+                console.error("Submission Error:", error);
                 alert("An error occurred. Please try again.");
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Confirm & Submit";

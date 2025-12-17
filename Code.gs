@@ -29,6 +29,13 @@ function doPost(e) {
 
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // Route to Sick Note Handler if applicable
+    if (data.formType === 'sick-note') {
+      return handleSickNoteSubmission(data);
+    }
+
+    // Default: Prescription Handling
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
 
     // Validate essential data
@@ -229,6 +236,69 @@ function onFormSubmit(e) {
     sheet.getRange(row, NOTIFICATION_COL).setValue("Processed on " + timestamp);
   } catch (err) {
     reportError('onFormSubmit', err, e.range ? e.range.getRow() : null);
+  }
+}
+
+// --- SICK NOTE HANDLERS ---
+
+function handleSickNoteSubmission(data) {
+  const SICK_SHEET_NAME = "Sick Notes";
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SICK_SHEET_NAME);
+
+  // Create sheet if not exists
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(SICK_SHEET_NAME);
+    // Add Headers
+    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Address", "Cert Type", "PPS", "Condition", "Dates", "Return to Work", "Notification Sent"]);
+    sheet.setFrozenRows(1);
+  }
+
+  const timestamp = new Date();
+  const rowData = [
+    timestamp,
+    "New Request",            // Status
+    data.name,
+    data.dob,
+    "'" + data.phone,         // Force string
+    data.email,
+    data.address,
+    data.type,
+    data.pps,
+    data.condition,
+    data.dates,
+    data.returnToWork,
+    "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
+  ];
+
+  sheet.appendRow(rowData);
+
+  sendSickNoteConfirmation(data.name, data.email);
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note' })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendSickNoteConfirmation(name, email) {
+  if (!email) return;
+  const subject = "Received: Your Sick Note Request";
+  const body = `
+    <p>Dear ${name},</p>
+    <p>We have received your request for a sick note/medical certificate.</p>
+    <p><strong>Next Steps:</strong></p>
+    <ul>
+      <li>Please allow 48 hours for processing.</li>
+      <li>If we need you to attend the surgery (e.g. for a new illness), we will contact you.</li>
+      <li>If payment (€20) is required, it can be paid upon collection.</li>
+    </ul>
+    <p>Thank you,</p>
+    <p><strong>${SENDER_NAME}</strong></p>
+    <hr>
+    ${FOOTER}
+  `;
+
+  try {
+    MailApp.sendEmail({ to: email, subject: subject, htmlBody: body, name: SENDER_NAME });
+  } catch (e) {
+    Logger.log("Failed to send sick note confirmation: " + e.toString());
   }
 }
 
