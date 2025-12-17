@@ -10,16 +10,49 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <style>
+        /* Sick Note Specific Styles */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .declaration-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #c8e6c9;
+            margin-top: 20px;
+        }
+        .declaration-box label {
+            display: flex;
+            align-items: start;
+            gap: 10px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .declaration-box input[type="checkbox"] {
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="top-bar">
-            <div class="contact-top">
-                <span>📞 (074) 93 74262</span> |
-                <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
-            </div>
-            <div class="emergency-top">
-                Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+            <div class="top-bar-content">
+                <div class="contact-top">
+                    <span>📞 (074) 93 74262</span> |
+                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
+                </div>
+                <div class="emergency-top">
+                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+                </div>
             </div>
         </div>
         <div class="nav-container">
@@ -60,74 +93,163 @@
         </div>
     </header>
 
-    <div class="container">
-        <h2 class="section-title">Medical Certification & Sick Notes</h2>
-
-        <div class="grid-2">
-            <!-- General Info Section -->
-            <div class="card">
-                <h3>General Information</h3>
-
-                <h4>Work Absences</h4>
-                <p>If you need a sick note for work, you may need to attend the surgery in person and be seen by a GP who can confirm and certify your illness.</p>
-                <br>
-
-                <h4>Hospital Stays</h4>
-                <p>If you have been an inpatient in Hospital, we require a discharge letter from the hospital confirming your stay before we can provide certification.</p>
-                <br>
-
-                <h4>Social Welfare Certificates</h4>
-                <p>If you have been absent from work for <strong>more than six days</strong>, you may need a continuance sick note (Social Welfare Certificate).</p>
-                <ul>
-                    <li>We will need your PPS number and the dates of your sick leave.</li>
-                    <li>Please contact reception 48 hours before your certificate is due.</li>
-                    <li>These must be collected from reception in person.</li>
-                </ul>
-                <br>
-
-                <h4>Letters & Reports</h4>
-                <p>Letters and reports requested by patients will incur a charge depending on the complexity of the condition and the time required to complete them.</p>
+    <div class="form-app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h3>Information</h3>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                <p><strong>Fees:</strong> €20 charge applies.</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <p><strong>Processing:</strong> Allow 48 hours.</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <p><strong>Collection:</strong> Must collect within 72 hours.</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <p><strong>Note:</strong> Max 2 weeks certification without review.</p>
             </div>
 
-            <!-- Online Request Section -->
-            <div class="card">
-                <h3>Request a Sick Note Online</h3>
-                <p>You can request a sickness certificate by completing our online form.</p>
+            <button type="button" class="clear-btn" onclick="clearForm()">❌ Clear Form</button>
+        </div>
 
-                <div class="alert-card" style="margin: 1.5rem 0;">
-                    <h4>⚠️ Important Information</h4>
-                    <ul>
-                        <li><strong>Cost:</strong> There is a €20 charge for requesting a sickness certificate, whether or not the certificate is collected.</li>
-                        <li><strong>Collection:</strong> Certificates must be collected within 72 hours, or they may be discarded.</li>
-                        <li><strong>Processing Time:</strong> Please allow 48 hours for your request to be processed.</li>
-                        <li><strong>Limit:</strong> You will not receive more than 2 weeks of sickness certification without a doctor's review, unless in exceptional circumstances (e.g., serious illness).</li>
-                    </ul>
+        <!-- Main Form -->
+        <div class="main-form-area">
+            <div id="sickNoteFormContainer">
+                <h2 style="color: var(--primary-color); border-bottom: 2px solid var(--gray-200); padding-bottom: 10px; margin-bottom: 20px;">Sickness Certification Request</h2>
+
+                <div class="alert-card" style="margin-bottom: 2rem;">
+                    <p>If you have been an inpatient in Hospital, we require a discharge letter before we can provide certification. Please drop this in or email it to us.</p>
                 </div>
 
-                <div style="margin-top: 2rem; width: 100%;">
-                    <iframe
-                      id="JotFormIFrame-221983001080344"
-                      title="Sickness Certification Form"
-                      onload="window.parent.scrollTo(0,0)"
-                      allowtransparency="true"
-                      allowfullscreen="true"
-                      allow="geolocation; microphone; camera"
-                      src="https://form.jotform.com/221983001080344"
-                      frameborder="0"
-                      style="min-width: 100%; height:800px; border:none;"
-                      scrolling="yes"
-                    >
-                    </iframe>
-                    <script type="text/javascript">
-                        var ifr = document.getElementById("JotFormIFrame-221983001080344");
-                        if (window.handleIFrameMessage) {
-                          window.handleIFrameMessage(ifr);
-                        } else {
-                           // Fallback or external script loading could go here if needed,
-                           // but standard iframe is robust enough for basic embedding.
-                        }
-                    </script>
-                </div>
+                <form id="sickNoteForm" onsubmit="event.preventDefault(); showSummary();">
+                    <!-- Section 1: Personal Details -->
+                    <div class="form-section">
+                        <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">1. Patient Details</h3>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" required>
+                                <span class="error-message" id="firstName-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" required>
+                                <span class="error-message" id="lastName-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="dob">Date of Birth</label>
+                                <input type="date" id="dob" required>
+                                <span class="error-message" id="dob-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" required>
+                                <span class="error-message" id="phone-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" required>
+                            <span class="error-message" id="email-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Current Address</label>
+                            <textarea id="address" rows="3" required></textarea>
+                            <span class="error-message" id="address-error"></span>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Certification Details -->
+                    <div class="form-section" style="margin-top: 2rem;">
+                        <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">2. Certification Details</h3>
+
+                        <div class="form-group">
+                            <label>Type of Certificate Required</label>
+                            <div class="radio-group">
+                                <label class="radio-item">
+                                    <input type="radio" name="certType" value="Social Welfare" onclick="togglePPS(true)" required> Social Welfare (IB1)
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="certType" value="Private" onclick="togglePPS(false)"> Private (Work)
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="certType" value="Both" onclick="togglePPS(true)"> Both
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="ppsGroup" style="display: none;">
+                            <label for="ppsNumber">PPS Number (Required for Social Welfare)</label>
+                            <input type="text" id="ppsNumber">
+                            <span class="error-message" id="ppsNumber-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="condition">Medical Condition / Reason for Absence</label>
+                            <textarea id="condition" rows="3" placeholder="Please describe your illness or reason for certification..." required></textarea>
+                            <span class="error-message" id="condition-error"></span>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="startDate">Date Illness Started</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">Date Illness Ended (or Expected End)</label>
+                                <input type="date" id="endDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Are you fit to return to work?</label>
+                            <div class="radio-group">
+                                <label class="radio-item">
+                                    <input type="radio" name="returnToWork" value="Yes" onclick="document.getElementById('returnDateGroup').style.display='block'" required> Yes
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="returnToWork" value="No" onclick="document.getElementById('returnDateGroup').style.display='none'"> No / Not sure yet
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="returnDateGroup" style="display: none;">
+                            <label for="returnDate">Return to Work Date</label>
+                            <input type="date" id="returnDate">
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Declaration -->
+                    <div class="declaration-box">
+                        <label>
+                            <input type="checkbox" id="declaration" required>
+                            <span>I certify that the information provided is true and accurate. I understand that a fee may apply and that I may need to be seen by a doctor if this is a new illness or if my certification extends beyond 2 weeks.</span>
+                        </label>
+                    </div>
+
+                    <div class="submit-area">
+                        <button type="submit" class="submit-btn">Review & Submit</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="successMessage" style="display: none; text-align: center; padding: 2rem;">
+                <!-- Success message injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Review -->
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary-color);">Confirm Details</h3>
+            <div id="summaryDetails" style="margin: 1.5rem 0;"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="document.getElementById('summaryModal').style.display='none'">Edit</button>
+                <button class="btn-confirm" onclick="submitFinal()">Confirm & Submit</button>
             </div>
         </div>
     </div>
@@ -148,8 +270,8 @@
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
-                <a href="confidentiality.html">Privacy Policy</a>
-                <a href="confidentiality.html">Cookie Policy</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Cookie Policy</a>
                 <a href="#">Accessibility</a>
             </div>
         </div>
@@ -159,5 +281,122 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script>
+        function togglePPS(show) {
+            const ppsGroup = document.getElementById('ppsGroup');
+            const ppsInput = document.getElementById('ppsNumber');
+            if (show) {
+                ppsGroup.style.display = 'block';
+                ppsInput.setAttribute('required', 'required');
+            } else {
+                ppsGroup.style.display = 'none';
+                ppsInput.removeAttribute('required');
+                ppsInput.value = '';
+            }
+        }
+
+        function clearForm() {
+            if(confirm("Clear all fields?")) {
+                document.getElementById('sickNoteForm').reset();
+                togglePPS(false);
+                document.getElementById('returnDateGroup').style.display='none';
+            }
+        }
+
+        function showSummary() {
+            const form = document.getElementById('sickNoteForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const data = {
+                name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                type: document.querySelector('input[name="certType"]:checked').value,
+                pps: document.getElementById('ppsNumber').value || 'N/A',
+                condition: document.getElementById('condition').value,
+                dates: `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`,
+                returnToWork: document.querySelector('input[name="returnToWork"]:checked').value === 'Yes' ?
+                              `Yes (${document.getElementById('returnDate').value})` : 'No'
+            };
+
+            const container = document.getElementById('summaryDetails');
+            container.innerHTML = `
+                <p><strong>Name:</strong> ${data.name}</p>
+                <p><strong>DOB:</strong> ${data.dob}</p>
+                <p><strong>Phone:</strong> ${data.phone}</p>
+                <p><strong>Type:</strong> ${data.type}</p>
+                ${data.pps !== 'N/A' ? `<p><strong>PPSN:</strong> ${data.pps}</p>` : ''}
+                <p><strong>Condition:</strong> ${data.condition}</p>
+                <p><strong>Dates:</strong> ${data.dates}</p>
+                <p><strong>Return to Work:</strong> ${data.returnToWork}</p>
+                <p style="margin-top:10px; font-size:0.9rem; color:#666;"><i>Please ensure all details are correct.</i></p>
+            `;
+
+            document.getElementById('summaryModal').style.display = 'flex';
+        }
+
+        function submitFinal() {
+            const btn = document.querySelector('.btn-confirm');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+
+            const data = {
+                formType: 'sick-note', // Discriminator for Backend
+                name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                type: document.querySelector('input[name="certType"]:checked').value,
+                pps: document.getElementById('ppsNumber').value || 'N/A',
+                condition: document.getElementById('condition').value,
+                dates: `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`,
+                returnToWork: document.querySelector('input[name="returnToWork"]:checked').value === 'Yes' ?
+                              `Yes (${document.getElementById('returnDate').value})` : 'No'
+            };
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Essential for Google Apps Script
+                headers: {
+                    'Content-Type': 'text/plain' // Essential to avoid CORS preflight
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                // Because mode is 'no-cors', we get an opaque response and cannot check .ok or .status
+                // We assume success if the fetch completes.
+                document.getElementById('summaryModal').style.display = 'none';
+                document.getElementById('sickNoteFormContainer').style.display = 'none';
+
+                const ref = 'SN-' + Math.floor(Math.random() * 100000); // Generate client-side ref for display
+
+                const successDiv = document.getElementById('successMessage');
+                successDiv.innerHTML = `
+                    <h2 style="color: green;">Request Submitted!</h2>
+                    <p>Reference: <strong>${ref}</strong></p>
+                    <p>We have received your request. Please allow 48 hours for processing.</p>
+                    <p>If payment is required, please pay at the reception upon collection.</p>
+                    <br>
+                    <button class="submit-btn" onclick="location.reload()">Submit Another</button>
+                `;
+                successDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error("Submission Error:", error);
+                alert("There was a problem submitting your request. Please try again or contact the surgery.");
+                btn.disabled = false;
+                btn.textContent = "Confirm & Submit";
+            });
+        }
+    </script>
 </body>
 </html>

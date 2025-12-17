@@ -11,107 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* Specific styles for the prescription form application */
-        .form-app-container {
-            display: flex;
-            gap: var(--space-4);
-            max-width: 1400px; /* Wider for the app layout */
-            margin: var(--space-4) auto;
-            padding: 0 var(--space-4);
-        }
-
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            background: var(--white);
-            padding: var(--space-4);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            height: fit-content;
-            position: sticky;
-            top: 100px;
-        }
-
-        .sidebar h3 {
-            font-size: 1.1rem;
-            color: var(--secondary-color);
-            border-bottom: 2px solid var(--gray-200);
-            padding-bottom: var(--space-2);
-            margin-bottom: var(--space-4);
-        }
-
-        .sidebar button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: var(--background-color);
-            border: 1px solid var(--gray-200);
-            color: var(--text-color);
-            text-align: left;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .sidebar button:hover {
-            background: var(--primary-color);
-            color: var(--white);
-            border-color: var(--primary-color);
-        }
-
-        .sidebar button.clear-btn {
-            background: #ffebee;
-            color: #d32f2f;
-            border-color: #ffcdd2;
-            margin-top: 20px;
-        }
-
-        .sidebar button.clear-btn:hover {
-            background: #d32f2f;
-            color: white;
-        }
-
-        .main-form-area {
-            flex-grow: 1;
-            background: var(--white);
-            padding: var(--space-6);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--secondary-color);
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="date"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--gray-200);
-            border-radius: 4px;
-            font-size: 1rem;
-            font-family: var(--font-main);
-            background: var(--gray-100);
-            box-sizing: border-box; /* Ensure padding doesn't overflow width */
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background: var(--white);
-            box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.1);
-        }
 
         .add-med-group {
             display: grid;
@@ -185,92 +84,7 @@
             color: white;
         }
 
-        .submit-area {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--gray-200);
-            text-align: right;
-        }
-
-        .submit-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: background 0.3s;
-            width: 100%; /* Default full width on mobile, auto on desktop via query */
-        }
-
-        @media (min-width: 600px) {
-            .submit-btn {
-                width: auto;
-            }
-        }
-
-        .submit-btn:hover {
-            background: #218838;
-        }
-
-        .error-message {
-            color: #d32f2f;
-            font-size: 0.85rem;
-            margin-top: 5px;
-            display: block;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none;
-            justify-content: center; align-items: center; z-index: 2000;
-        }
-        .modal-content {
-            background: white; padding: 2rem; border-radius: var(--border-radius);
-            max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;
-        }
-        .modal-actions {
-            display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;
-        }
-        .btn-cancel { background: var(--gray-600); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        .btn-confirm { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-
         @media (max-width: 900px) {
-            .form-app-container {
-                flex-direction: column;
-                padding: 0 var(--space-2);
-            }
-            .sidebar {
-                width: 100%;
-                position: static;
-                margin-bottom: 2rem;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .sidebar h3 {
-                grid-column: 1 / -1;
-                margin-bottom: 0;
-            }
-            .sidebar button {
-                margin-bottom: 0;
-                text-align: center;
-            }
-            /* Make Clear Form full width if odd number of buttons or just primarily */
-            .sidebar button.clear-btn {
-                grid-column: 1 / -1;
-                margin-top: 0;
-            }
-
-            .main-form-area {
-                padding: var(--space-4);
-            }
-
             .add-med-group {
                 grid-template-columns: 1fr;
             }
@@ -817,13 +631,26 @@
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
 
-            const { patientDetails, medicationList } = getFormDataAsObject();
-            const payload = { patientDetails, medicationList };
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
 
-            // Mock Submission (Simulate Network Delay)
-            new Promise(resolve => setTimeout(resolve, 1500))
+            const { patientDetails, medicationList } = getFormDataAsObject();
+            // Added formType for Backend Discrimination
+            const payload = {
+                formType: 'prescription',
+                patientDetails,
+                medicationList
+            };
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify(payload)
+            })
             .then(() => {
-                console.log("Mock Submission Payload:", payload); // Log for demonstration
                 document.getElementById('summaryModal').style.display = 'none';
                 const ref = generateReferenceNumber();
                 document.getElementById('prescriptionForm').style.display = 'none';
@@ -839,7 +666,7 @@
                 localStorage.removeItem('prescriptionFormData');
             })
             .catch(error => {
-                console.error(error);
+                console.error("Submission Error:", error);
                 alert("An error occurred. Please try again.");
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Confirm & Submit";
