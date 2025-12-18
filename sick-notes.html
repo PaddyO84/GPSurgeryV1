@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Request a sick note or sickness certification from Carndonagh Health Centre.">
-    <title>Sick Notes & Certification - Carndonagh Health Centre</title>
+    <meta name="description" content="Request a sick note or sickness certification from Example Health Centre.">
+    <title>Sick Notes & Certification - Example Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <script src="js/config.js"></script>
     <style>
         /* Sick Note Specific Styles */
         .radio-group {
@@ -47,18 +48,18 @@
         <div class="top-bar">
             <div class="top-bar-content">
                 <div class="contact-top">
-                    <span>📞 (074) 93 74262</span> |
-                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
+                    <span>📞 (01) 234 5679</span> |
+                    <span>📍 123 Main Street, Example Town, Co. Donegal</span>
                 </div>
                 <div class="emergency-top">
-                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+                    Out of Hours (NowDoc): <strong>(01) 987 6543</strong>
                 </div>
             </div>
         </div>
         <div class="nav-container">
             <div class="logo">
                 <a href="index.html">
-                    <img src="images/logo.png" alt="Carndonagh Health Centre Logo">
+                    <img src="images/logo.png" alt="Example Health Centre Logo">
                 </a>
             </div>
             <div class="menu-toggle">☰</div>
@@ -269,16 +270,16 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h4>Carndonagh Health Centre</h4>
-                <p>Derry Rd, Carndonagh</p>
+                <h4>Example Health Centre</h4>
+                <p>123 Main Street, Example Town</p>
                 <p>Co. Donegal</p>
-                <p>F93 EW7T</p>
+                <p>D01 XYZ1</p>
             </div>
             <div class="footer-section">
                 <h4>Contact</h4>
-                <p><a href="tel:0749374208">(074) 93 74208</a></p>
-                <p><a href="tel:0749374262">(074) 93 74262</a></p>
-                <p><a href="mailto:reception@carndonaghhealthcentre.ie">reception@carndonaghhealthcentre.ie</a></p>
+                <p><a href="tel:012345670">(01) 234 5670</a></p>
+                <p><a href="tel:012345679">(01) 234 5679</a></p>
+                <p><a href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></p>
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
@@ -288,7 +289,7 @@
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2024 Carndonagh Health Centre. All Rights Reserved.</p>
+            <p>&copy; 2024 Example Health Centre. All Rights Reserved.</p>
         </div>
     </footer>
 
@@ -431,8 +432,8 @@
             btn.disabled = true;
             btn.textContent = "Processing...";
 
-            // DEPLOYED URL
-            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
+            // Use URL from js/config.js
+            const SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL;
 
             const data = {
                 formType: 'sick-note', // Discriminator for Backend

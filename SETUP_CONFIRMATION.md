@@ -43,9 +43,9 @@ While the primary data entry is now handled by the `doPost` Web App function, th
 
 ### Environment Variables (Hardcoded in Script)
 Ensure these constants in `Code.gs` match the practice's details:
-*   `SENDER_NAME`: "Carndonagh Health Centre"
-*   `YOUR_PHONE_NUMBER`: "074-93-74242"
-*   `ADMIN_EMAIL`: "patricknoone+surgery@gmail.com"
+*   `SENDER_NAME`: "Example Health Centre"
+*   `YOUR_PHONE_NUMBER`: "01-234-5678"
+*   `ADMIN_EMAIL`: "admin@example.com"
 
 ## 3. Frontend Configuration
 The file `prescription_form.html` has been updated to submit data to the Web App URL.
