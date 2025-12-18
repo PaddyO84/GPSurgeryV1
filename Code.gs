@@ -10,9 +10,9 @@ const MEDS_COL = 8;        // Medication List is in Column H
 const NOTIFICATION_COL = 11; // Notification Sent is in Column K
 
 // --- SCRIPT SETTINGS ---
-const SENDER_NAME = "Carndonagh Health Centre";
-const YOUR_PHONE_NUMBER = "074-93-74242";
-const ADMIN_EMAIL = "patricknoone+surgery@gmail.com";
+const SENDER_NAME = "Example Health Centre";
+const YOUR_PHONE_NUMBER = "01-234-5678";
+const ADMIN_EMAIL = "admin@example.com";
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;

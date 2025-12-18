@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Order repeat prescriptions online from Carndonagh Health Centre. Secure and convenient.">
-    <title>Order Repeat Prescription - Carndonagh Health Centre</title>
+    <meta name="description" content="Order repeat prescriptions online from Example Health Centre. Secure and convenient.">
+    <title>Order Repeat Prescription - Example Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -180,18 +180,18 @@
         <div class="top-bar">
             <div class="top-bar-content">
                 <div class="contact-top">
-                    <span>📞 (074) 93 74262</span> |
-                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
+                    <span>📞 (01) 234 5679</span> |
+                    <span>📍 123 Main Street, Example Town, Co. Donegal</span>
                 </div>
                 <div class="emergency-top">
-                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
+                    Out of Hours (NowDoc): <strong>(01) 987 6543</strong>
                 </div>
             </div>
         </div>
         <div class="nav-container">
             <div class="logo">
                 <a href="index.html">
-                    <img src="images/logo.png" alt="Carndonagh Health Centre Logo">
+                    <img src="images/logo.png" alt="Example Health Centre Logo">
                 </a>
             </div>
             <div class="menu-toggle">☰</div>
@@ -362,16 +362,16 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h4>Carndonagh Health Centre</h4>
-                <p>Derry Rd, Carndonagh</p>
+                <h4>Example Health Centre</h4>
+                <p>123 Main Street, Example Town</p>
                 <p>Co. Donegal</p>
-                <p>F93 EW7T</p>
+                <p>D01 XYZ1</p>
             </div>
             <div class="footer-section">
                 <h4>Contact</h4>
-                <p><a href="tel:0749374208">(074) 93 74208</a></p>
-                <p><a href="tel:0749374262">(074) 93 74262</a></p>
-                <p><a href="mailto:reception@carndonaghhealthcentre.ie">reception@carndonaghhealthcentre.ie</a></p>
+                <p><a href="tel:012345670">(01) 234 5670</a></p>
+                <p><a href="tel:012345679">(01) 234 5679</a></p>
+                <p><a href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></p>
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
@@ -381,7 +381,7 @@
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2024 Carndonagh Health Centre. All Rights Reserved.</p>
+            <p>&copy; 2024 Example Health Centre. All Rights Reserved.</p>
         </div>
     </footer>
 
@@ -390,7 +390,12 @@
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
         // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
         const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
-        const pharmacyOptions = { "Tierney's Healthwise Pharmacy, Buncrana": "Tierney's Healthwise Pharmacy, Buncrana", "Inish Pharmacy, Buncrana": "Inish Pharmacy, Buncrana", "Duffy's Pharmacy, Buncrana": "Duffy's Pharmacy, Buncrana", "Brennan's Pharmacy, Buncrana": "Brennan's Pharmacy, Buncrana", "Hannon's Pharmacy, Moville": "Hannon's Pharmacy, Moville", "Foyle Pharmacy, Moville": "Foyle Pharmacy, Moville", "Brennan's Pharmacy, Clonmany": "Brennan's Pharmacy, Clonmany", "Inish Pharmacy, Muff": "Inish Pharmacy, Muff", "Mullans Pharmacy, Carndonagh": "Mullans Pharmacy, Carndonagh", "Carn Pharmacy, Carndonagh": "Carn Pharmacy, Carndonagh", "McNeill's Pharmacy, Carndonagh": "McNeill's Pharmacy, Carndonagh", "Inish Pharmacy, Carndonagh": "Inish Pharmacy, Carndonagh" };
+        const pharmacyOptions = {
+            "Pharmacy A, Example Town": "Pharmacy A, Example Town",
+            "Pharmacy B, Example Town": "Pharmacy B, Example Town",
+            "Pharmacy C, Town North": "Pharmacy C, Town North",
+            "Pharmacy D, Town South": "Pharmacy D, Town South"
+        };
         const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
 
         document.addEventListener('DOMContentLoaded', () => {

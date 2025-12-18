@@ -1,8 +1,8 @@
-# Carndonagh Medical Practice - Digital Transformation Proposal
+# Example Medical Practice - Digital Transformation Proposal
 
 ## 1. Executive Summary
 
-We propose a comprehensive digital transformation of the Carndonagh Medical Practice's online presence. This solution replaces the legacy system with a modern, responsive, and secure web platform designed to streamline patient requests, reduce administrative overhead, and ensure GDPR compliance.
+We propose a comprehensive digital transformation of the Example Medical Practice's online presence. This solution replaces the legacy system with a modern, responsive, and secure web platform designed to streamline patient requests, reduce administrative overhead, and ensure GDPR compliance.
 
 By leveraging a serverless architecture (Google Apps Script) combined with high-performance static hosting, we deliver a cost-effective, zero-maintenance solution that integrates directly with your existing workflows (Google Sheets).
 
@@ -41,7 +41,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 | :--- | :--- | :--- |
 | **Total Pages** | 14 | Including specific portals for Appointments, Prescriptions, and Policies. |
 | **Frontend Code** | ~3,500 Lines | Semantic HTML5 for accessibility and SEO. |
-| **Styling (CSS)** | 855 Lines | Custom "Carndonagh Deep Green" theme with fluid responsiveness. |
+| **Styling (CSS)** | 855 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
 | **Backend Logic** | 633 Lines | Google Apps Script handling routing, emails, and cleaning. |
 | **Performance** | < 1.0s | Initial Load Time (Static Content). |
 | **Uptime** | 99.9% | Hosted on enterprise-grade CDNs (GitHub Pages / Netlify). |
@@ -106,7 +106,7 @@ graph TD
 
 ### Figure 1: The Modern Dashboard (Home)
 *(Description of `index.html`)*
-A clean, welcoming landing page featuring quick-access buttons for "Order Prescription" and "Book Appointment". The "Carndonagh Deep Green" branding builds trust, while the "Zero Tolerance" banner ensures expectations are set immediately.
+A clean, welcoming landing page featuring quick-access buttons for "Order Prescription" and "Book Appointment". The "Example Town Deep Green" branding builds trust, while the "Zero Tolerance" banner ensures expectations are set immediately.
 
 ### Figure 2: The Smart Prescription Portal
 *(Description of `order-prescription.html`)*
