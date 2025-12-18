@@ -853,3 +853,20 @@ footer {
         padding: var(--space-4);
     }
 }
+
+/* Hero Logo */
+.hero-logo {
+    display: block;
+    margin: 0 auto 1.5rem auto;
+    max-height: 40vh; /* Approximately height of the central banner */
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); /* Make it pop against the background */
+}
+
+@media (max-width: 768px) {
+    .hero-logo {
+        max-height: 25vh; /* Smaller on mobile */
+        margin-bottom: 1rem;
+    }
+}
