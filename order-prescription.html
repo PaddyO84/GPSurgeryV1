@@ -749,7 +749,8 @@
             <h3>Medications</h3>
             <table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>
             ${medicationList.map(m => `<tr><td>${m.name}</td><td>${m.dosage}</td><td>${m.freq}</td></tr>`).join('')}
-            </tbody></table></body></html>`);
+            </tbody></table><script src="js/welcome.js"></script>
+</body></html>`);
             w.document.close();
             w.print();
         }
@@ -783,5 +784,6 @@
             r.readAsText(file);
         }
     </script>
+<script src="js/welcome.js"></script>
 </body>
 </html>
