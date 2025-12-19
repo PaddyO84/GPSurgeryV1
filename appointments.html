@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <script src="js/config.js"></script>
 </head>
 <body>
     <header>
@@ -64,8 +65,71 @@
     <div class="container">
         <h2 class="section-title">Appointments</h2>
 
+        <!-- Online Booking Form -->
+        <div class="card" style="margin-bottom: 3rem; border: 1px solid var(--primary-color);">
+            <h3 style="color: var(--primary-color); border-bottom: 1px solid var(--gray-200); padding-bottom: 10px; margin-bottom: 20px;">Request Appointment Online</h3>
+            <form id="appointmentForm" onsubmit="event.preventDefault(); submitAppointment();">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="appName">Full Name</label>
+                        <input type="text" id="appName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appDob">Date of Birth</label>
+                        <input type="date" id="appDob" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="appPhone">Phone Number</label>
+                        <input type="tel" id="appPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appEmail">Email Address</label>
+                        <input type="email" id="appEmail" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="appType">Appointment Type</label>
+                        <select id="appType" required>
+                            <option value="" disabled selected>Select Type...</option>
+                            <option value="Routine GP Visit">Routine GP Visit</option>
+                            <option value="Blood Test">Blood Test</option>
+                            <option value="Vaccination">Vaccination</option>
+                            <option value="Nurse Visit">Nurse Visit</option>
+                            <option value="Review">Review (Long Term Illness)</option>
+                            <option value="Other">Other (Please specify below)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="appTime">Preferred Time</label>
+                        <select id="appTime" required>
+                            <option value="Morning (9am - 12pm)">Morning (9am - 12pm)</option>
+                            <option value="Afternoon (2pm - 4:30pm)">Afternoon (2pm - 4:30pm)</option>
+                            <option value="Anytime">Anytime</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="appNotes">Reason for Visit / Notes</label>
+                    <textarea id="appNotes" rows="3" placeholder="Please provide a brief reason to help us triage your appointment..."></textarea>
+                </div>
+                <div class="submit-area" style="border:none; padding-top:0; margin-top:1rem;">
+                    <button type="submit" class="submit-btn">Request Appointment</button>
+                </div>
+            </form>
+            <div id="appSuccessMessage" style="display: none; text-align: center; color: green; margin-top: 1rem;">
+                <h3>Request Sent!</h3>
+                <p>We will contact you shortly to confirm the exact time.</p>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <h3 style="margin-bottom: 1.5rem; color: var(--secondary-color);">Appointment Information</h3>
+
         <div class="alert-card" style="margin-bottom: 2rem;">
-            <h3>Booking an Appointment</h3>
+            <h3>Telephone Booking</h3>
             <p>To book your appointment please call reception on <a href="tel:012345679"><strong>(01) 234 5679</strong></a></p>
             <br>
             <p>Our phone lines are very busy at present, particularly on Monday and Tuesday mornings. Please try to avoid these times when calling the Surgery for something non-urgent.</p>
@@ -173,6 +237,47 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script>
+        function submitAppointment() {
+            const btn = document.querySelector('#appointmentForm .submit-btn');
+            const form = document.getElementById('appointmentForm');
+            const successMsg = document.getElementById('appSuccessMessage');
+
+            btn.disabled = true;
+            btn.textContent = "Sending...";
+
+            const data = {
+                formType: 'appointment',
+                name: document.getElementById('appName').value,
+                dob: document.getElementById('appDob').value,
+                phone: document.getElementById('appPhone').value,
+                email: document.getElementById('appEmail').value,
+                type: document.getElementById('appType').value,
+                preferredTime: document.getElementById('appTime').value,
+                notes: document.getElementById('appNotes').value
+            };
+
+            const SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL;
+
+            fetch(SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                form.reset();
+                form.style.display = 'none';
+                successMsg.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again or call reception.');
+                btn.disabled = false;
+                btn.textContent = "Request Appointment";
+            });
+        }
+    </script>
 <script src="js/welcome.js"></script>
 </body>
 </html>
