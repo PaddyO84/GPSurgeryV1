@@ -35,6 +35,11 @@ function doPost(e) {
       return handleSickNoteSubmission(data);
     }
 
+    // Route to Appointment Handler if applicable
+    if (data.formType === 'appointment') {
+      return handleAppointmentSubmission(data);
+    }
+
     // Default: Prescription Handling
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
 
@@ -236,6 +241,67 @@ function onFormSubmit(e) {
     sheet.getRange(row, NOTIFICATION_COL).setValue("Processed on " + timestamp);
   } catch (err) {
     reportError('onFormSubmit', err, e.range ? e.range.getRow() : null);
+  }
+}
+
+// --- APPOINTMENT HANDLERS ---
+
+function handleAppointmentSubmission(data) {
+  const APPT_SHEET_NAME = "Appointments";
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APPT_SHEET_NAME);
+
+  // Create sheet if not exists
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(APPT_SHEET_NAME);
+    // Add Headers
+    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Type", "Preferred Time", "Notes", "Notification Sent"]);
+    sheet.setFrozenRows(1);
+  }
+
+  const timestamp = new Date();
+  const rowData = [
+    timestamp,
+    "New Request",            // Status
+    data.name,
+    data.dob,
+    "'" + data.phone,         // Force string
+    data.email,
+    data.type,
+    data.preferredTime,
+    data.notes,
+    "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
+  ];
+
+  sheet.appendRow(rowData);
+
+  sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment' })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendAppointmentConfirmation(name, email, type, time) {
+  if (!email) return;
+  const subject = "Received: Your Appointment Request";
+  const body = `
+    <p>Dear ${name},</p>
+    <p>We have received your request for an appointment.</p>
+    <p><strong>Request Details:</strong></p>
+    <ul>
+      <li><strong>Type:</strong> ${type}</li>
+      <li><strong>Preferred Time:</strong> ${time}</li>
+    </ul>
+    <p><strong>Next Steps:</strong></p>
+    <p>Our reception team will review your request and contact you shortly (via phone or email) to confirm a specific date and time slot.</p>
+    <p>Thank you,</p>
+    <p><strong>${SENDER_NAME}</strong></p>
+    <hr>
+    ${FOOTER}
+  `;
+
+  try {
+    MailApp.sendEmail({ to: email, subject: subject, htmlBody: body, name: SENDER_NAME });
+  } catch (e) {
+    Logger.log("Failed to send appointment confirmation: " + e.toString());
   }
 }
 
