@@ -157,7 +157,9 @@ function onEdit(e) {
     const sheet = range.getSheet();
     const row = range.getRow();
 
-    if (sheet.getName() !== SHEET_NAME || range.getColumn() !== STATUS_COL || row < 2) {
+    // Allow triggering on both Prescription and Appointment sheets
+    const allowedSheets = [SHEET_NAME, "Appointments"];
+    if (!allowedSheets.includes(sheet.getName()) || range.getColumn() !== STATUS_COL || row < 2) {
       return;
     }
 
@@ -253,24 +255,29 @@ function handleAppointmentSubmission(data) {
   // Create sheet if not exists
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(APPT_SHEET_NAME);
-    // Add Headers
-    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Type", "Preferred Time", "Notes", "Notification Sent"]);
+    // Add Headers: Include CommPref column to match generic logic (mapped to COMM_PREF_COL=9)
+    // Structure: Timestamp(1), Email(2), Pharmacy(3/Type), Name(4), Address(5), Phone(6), DOB(7), Meds(8/Notes), CommPref(9), Status(10), Notification(11)
+    // We align Columns to allow 'onEdit' generic logic to work.
+    sheet.appendRow(["Timestamp", "Email", "Type", "Name", "Address", "Phone", "DOB", "Notes", "CommPref", "Status", "Notification Sent", "Preferred Time"]);
     sheet.setFrozenRows(1);
   }
 
   const timestamp = new Date();
-  const rowData = [
-    timestamp,
-    "New Request",            // Status
-    data.name,
-    data.dob,
-    "'" + data.phone,         // Force string
-    data.email,
-    data.type,
-    data.preferredTime,
-    data.notes,
-    "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
-  ];
+  // Map data to columns matching constants (approximate)
+  // EMAIL_COL=2, NAME_COL=4, PHONE_COL=6, COMM_PREF_COL=9, STATUS_COL=10
+  const rowData = [];
+  rowData[0] = timestamp;
+  rowData[EMAIL_COL - 1] = data.email;
+  rowData[2] = data.type; // Col 3 (usually Pharmacy)
+  rowData[NAME_COL - 1] = data.name;
+  rowData[4] = ""; // Address (not collected for simple appt or not crucial)
+  rowData[PHONE_COL - 1] = "'" + data.phone;
+  rowData[6] = data.dob;
+  rowData[7] = data.notes; // Col 8 (usually Meds)
+  rowData[COMM_PREF_COL - 1] = "Email"; // Default or capture from form if added
+  rowData[STATUS_COL - 1] = "New Request";
+  rowData[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+  rowData[11] = data.preferredTime; // Extra column
 
   sheet.appendRow(rowData);
 
