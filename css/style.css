@@ -854,19 +854,49 @@ footer {
     }
 }
 
-/* Hero Logo */
-.hero-logo {
-    display: block;
-    margin: 0 auto 1.5rem auto;
-    max-height: 40vh; /* Approximately height of the central banner */
-    width: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); /* Make it pop against the background */
+/* Hero Layout (Flexbox for Side-by-Side) */
+.hero-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    max-width: var(--max-width);
+    width: 100%;
+    z-index: 2;
+    position: relative;
+    text-align: left; /* Default text alignment for desktop */
 }
 
+/* Updated Logo Style */
+.hero-logo {
+    display: block;
+    margin: 0; /* Reset auto margin */
+    max-height: 50vh; /* Match hero min-height */
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    flex-shrink: 0; /* Prevent logo from shrinking too much */
+}
+
+/* Updated Text Container */
+.hero-text {
+    flex: 1;
+    max-width: 600px;
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
+    .hero-layout {
+        flex-direction: column;
+        text-align: center;
+    }
+
     .hero-logo {
-        max-height: 25vh; /* Smaller on mobile */
-        margin-bottom: 1rem;
+        max-height: 25vh;
+        margin-bottom: var(--space-4);
+    }
+
+    .hero-text {
+        width: 100%;
     }
 }
