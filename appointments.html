@@ -89,6 +89,10 @@
                         <input type="email" id="appEmail" required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="appAddress">Home Address</label>
+                    <textarea id="appAddress" rows="2" required placeholder="Please enter your full address..."></textarea>
+                </div>
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="appType">Appointment Type</label>
@@ -252,6 +256,7 @@
                 dob: document.getElementById('appDob').value,
                 phone: document.getElementById('appPhone').value,
                 email: document.getElementById('appEmail').value,
+                address: document.getElementById('appAddress').value,
                 type: document.getElementById('appType').value,
                 preferredTime: document.getElementById('appTime').value,
                 notes: document.getElementById('appNotes').value

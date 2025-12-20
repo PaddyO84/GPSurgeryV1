@@ -16,13 +16,26 @@ def verify_forms_wiring(page: Page):
     # We want to verify it sends the right data to the right URL
     target_url_fragment = "/exec"
 
+    # Handle Welcome Modal if it appears
+    if page.is_visible("#demo-welcome-modal"):
+        page.click("button:has-text('I Understand')")
+        expect(page.locator("#demo-welcome-modal")).not_to_be_visible()
+
     # Fill form
     page.fill("#patientName", "John Doe")
     page.fill("#patientEmail", "john@example.com")
     page.fill("#patientPhone", "0871234567")
     page.fill("#patientDOB", "1980-01-01")
     page.fill("#patientAddress", "123 Main St")
-    page.select_option("#chosenPharmacy", index=1) # Select first option
+
+    # Wait for the select to be populated (hacky workaround for potential race condition)
+    # If the options are not there, try to proceed anyway to see if it works or fails
+    try:
+        page.select_option("#chosenPharmacy", index=1) # Select first option
+    except:
+        print("Initial select failed, trying to wait for options...")
+        page.wait_for_function("document.getElementById('chosenPharmacy').options.length > 1", timeout=5000)
+        page.select_option("#chosenPharmacy", index=1)
 
     # Add Med
     page.fill("#medName", "Test Med")
@@ -56,6 +69,11 @@ def verify_forms_wiring(page: Page):
     # 2. Test Sick Note Form
     print(f"Testing Sick Note Form at: {sick_note_url}")
     page.goto(sick_note_url)
+
+    # Handle Welcome Modal if it appears
+    if page.is_visible("#demo-welcome-modal"):
+        page.click("button:has-text('I Understand')")
+        expect(page.locator("#demo-welcome-modal")).not_to_be_visible()
 
     # Fill form
     page.fill("#firstName", "Jane")

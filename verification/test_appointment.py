@@ -10,14 +10,18 @@ def verify_appointment_form(page: Page):
     page.goto(app_url)
 
     # Close welcome modal if present
-    if page.is_visible("#demo-welcome-modal"):
-        page.click("button:has-text('I Understand')")
+    try:
+        # Force remove the modal from DOM to be sure
+        page.evaluate("document.getElementById('demo-welcome-modal')?.remove()")
+    except:
+        pass
 
     # Fill form
     page.fill("#appName", "Test Patient")
     page.fill("#appDob", "1990-05-20")
     page.fill("#appPhone", "0871234567")
     page.fill("#appEmail", "test@example.com")
+    page.fill("#appAddress", "123 Test Street")
 
     page.select_option("#appType", "Routine GP Visit")
     page.select_option("#appTime", "Morning (9am - 12pm)")
