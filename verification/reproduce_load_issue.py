@@ -2,14 +2,18 @@ from playwright.sync_api import sync_playwright, expect
 import os
 
 def reproduce_issue(page):
+    page.on("console", lambda msg: print(f"CONSOLE: {msg.text}"))
+    page.on("pageerror", lambda exc: print(f"PAGE ERROR: {exc}"))
+
     page.goto("file:///app/order-prescription.html")
 
     # Upload the file
+    print("Uploading file...")
     file_input = page.locator("#loadFile")
     file_input.set_input_files("test_prescription.json")
 
     # Wait for processing
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1000)
 
     # Check if Name is populated
     name_val = page.locator("#patientName").input_value()
@@ -29,9 +33,6 @@ def reproduce_issue(page):
         print("FAILURE: Medication rows not populated correctly.")
     else:
         print("SUCCESS: Medication rows populated.")
-
-    # Take screenshot
-    page.screenshot(path="verification/reproduce_load_issue.png")
 
 if __name__ == "__main__":
     with sync_playwright() as p:
