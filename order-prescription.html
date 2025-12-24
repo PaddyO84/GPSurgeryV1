@@ -203,7 +203,7 @@
                         <div class="dropdown-content">
                             <a href="appointments.html">Appointments</a>
                             <a href="prices.html">Fees & Payment</a>
-                            <a href="prescriptions.html">Prescriptions</a>
+                            <a href="order-prescription.html">Prescriptions</a>
                             <a href="test-results.html">Test Results</a>
                             <a href="new-patients.html">New Patients</a>
                             <a href="sick-notes.html">Sick Notes/Certification</a>
@@ -237,6 +237,25 @@
             <button type="button" class="clear-btn" onclick="clearAllFields()">❌ Clear Form</button>
             <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json" style="display: none;">
             <div id="notification-area" style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
+
+            <!-- Policy Information -->
+            <div class="sidebar-info-card">
+                <h4>Processing Times</h4>
+                <p>Please allow <strong>48 hours (2 working days)</strong> for prescriptions to be processed and sent to your pharmacy.</p>
+                 <ul style="font-size: 0.9em; padding-left: 1.2rem; margin-top: 0.5rem;">
+                    <li><strong>Ordered Monday:</strong> Ready Wednesday</li>
+                    <li><strong>Ordered Tuesday:</strong> Ready Thursday</li>
+                    <li><strong>Ordered Friday:</strong> Ready Tuesday</li>
+                </ul>
+            </div>
+            <div class="sidebar-info-card">
+                <h4>Medication Reviews</h4>
+                <p>Patients on regular medication must have a review at least every 12 months. Your GP may request you attend for a review before issuing a repeat.</p>
+            </div>
+            <div class="sidebar-info-card">
+                <h4>Repeat Policy</h4>
+                <p>Repeat prescriptions are for stable, long-term conditions. If you need to change your medication, please book an appointment.</p>
+            </div>
         </div>
 
         <!-- Main Form -->

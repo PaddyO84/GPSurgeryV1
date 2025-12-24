@@ -710,6 +710,26 @@ footer {
     border-color: var(--primary-color);
 }
 
+.sidebar-info-card {
+    background-color: var(--gray-50);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-top: 1.5rem;
+    border-left: 3px solid var(--primary-color);
+}
+
+.sidebar-info-card h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+}
+
+.sidebar-info-card p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
 .sidebar button.clear-btn {
     background: #ffebee;
     color: #d32f2f;
