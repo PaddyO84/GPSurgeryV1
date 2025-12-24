@@ -176,56 +176,7 @@
     <script src="js/config.js"></script>
 </head>
 <body>
-    <header>
-        <div class="top-bar">
-            <div class="top-bar-content">
-                <div class="contact-top">
-                    <span>📞 (01) 234 5679</span> |
-                    <span>📍 123 Main Street, Example Town, Co. Donegal</span>
-                </div>
-                <div class="emergency-top">
-                    Out of Hours (NowDoc): <strong>(01) 987 6543</strong>
-                </div>
-            </div>
-        </div>
-        <div class="nav-container">
-            <div class="logo">
-                <a href="index.html">
-                    <img src="images/logo.png" alt="Example Health Centre Logo">
-                </a>
-            </div>
-            <div class="menu-toggle">☰</div>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li class="dropdown">
-                        <a href="#">Patient Info ▾</a>
-                        <div class="dropdown-content">
-                            <a href="appointments.html">Appointments</a>
-                            <a href="prices.html">Fees & Payment</a>
-                            <a href="order-prescription.html">Prescriptions</a>
-                            <a href="test-results.html">Test Results</a>
-                            <a href="new-patients.html">New Patients</a>
-                            <a href="sick-notes.html">Sick Notes/Certification</a>
-
-
-                            <a href="confidentiality.html">Confidentiality</a>
-                            <a href="zero-tolerance.html">Unacceptable Behaviour</a>
-                        </div>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Online Services ▾</a>
-                        <div class="dropdown-content">
-                            <a href="order-prescription.html">Repeat Prescriptions</a>
-                            <a href="sick-notes.html">Sickness Certification</a>
-                        </div>
-                    </li>
-                    <li><a href="forms.html">Useful Forms</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <header id="header-placeholder"></header>
 
     <div class="form-app-container">
         <!-- Sidebar Controls -->
@@ -237,25 +188,6 @@
             <button type="button" class="clear-btn" onclick="clearAllFields()">❌ Clear Form</button>
             <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json" style="display: none;">
             <div id="notification-area" style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
-
-            <!-- Policy Information -->
-            <div class="sidebar-info-card">
-                <h4>Processing Times</h4>
-                <p>Please allow <strong>48 hours (2 working days)</strong> for prescriptions to be processed and sent to your pharmacy.</p>
-                 <ul style="font-size: 0.9em; padding-left: 1.2rem; margin-top: 0.5rem;">
-                    <li><strong>Ordered Monday:</strong> Ready Wednesday</li>
-                    <li><strong>Ordered Tuesday:</strong> Ready Thursday</li>
-                    <li><strong>Ordered Friday:</strong> Ready Tuesday</li>
-                </ul>
-            </div>
-            <div class="sidebar-info-card">
-                <h4>Medication Reviews</h4>
-                <p>Patients on regular medication must have a review at least every 12 months. Your GP may request you attend for a review before issuing a repeat.</p>
-            </div>
-            <div class="sidebar-info-card">
-                <h4>Repeat Policy</h4>
-                <p>Repeat prescriptions are for stable, long-term conditions. If you need to change your medication, please book an appointment.</p>
-            </div>
         </div>
 
         <!-- Main Form -->
@@ -378,32 +310,9 @@
 
     <datalist id="medication-list"></datalist>
 
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Example Health Centre</h4>
-                <p>123 Main Street, Example Town</p>
-                <p>Co. Donegal</p>
-                <p>D01 XYZ1</p>
-            </div>
-            <div class="footer-section">
-                <h4>Contact</h4>
-                <p><a href="tel:012345670">(01) 234 5670</a></p>
-                <p><a href="tel:012345679">(01) 234 5679</a></p>
-                <p><a href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></p>
-            </div>
-            <div class="footer-section">
-                <h4>Links</h4>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Cookie Policy</a>
-                <a href="#">Accessibility</a>
-            </div>
-        </div>
-        <div class="copyright">
-            <p>&copy; 2024 Example Health Centre. All Rights Reserved.</p>
-        </div>
-    </footer>
+    <footer id="footer-placeholder"></footer>
 
+    <script src="js/loadComponents.js"></script>
     <script src="js/main.js"></script>
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
