@@ -1,0 +1,31 @@
+/* Hero Section Styles */
+.hero-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.hero-text {
+    flex: 1;
+    text-align: left;
+}
+
+.hero-logo {
+    flex: 1;
+    max-width: 50%;
+    height: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-layout {
+        flex-direction: column-reverse;
+        text-align: center;
+    }
+
+    .hero-logo {
+        max-width: 60%;
+        margin-bottom: 2rem;
+    }
+}
