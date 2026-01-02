@@ -52,125 +52,126 @@
     <header id="header-placeholder"></header>
 
     <main>
-        <section class="hero">
+        <section class="hero" aria-labelledby="hero-title">
             <div class="hero-layout">
                 <div class="hero-text">
-                    <h1>Example Health Centre</h1>
-                    <p>Providing quality healthcare to the Inishowen community.</p>
-                    <div style="margin-top: 1.5rem;">
-                       <a href="appointments.html" class="btn">Book Appointment</a>
-                       <a href="order-prescription.html" class="btn btn-outline" style="margin-left: 1rem; color: white; border-color: white;">Order Prescriptions</a>
+                    <h1 id="hero-title">Example Health Centre</h1>
+                    <p class="hero-subtitle">Providing quality healthcare to the Inishowen community for over 40 years.</p>
+                    <div class="hero-actions">
+                       <a href="appointments.html" class="btn btn-primary" aria-label="Book an appointment online">Book Appointment</a>
+                       <a href="order-prescription.html" class="btn btn-outline-light" aria-label="Order a repeat prescription">Order Prescriptions</a>
                     </div>
                 </div>
                 <img src="images/logo.png" alt="Example Health Centre Logo" class="hero-logo">
             </div>
         </section>
 
-        <!-- Important Alerts -->
-        <section class="alert-section">
-            <article class="alert-card">
-                <h3>❄️ Winter Overflow Clinic</h3>
-                <p><strong>For acute respiratory illnesses or urgent matters only.</strong></p>
-                <p>By appointment only. Please call reception.</p>
-                <p style="margin-top:5px; font-size: 0.9em; color: var(--text-muted);">(Effective from Monday 8th December, 5pm)</p>
+        <section class="alert-section" aria-label="Important Alerts">
+            <article class="alert-card" role="article">
+                <h3><span class="icon" aria-hidden="true">❄️</span> Winter Overflow Clinic</h3>
+                <p>For <strong>acute respiratory illnesses</strong> or urgent matters only. By appointment only - please call reception.</p>
+                <small>(Effective from Monday 8th December, 5pm)</small>
             </article>
-
-            <article class="alert-card">
-                <h3>⚠️ Fee Update</h3>
-                <p>Private fees were updated on 1st January 2024.</p>
-                <a href="prices.html" style="font-weight: 600; margin-top: 0.5rem; display: inline-block;">View current price list &rarr;</a>
+            <article class="alert-card" role="article">
+                <h3><span class="icon" aria-hidden="true">⚠️</span> Fee Update</h3>
+                <p>Private fees were updated on 1st January 2024. Please review the latest pricing information.</p>
+                <a href="prices.html" class="alert-link">View current price list &rarr;</a>
             </article>
-
-            <article class="alert-card">
-                <h3>📞 Urgent Appointments</h3>
-                <p>Please call between <strong>9am - 10am</strong> for urgent requests.</p>
-                <p style="margin-top:5px; font-size: 0.9em; color: var(--text-muted);">Please reserve this time for urgent matters only.</p>
+            <article class="alert-card" role="article">
+                <h3><span class="icon" aria-hidden="true">📞</span> Urgent Appointments</h3>
+                <p>Please call between <strong>9am - 10am</strong> for urgent, same-day appointment requests.</p>
+                 <small>Please reserve this time for urgent matters only.</small>
             </article>
         </section>
 
         <section class="container section">
-            <h2 class="section-title">Welcome to Our Practice</h2>
-            <div class="grid-3">
-                <article class="card">
+            <h2 class="section-title">Your Health, Our Priority</h2>
+            <p class="section-subtitle">We offer a comprehensive range of GP services to meet your needs.</p>
+            <div class="grid-3" style="margin-top: var(--space-8);">
+                <article class="card info-card">
                     <h3>Opening Hours</h3>
-                    <p><strong>Monday - Friday:</strong></p>
-                    <p>9:00am - 12:30pm</p>
-                    <p>2:00pm - 4:30pm</p>
-                    <br>
-                    <p><strong>Out of Hours (NowDoc):</strong></p>
-                    <p>Weeknights & Weekends: <a href="tel:019876543" style="font-weight:bold;">01 987 6543</a></p>
+                    <ul class="info-list">
+                        <li><strong>Monday - Friday:</strong> 9:00am - 12:30pm</li>
+                        <li><strong>Monday - Friday:</strong> 2:00pm - 4:30pm</li>
+                        <li><strong>Out of Hours:</strong> See NowDoc details</li>
+                    </ul>
                 </article>
-
-                <article class="card">
+                <article class="card info-card">
                     <h3>Contact Us</h3>
-                    <p><strong>Phone:</strong></p>
-                    <p><a href="tel:012345670">(01) 234 5670</a></p>
-                    <p><a href="tel:012345679">(01) 234 5679</a></p>
-                    <br>
-                    <p><strong>Email:</strong></p>
-                    <p><a href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></p>
+                     <ul class="info-list">
+                        <li><strong>Phone:</strong> <a href="tel:012345679">(01) 234 5679</a></li>
+                        <li><strong>Email:</strong> <a href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></li>
+                        <li><strong>NowDoc:</strong> <a href="tel:019876543">01 987 6543</a></li>
+                    </ul>
                 </article>
-
-                <article class="card">
+                <article class="card card-accent">
                     <h3>Quick Links</h3>
-                    <ul style="list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <li><a href="order-prescription.html" class="btn" style="width: 100%;">Order Repeat Prescription</a></li>
-                        <li><a href="appointments.html" style="display: block; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100);">Book an Appointment</a></li>
-                        <li><a href="prices.html" style="display: block; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100);">View Price List</a></li>
-                        <li><a href="forms.html" style="display: block; padding: 0.5rem 0;">Download Forms</a></li>
+                    <ul class="quick-links">
+                        <li><a href="order-prescription.html">Order Repeat Prescription</a></li>
+                        <li><a href="appointments.html">Book an Appointment</a></li>
+                        <li><a href="prices.html">View Price List</a></li>
+                        <li><a href="forms.html">Download Forms</a></li>
                     </ul>
                 </article>
             </div>
         </section>
 
         <section class="container section">
-            <h2 class="section-title">Our Team</h2>
-            <div class="grid-3">
-                <div class="card staff-category">
+            <h2 class="section-title">Meet Our Team</h2>
+            <p class="section-subtitle">Our dedicated professionals are here to provide expert care.</p>
+            <div class="grid-3" style="margin-top: var(--space-8);">
+                <div class="card team-card">
                     <h4>General Practitioners</h4>
-                    <p>Dr. A. Browne</p>
-                    <p>Dr. C. Davis</p>
-                    <p>Dr. E. Farren</p>
+                    <ul>
+                        <li>Dr. A. Browne</li>
+                        <li>Dr. C. Davis</li>
+                        <li>Dr. E. Farren</li>
+                    </ul>
                 </div>
-                <div class="card staff-category">
-                    <h4>Practice Nurse</h4>
-                    <p>Nurse G. Hirrell</p>
-                    <h4>Phlebotomist</h4>
-                    <p>Iona Jenkins</p>
+                <div class="card team-card">
+                    <h4>Clinical Staff</h4>
+                     <ul>
+                        <li><strong>Practice Nurse:</strong> Nurse G. Hirrell</li>
+                        <li><strong>Phlebotomist:</strong> Iona Jenkins</li>
+                    </ul>
                 </div>
-                <div class="card staff-category">
+                <div class="card team-card">
                     <h4>Administration</h4>
-                    <p><strong>Practice Manager:</strong> Kelly Lyons</p>
-                    <p><strong>Reception:</strong> Maria Nevins, Orla Perkins, Quinn Reilly</p>
+                    <ul>
+                        <li><strong>Practice Manager:</strong> Kelly Lyons</li>
+                        <li><strong>Reception:</strong> Maria Nevins, Orla Perkins, Quinn Reilly</li>
+                    </ul>
                 </div>
             </div>
         </section>
 
-        <section class="container" style="margin-bottom: 4rem;">
-            <div class="card" style="border-left: 5px solid var(--error-color); background-color: #fff5f5; flex-direction: row; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                <img src="https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/bb6e21ba-f29c-46be-a8ea-cde0752e187c/Zero_Tol.png" alt="Zero Tolerance" style="height: 80px; width: auto;">
-                <div style="flex: 1;">
-                    <h3 style="color: var(--error-color); margin-bottom: 0.5rem;">Dignity and Respect at Work</h3>
-                    <p>Example Health Centre operates a <strong>Zero Tolerance Policy</strong> in accordance with HSE guidelines. Our staff have the right to work in an environment free from violence, abuse, and intimidation.</p>
-                    <p style="margin-top: 1rem;"><a href="zero-tolerance.html" style="color: var(--error-color); font-weight: bold; text-decoration: underline;">Read our full Zero Tolerance Policy &rarr;</a></p>
+        <section class="container cta-section">
+            <div class="cta-card zero-tolerance-card">
+                <img src="images/zero_tolerance.png" alt="Zero Tolerance Icon" class="cta-icon">
+                <div class="cta-content">
+                    <h3>Dignity and Respect at Work</h3>
+                    <p>We operate a <strong>Zero Tolerance Policy</strong>. Our staff have the right to work in an environment free from violence, abuse, and intimidation.</p>
+                    <a href="zero-tolerance.html" class="cta-link">Read our full Policy &rarr;</a>
                 </div>
             </div>
-        </section>
-
-        <section class="container">
-            <div class="card" style="text-align: center; align-items: center;">
-                <img src="https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/88984eb8-d63f-496f-9afd-6d09b13c1b23/billink+logo.png" alt="Billink" style="max-width: 150px; margin-bottom: 1.5rem;">
-                <h3>Online Payments</h3>
-                <p style="margin-bottom: 1.5rem;">We now accept secure online payments via Billink.</p>
-                <a href="https://billinkpayments.com/" target="_blank" class="btn">Pay Online Now</a>
+             <div class="cta-card online-payments-card">
+                <img src="images/billink_logo.png" alt="Billink Logo" class="cta-icon">
+                <div class="cta-content">
+                    <h3>Online Payments</h3>
+                    <p>We now accept secure online payments for our services via our partner, Billink.</p>
+                     <a href="https://billinkpayments.com/" target="_blank" class="btn btn-outline">Pay Your Bill Online</a>
+                </div>
             </div>
         </section>
     </main>
 
     <footer id="footer-placeholder"></footer>
 
+    <script src="js/siteData.js"></script>
+    <script src="js/dynamicContent.js"></script>
     <script src="js/loadComponents.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/search.js"></script>
 <script src="js/welcome.js"></script>
 </body>
 </html>

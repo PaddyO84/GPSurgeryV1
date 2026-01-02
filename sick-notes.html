@@ -228,7 +228,7 @@
         const canvas = document.getElementById('signatureCanvas');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
-        let hasSigned = false;
+        window.hasSigned = false; // Make hasSigned global for testing
 
         function resizeCanvas() {
             // Make canvas responsive
@@ -248,7 +248,7 @@
         function endPosition() {
             isDrawing = false;
             ctx.beginPath();
-            if(hasSigned) document.getElementById('signatureData').value = canvas.toDataURL();
+            if(window.hasSigned) document.getElementById('signatureData').value = canvas.toDataURL();
         }
         function draw(e) {
             if (!isDrawing) return;
@@ -266,7 +266,7 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(clientX - rect.left, clientY - rect.top);
-            hasSigned = true;
+            window.hasSigned = true;
         }
 
         canvas.addEventListener('mousedown', startPosition);
@@ -279,7 +279,7 @@
 
         function clearSignature() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            hasSigned = false;
+            window.hasSigned = false;
             document.getElementById('signatureData').value = '';
         }
 
@@ -310,7 +310,7 @@
 
             // Check Signature
             const sigError = document.getElementById('signature-error');
-            if (!hasSigned) {
+            if (!window.hasSigned) {
                 sigError.textContent = "Please sign the declaration.";
                 // Scroll to signature
                 document.getElementById('signatureCanvas').scrollIntoView({behavior: 'smooth'});

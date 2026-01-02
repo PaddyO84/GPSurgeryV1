@@ -18,67 +18,78 @@
     <div class="container">
         <h2 class="section-title">Appointments</h2>
 
-        <!-- Online Booking Form -->
-        <div class="card" style="margin-bottom: 3rem; border: 1px solid var(--primary-color);">
-            <h3 style="color: var(--primary-color); border-bottom: 1px solid var(--gray-200); padding-bottom: 10px; margin-bottom: 20px;">Request Appointment Online</h3>
+        <div class="card" style="margin-bottom: 3rem; background-color: var(--gray-50); border-color: var(--primary-color);">
+            <h2 class="form-title" style="margin-bottom: var(--space-4);">Request an Appointment</h2>
+            <p class="form-subtitle" style="margin-bottom: var(--space-6);">This is a <strong>request form</strong>, not a live booking system. Our reception team will contact you to confirm a final date and time.</p>
             <form id="appointmentForm" onsubmit="event.preventDefault(); submitAppointment();">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="appName">Full Name</label>
-                        <input type="text" id="appName" required>
+                 <fieldset class="form-section" style="background-color: var(--white);">
+                    <legend>Patient Details</legend>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="appName">Full Name</label>
+                            <input type="text" id="appName" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="appDob">Date of Birth</label>
+                            <input type="date" id="appDob" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appPhone">Phone Number</label>
+                            <input type="tel" id="appPhone" required placeholder="08X XXX XXXX">
+                        </div>
+                        <div class="form-group">
+                            <label for="appEmail">Email Address</label>
+                            <input type="email" id="appEmail" required placeholder="your.email@example.com">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="appDob">Date of Birth</label>
-                        <input type="date" id="appDob" required>
+                        <label for="appAddress">Home Address</label>
+                        <textarea id="appAddress" rows="2" required placeholder="Please enter your full address..."></textarea>
                     </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="appPhone">Phone Number</label>
-                        <input type="tel" id="appPhone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="appEmail">Email Address</label>
-                        <input type="email" id="appEmail" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="appAddress">Home Address</label>
-                    <textarea id="appAddress" rows="2" required placeholder="Please enter your full address..."></textarea>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="appType">Appointment Type</label>
-                        <select id="appType" required>
-                            <option value="" disabled selected>Select Type...</option>
-                            <option value="Routine GP Visit">Routine GP Visit</option>
-                            <option value="Blood Test">Blood Test</option>
-                            <option value="Vaccination">Vaccination</option>
-                            <option value="Nurse Visit">Nurse Visit</option>
-                            <option value="Review">Review (Long Term Illness)</option>
-                            <option value="Other">Other (Please specify below)</option>
-                        </select>
+                </fieldset>
+                <fieldset class="form-section" style="background-color: var(--white);">
+                    <legend>Appointment Details</legend>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="appType">Appointment Type</label>
+                            <select id="appType" required>
+                                <option value="" disabled selected>Select Type...</option>
+                                <option value="Routine GP Visit">Routine GP Visit</option>
+                                <option value="Blood Test">Blood Test</option>
+                                <option value="Vaccination">Vaccination</option>
+                                <option value="Nurse Visit">Nurse Visit</option>
+                                <option value="Review">Review (Long Term Illness)</option>
+                                <option value="Other">Other (Please specify below)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appTime">Preferred Time</label>
+                            <select id="appTime" required>
+                                <option value="Morning (9am - 12pm)">Morning (9am - 12pm)</option>
+                                <option value="Afternoon (2pm - 4:30pm)">Afternoon (2pm - 4:30pm)</option>
+                                <option value="Anytime">Anytime</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="appTime">Preferred Time</label>
-                        <select id="appTime" required>
-                            <option value="Morning (9am - 12pm)">Morning (9am - 12pm)</option>
-                            <option value="Afternoon (2pm - 4:30pm)">Afternoon (2pm - 4:30pm)</option>
-                            <option value="Anytime">Anytime</option>
-                        </select>
+                        <label for="appNotes">Reason for Visit / Notes</label>
+                        <textarea id="appNotes" rows="3" placeholder="Please provide a brief reason to help us triage your appointment..."></textarea>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="appNotes">Reason for Visit / Notes</label>
-                    <textarea id="appNotes" rows="3" placeholder="Please provide a brief reason to help us triage your appointment..."></textarea>
-                </div>
-                <div class="submit-area" style="border:none; padding-top:0; margin-top:1rem;">
-                    <button type="submit" class="submit-btn">Request Appointment</button>
+                </fieldset>
+                <div class="submit-area" style="border:none; padding:0; margin-top: var(--space-6);">
+                    <button type="submit" class="submit-btn" style="width: 100%;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20" style="margin-right: 8px;" aria-hidden="true"><path d="M10 2a.75.75 0 01.75.75v6.5h6.5a.75.75 0 010 1.5h-6.5v6.5a.75.75 0 01-1.5 0v-6.5h-6.5a.75.75 0 010-1.5h6.5v-6.5A.75.75 0 0110 2z" /></svg>
+                        Submit Appointment Request
+                    </button>
                 </div>
             </form>
-            <div id="appSuccessMessage" style="display: none; text-align: center; color: green; margin-top: 1rem;">
-                <h3>Request Sent!</h3>
-                <p>We will contact you shortly to confirm the exact time.</p>
+            <div id="appSuccessMessage" style="display: none; text-align: center; padding: 2rem;">
+                <div class="success-animation">
+                    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+                </div>
+                <h2 class="success-title">Request Sent</h2>
+                <p class="success-message">Thank you. We have received your appointment request and will contact you shortly to confirm the exact time and date.</p>
+                <button class="btn" onclick="location.reload()">Make Another Request</button>
             </div>
         </div>
 
@@ -169,8 +180,11 @@
 
     <footer id="footer-placeholder"></footer>
 
+    <script src="js/siteData.js"></script>
+    <script src="js/dynamicContent.js"></script>
     <script src="js/loadComponents.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/search.js"></script>
     <script>
         function submitAppointment() {
             const btn = document.querySelector('#appointmentForm .submit-btn');

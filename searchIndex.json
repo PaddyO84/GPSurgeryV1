@@ -1,0 +1,47 @@
+[
+    {
+        "url": "index.html",
+        "title": "Home",
+        "content": "Example Health Centre, GP Practice Donegal, appointments, prescriptions, patient services, opening hours, contact, our team, zero tolerance, online payments."
+    },
+    {
+        "url": "appointments.html",
+        "title": "Appointments",
+        "content": "Book an appointment, appointment types, home visits, emergency information, routine appointments, late arrivals, cancellations."
+    },
+    {
+        "url": "order-prescription.html",
+        "title": "Order Repeat Prescription",
+        "content": "Order repeat prescriptions online, medication list, patient details, pharmacy."
+    },
+    {
+        "url": "prices.html",
+        "title": "Fees & Payment",
+        "content": "Price list, private fees, medical card, GP visit card, online payments."
+    },
+    {
+        "url": "sick-notes.html",
+        "title": "Sick Notes & Certification",
+        "content": "Request a sick note, sickness certification, social welfare, private certificate."
+    },
+    {
+        "url": "contact.html",
+        "title": "Contact Us",
+        "content": "Contact information, address, phone number, email, map, opening hours."
+    },
+    {
+        "url": "new-patients.html",
+        "title": "New Patients",
+        "content": "Register as a new patient, eligibility, catchment area."
+    },
+    {
+        "url": "test-results.html",
+        "title": "Test Results",
+        "content": "How to get your test results, blood tests, scan results."
+    },
+    {
+        "url": "zero-tolerance.html",
+        "title": "Zero Tolerance Policy",
+        "content": "Unacceptable behaviour, dignity and respect at work."
+    }
+]

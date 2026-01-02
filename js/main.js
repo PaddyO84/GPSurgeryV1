@@ -1,30 +1,68 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Menu Toggle
+    // Off-Canvas Mobile Menu
     const menuToggle = document.querySelector('.menu-toggle');
-    const navUl = document.querySelector('nav ul');
+    const nav = document.querySelector('nav');
+    let navOverlay = document.querySelector('.nav-overlay');
 
-    if (menuToggle && navUl) {
+    // Create overlay if it doesn't exist
+    if (!navOverlay) {
+        navOverlay = document.createElement('div');
+        navOverlay.className = 'nav-overlay';
+        document.body.appendChild(navOverlay);
+    }
+
+    if (menuToggle && nav) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            const isExpanded = navUl.classList.toggle('show');
-            menuToggle.setAttribute('aria-expanded', isExpanded);
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (navUl.classList.contains('show') && !navUl.contains(e.target) && !menuToggle.contains(e.target)) {
-                navUl.classList.remove('show');
-                menuToggle.setAttribute('aria-expanded', 'false');
-            }
+            toggleMenu();
         });
     }
+
+    // Toggle function
+    function toggleMenu() {
+        const isExpanded = nav.classList.toggle('show');
+        navOverlay.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', isExpanded);
+        menuToggle.textContent = isExpanded ? '✕' : '☰';
+        document.body.style.overflow = isExpanded ? 'hidden' : '';
+    }
+
+    // Close menu when clicking overlay or pressing Esc
+    navOverlay.addEventListener('click', toggleMenu);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && nav.classList.contains('show')) {
+            toggleMenu();
+        }
+    });
+
+
+    // Mobile Dropdown Functionality
+    const dropdowns = document.querySelectorAll('nav .dropdown > a');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const parent = dropdown.parentElement;
+                parent.classList.toggle('open');
+            }
+        });
+    });
+
 
     // Accordion Functionality
     const accordions = document.getElementsByClassName("accordion");
     for (let i = 0; i < accordions.length; i++) {
-        accordions[i].addEventListener("click", function() {
+        const accordion = accordions[i];
+        const panel = accordion.nextElementSibling;
+        const panelId = `panel-${i}`;
+        panel.setAttribute('id', panelId);
+        accordion.setAttribute('aria-controls', panelId);
+        accordion.setAttribute('aria-expanded', 'false');
+
+        accordion.addEventListener("click", function() {
             this.classList.toggle("active");
-            const panel = this.nextElementSibling;
+            const isExpanded = this.classList.contains("active");
+            this.setAttribute('aria-expanded', isExpanded);
             if (panel.style.maxHeight) {
                 panel.style.maxHeight = null;
             } else {
@@ -32,31 +70,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // Mobile Dropdown Interactions
-    const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
-    dropdownTriggers.forEach(trigger => {
-        trigger.addEventListener('click', (e) => {
-            // Only toggle on mobile or keyboard interaction
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                const content = trigger.nextElementSibling;
-                // Close other dropdowns
-                document.querySelectorAll('.dropdown-content').forEach(d => {
-                    if (d !== content) d.style.display = 'none';
-                });
-
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
-            }
-        });
-
-        // Keyboard support
-        trigger.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                const content = trigger.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
-            }
-        });
-    });
 });

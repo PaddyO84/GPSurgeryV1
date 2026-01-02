@@ -30,70 +30,14 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
 
-    // Route to Sick Note Handler if applicable
-    if (data.formType === 'sick-note') {
-      return handleSickNoteSubmission(data);
+    switch (data.formType) {
+      case 'sick-note':
+        return handleSickNoteSubmission(data);
+      case 'appointment':
+        return handleAppointmentSubmission(data);
+      default:
+        return handlePrescriptionSubmission(data);
     }
-
-    // Route to Appointment Handler if applicable
-    if (data.formType === 'appointment') {
-      return handleAppointmentSubmission(data);
-    }
-
-    // Default: Prescription Handling
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-
-    // Validate essential data
-    if (!data.patientDetails.name || !data.patientDetails.email) {
-       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const timestamp = new Date();
-
-    // Format Medication List
-    let medicationString = "";
-    if (data.medicationList && Array.isArray(data.medicationList)) {
-       medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
-    }
-
-    // Append to Sheet (Order must match Columns defined at top, roughly)
-    // Sheet Structure assumed: Timestamp, Email, Pharmacy, Name, Address, Phone, DOB, Meds, CommPref, Status, Notification
-    // Note: The original Google Form might have had a specific column order. We will map to the known columns constants.
-    // However, appendRow adds to the end. We need to respect the visual layout.
-    // Based on constants:
-    // A(1): Timestamp (Standard form)
-    // B(2): Email (EMAIL_COL)
-    // C(3): Pharmacy (PHARMACY_COL)
-    // D(4): Name (NAME_COL)
-    // E(5): Address (Assumed based on HTML form, but not in constants)
-    // F(6): Phone (PHONE_COL)
-    // G(7): DOB (Assumed)
-    // H(8): Meds (MEDS_COL)
-    // I(9): CommPref (COMM_PREF_COL)
-    // J(10): Status (STATUS_COL)
-    // K(11): Notification (NOTIFICATION_COL)
-
-    const newRow = [];
-    newRow[0] = timestamp; // Col A
-    newRow[EMAIL_COL - 1] = data.patientDetails.email;
-    newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
-    newRow[NAME_COL - 1] = data.patientDetails.name;
-    newRow[4] = data.patientDetails.address; // Col E (Index 4)
-    newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
-    newRow[6] = data.patientDetails.dob; // Col G (Index 6)
-    newRow[MEDS_COL - 1] = medicationString;
-    newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
-    newRow[STATUS_COL - 1] = ""; // Initial Status Empty
-    newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
-
-    sheet.appendRow(newRow);
-    const row = sheet.getLastRow();
-
-    // Send Confirmation
-    sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
-
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
-
   } catch (err) {
     reportError('doPost', err, null);
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': err.toString() })).setMimeType(ContentService.MimeType.JSON);
@@ -248,44 +192,6 @@ function onFormSubmit(e) {
 
 // --- APPOINTMENT HANDLERS ---
 
-function handleAppointmentSubmission(data) {
-  const APPT_SHEET_NAME = "Appointments";
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(APPT_SHEET_NAME);
-
-  // Create sheet if not exists
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(APPT_SHEET_NAME);
-    // Add Headers: Include CommPref column to match generic logic (mapped to COMM_PREF_COL=9)
-    // Structure: Timestamp(1), Email(2), Pharmacy(3/Type), Name(4), Address(5), Phone(6), DOB(7), Meds(8/Notes), CommPref(9), Status(10), Notification(11)
-    // We align Columns to allow 'onEdit' generic logic to work.
-    sheet.appendRow(["Timestamp", "Email", "Type", "Name", "Address", "Phone", "DOB", "Notes", "CommPref", "Status", "Notification Sent", "Preferred Time"]);
-    sheet.setFrozenRows(1);
-  }
-
-  const timestamp = new Date();
-  // Map data to columns matching constants (approximate)
-  // EMAIL_COL=2, NAME_COL=4, PHONE_COL=6, COMM_PREF_COL=9, STATUS_COL=10
-  const rowData = [];
-  rowData[0] = timestamp;
-  rowData[EMAIL_COL - 1] = data.email;
-  rowData[2] = data.type; // Col 3 (usually Pharmacy)
-  rowData[NAME_COL - 1] = data.name;
-  rowData[4] = ""; // Address (not collected for simple appt or not crucial)
-  rowData[PHONE_COL - 1] = "'" + data.phone;
-  rowData[6] = data.dob;
-  rowData[7] = data.notes; // Col 8 (usually Meds)
-  rowData[COMM_PREF_COL - 1] = "Email"; // Default or capture from form if added
-  rowData[STATUS_COL - 1] = "New Request";
-  rowData[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
-  rowData[11] = data.preferredTime; // Extra column
-
-  sheet.appendRow(rowData);
-
-  sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
-
-  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment' })).setMimeType(ContentService.MimeType.JSON);
-}
-
 function sendAppointmentConfirmation(name, email, type, time) {
   if (!email) return;
   const subject = "Received: Your Appointment Request";
@@ -313,43 +219,6 @@ function sendAppointmentConfirmation(name, email, type, time) {
 }
 
 // --- SICK NOTE HANDLERS ---
-
-function handleSickNoteSubmission(data) {
-  const SICK_SHEET_NAME = "Sick Notes";
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SICK_SHEET_NAME);
-
-  // Create sheet if not exists
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(SICK_SHEET_NAME);
-    // Add Headers
-    sheet.appendRow(["Timestamp", "Status", "Name", "DOB", "Phone", "Email", "Address", "Cert Type", "PPS", "Condition", "Dates", "Return to Work", "Signature", "Notification Sent"]);
-    sheet.setFrozenRows(1);
-  }
-
-  const timestamp = new Date();
-  const rowData = [
-    timestamp,
-    "New Request",            // Status
-    data.name,
-    data.dob,
-    "'" + data.phone,         // Force string
-    data.email,
-    data.address,
-    data.type,
-    data.pps,
-    data.condition,
-    data.dates,
-    data.returnToWork,
-    data.signature || "Not Provided", // Base64 Signature
-    "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
-  ];
-
-  sheet.appendRow(rowData);
-
-  sendSickNoteConfirmation(data.name, data.email);
-
-  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note' })).setMimeType(ContentService.MimeType.JSON);
-}
 
 function sendSickNoteConfirmation(name, email) {
   if (!email) return;
@@ -626,26 +495,6 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
   }
 }
 
-/**
- * Emails a detailed error report to the admin.
- * @param {string} functionName - The name of the function where the error occurred.
- * @param {Error} error - The error object.
- * @param {number} [row] - The row number associated with the error, if applicable.
- */
-function reportError(functionName, error, row) {
-  try {
-    const subject = `Prescription Script Error: ${functionName}`;
-    const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-    let body = `An error occurred in the function <strong>${functionName}</strong> at ${timestamp}.`;
-    if (row) {
-      body += `<br><br>The error was related to row <strong>${row}</strong>.`;
-    }
-    body += `<br><br><strong>Error Details:</strong><br>Name: ${error.name}<br>Message: ${error.message}<br>Stack Trace:<br>${error.stack.replace(/\n/g, '<br>')}`;
-    MailApp.sendEmail(ADMIN_EMAIL, subject, "", { htmlBody: body });
-  } catch (e) {
-    Logger.log(`Could not send error report email. Original error in ${functionName}: ${error.message}. Error sending report: ${e.message}`);
-  }
-}
 
 /**
  * Moves rows with a 'Sent to Pharmacy' status older than 180 days to an 'Archive' sheet.

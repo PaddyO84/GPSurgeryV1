@@ -193,18 +193,20 @@
         <!-- Main Form -->
         <div class="main-form-area" id="formContainer">
             <div id="prescriptionForm">
-                <h2 style="color: var(--primary-color); border-bottom: 2px solid var(--gray-200); padding-bottom: 10px; margin-bottom: 20px;">Repeat Prescription Request</h2>
+                <h2 class="form-title">Repeat Prescription Request</h2>
+                <p class="form-subtitle">Please allow <strong>48 hours</strong> for your prescription to be processed and sent to your pharmacy.</p>
 
-                <div class="alert-card" style="margin-bottom: 2rem;">
-                    <p><strong>Important:</strong> Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection, please contact reception.</p>
+                <div class="alert-card" style="border-left-color: var(--error-color); margin-bottom: 2rem;">
+                    <h3 style="color: var(--error-color);">Do Not Order Antibiotics</h3>
+                    <p>Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection, please contact reception directly.</p>
                 </div>
 
-                <div class="form-section">
-                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">1. Patient Details</h3>
+                <fieldset class="form-section">
+                    <legend>1. Patient Details</legend>
                     <div class="grid-2">
                         <div class="form-group">
                             <label for="patientName">Full Name</label>
-                            <input type="text" id="patientName" required>
+                            <input type="text" id="patientName" required placeholder="Enter your full name">
                             <span class="error-message" id="patientName-error"></span>
                         </div>
                         <div class="form-group">
@@ -212,81 +214,79 @@
                             <input type="date" id="patientDOB" required>
                             <span class="error-message" id="patientDOB-error"></span>
                         </div>
-                    </div>
-
-                    <div class="grid-2">
                         <div class="form-group">
                             <label for="patientPhone">Phone Number</label>
-                            <input type="tel" id="patientPhone" required>
+                            <input type="tel" id="patientPhone" required placeholder="e.g., 08X XXX XXXX">
                             <span class="error-message" id="patientPhone-error"></span>
                         </div>
                         <div class="form-group">
                             <label for="patientEmail">Email Address</label>
-                            <input type="email" id="patientEmail" required>
+                            <input type="email" id="patientEmail" required placeholder="your.email@example.com">
                             <span class="error-message" id="patientEmail-error"></span>
                         </div>
                     </div>
-
-                    <div class="form-group">
+                     <div class="form-group">
                         <label for="patientAddress">Home Address</label>
-                        <textarea id="patientAddress" rows="3" required></textarea>
+                        <textarea id="patientAddress" rows="3" required placeholder="Please enter your full address"></textarea>
                         <span class="error-message" id="patientAddress-error"></span>
                     </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="chosenPharmacy">Chosen Pharmacy</label>
+                            <select id="chosenPharmacy" required></select>
+                            <span class="error-message" id="chosenPharmacy-error"></span>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="chosenPharmacy">Chosen Pharmacy</label>
-                        <select id="chosenPharmacy" required></select>
-                        <span class="error-message" id="chosenPharmacy-error"></span>
+                        <div class="form-group">
+                            <label for="communicationPref">Notification Method</label>
+                            <select id="communicationPref">
+                                <option value="Email">Email</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                            </select>
+                        </div>
                     </div>
+                </fieldset>
 
-                    <div class="form-group">
-                        <label for="communicationPref">Preferred Contact Method</label>
-                        <select id="communicationPref">
-                            <option value="Email">Email</option>
-                            <option value="WhatsApp">WhatsApp</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-section" style="margin-top: 2rem;">
-                    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">2. Add Medications</h3>
-
+                <fieldset class="form-section">
+                    <legend>2. Add Medications</legend>
                     <div class="add-med-group">
-                        <div>
+                        <div class="form-group">
                             <label for="medName">Medication Name</label>
                             <input type="text" id="medName" list="medication-list" placeholder="Start typing...">
                         </div>
-                        <div>
+                        <div class="form-group">
                             <label for="medDosage">Dosage</label>
                             <input type="text" id="medDosage" placeholder="e.g., 20mg">
                         </div>
-                        <div>
+                        <div class="form-group">
                             <label for="medFreq">Frequency</label>
                             <select id="medFreq"></select>
                         </div>
-                        <div>
-                            <button type="button" class="add-med-btn" onclick="addMedication()">+ Add</button>
-                        </div>
+                        <button type="button" class="add-med-btn" onclick="addMedication()">+ Add</button>
                     </div>
-                    <span class="error-message" id="medication-error" style="margin-bottom: 1rem;"></span>
+                    <span class="error-message" id="medication-error"></span>
 
-                    <table class="med-table" id="medicationTable">
-                        <thead>
+                    <table class="med-table" id="medicationTable" aria-live="polite">
+                         <thead>
                             <tr>
-                                <th>Medication Name</th>
+                                <th>Medication</th>
                                 <th>Dosage</th>
                                 <th>Frequency</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="medicationList">
-                            <!-- Rows will be added here -->
+                            <!-- Medications will be added here -->
                         </tbody>
                     </table>
-                </div>
+                     <p id="no-meds-message" class="empty-table-message">No medications added yet.</p>
+                </fieldset>
 
                 <div class="submit-area">
-                    <button class="submit-btn" onclick="showSummary()">Review & Submit Request</button>
+                    <button class="submit-btn" onclick="showSummary()">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20" style="margin-right: 8px;" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Review & Submit Request
+                    </button>
                 </div>
             </div>
 
@@ -312,8 +312,11 @@
 
     <footer id="footer-placeholder"></footer>
 
+    <script src="js/siteData.js"></script>
+    <script src="js/dynamicContent.js"></script>
     <script src="js/loadComponents.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/search.js"></script>
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
         // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
@@ -432,11 +435,13 @@
             row.insertCell().textContent = dosage;
             row.insertCell().textContent = freq;
             const actionCell = row.insertCell();
+            updateMedicationVisibility();
 
             // Edit Button
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-btn';
             editBtn.textContent = 'Edit';
+            editBtn.setAttribute('aria-label', `Edit ${name}`);
             editBtn.style.marginRight = '5px';
             editBtn.onclick = (e) => { e.stopPropagation(); editMedication(editBtn); };
 
@@ -444,6 +449,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-btn';
             removeBtn.textContent = 'Remove';
+            removeBtn.setAttribute('aria-label', `Remove ${name}`);
             removeBtn.onclick = (e) => { e.stopPropagation(); removeMedication(removeBtn); };
 
             actionCell.appendChild(editBtn);
@@ -500,6 +506,7 @@
         function removeMedication(button) {
             button.closest('tr').remove();
             saveToLocalStorage();
+            updateMedicationVisibility();
         }
 
         function clearAllFields() {
@@ -507,7 +514,17 @@
                 populateFormFromData({ patientDetails: {}, medicationList: [] });
                 localStorage.removeItem('prescriptionFormData');
                 showNotification("Form cleared.");
+                updateMedicationVisibility();
             }
+        }
+
+        function updateMedicationVisibility() {
+            const table = document.getElementById('medicationTable');
+            const message = document.getElementById('no-meds-message');
+            const hasMeds = document.getElementById('medicationList').rows.length > 0;
+
+            table.style.display = hasMeds ? '' : 'none';
+            message.classList.toggle('show', !hasMeds);
         }
 
         function showSummary() {
@@ -590,11 +607,12 @@
                 document.getElementById('prescriptionForm').style.display = 'none';
                 const successDiv = document.getElementById('successMessage');
                 successDiv.innerHTML = `
-                    <h2 style="color: green;">Request Submitted Successfully!</h2>
-                    <p>Your reference number is: <strong>${ref}</strong></p>
-                    <p>Please allow 48 hours for processing.</p>
-                    <br>
-                    <button class="submit-btn" onclick="location.reload()">Submit Another Request</button>
+                    <div class="success-animation">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+                    </div>
+                    <h2 class="success-title">Request Submitted</h2>
+                    <p class="success-message">Your reference number is: <strong>${ref}</strong>. A confirmation has been sent to your email. Please allow 48 hours for processing.</p>
+                    <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
                 successDiv.style.display = 'block';
                 localStorage.removeItem('prescriptionFormData');
