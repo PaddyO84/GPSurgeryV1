@@ -1,4 +1,16 @@
+// --- Antigravity Connectivity Test ---
+/**
+ * Test function pushed by Antigravity to verify clasp connectivity.
+ * @returns {string} A success message.
+ */
+function antigravityTest() {
+  const timestamp = new Date().toISOString();
+  Logger.log(`Connectivity test successful at ${timestamp}`);
+  return `Antigravity connection active: ${timestamp}`;
+}
+
 // --- 1. FINAL CORRECT CONFIGURATION ---
+
 const SHEET_NAME = "Form responses 1";
 const EMAIL_COL = 2;       // Patient Email is in Column B
 const PHARMACY_COL = 3;    // Chosen Pharmacy is in Column C
@@ -194,27 +206,19 @@ function onFormSubmit(e) {
 
 function sendAppointmentConfirmation(name, email, type, time) {
   if (!email) return;
-  const subject = "Received: Your Appointment Request";
-  const body = `
-    <p>Dear ${name},</p>
-    <p>We have received your request for an appointment.</p>
-    <p><strong>Request Details:</strong></p>
-    <ul>
-      <li><strong>Type:</strong> ${type}</li>
-      <li><strong>Preferred Time:</strong> ${time}</li>
-    </ul>
-    <p><strong>Next Steps:</strong></p>
-    <p>Our reception team will review your request and contact you shortly (via phone or email) to confirm a specific date and time slot.</p>
-    <p>Thank you,</p>
-    <p><strong>${SENDER_NAME}</strong></p>
-    <hr>
-    ${FOOTER}
-  `;
-
   try {
-    MailApp.sendEmail({ to: email, subject: subject, htmlBody: body, name: SENDER_NAME });
+    const template = HtmlService.createTemplateFromFile('email_confirmation');
+    template.senderName = SENDER_NAME;
+    template.patientName = name;
+    template.requestType = 'appointment';
+    template.phoneNumber = YOUR_PHONE_NUMBER;
+    
+    const subject = "Received: Your Appointment Request";
+    const htmlBody = template.evaluate().getContent();
+    
+    MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
   } catch (e) {
-    Logger.log("Failed to send appointment confirmation: " + e.toString());
+    reportError('sendAppointmentConfirmation', e, null);
   }
 }
 
@@ -222,26 +226,19 @@ function sendAppointmentConfirmation(name, email, type, time) {
 
 function sendSickNoteConfirmation(name, email) {
   if (!email) return;
-  const subject = "Received: Your Sick Note Request";
-  const body = `
-    <p>Dear ${name},</p>
-    <p>We have received your request for a sick note/medical certificate.</p>
-    <p><strong>Next Steps:</strong></p>
-    <ul>
-      <li>Please allow 48 hours for processing.</li>
-      <li>If we need you to attend the surgery (e.g. for a new illness), we will contact you.</li>
-      <li>If payment (€20) is required, it can be paid upon collection.</li>
-    </ul>
-    <p>Thank you,</p>
-    <p><strong>${SENDER_NAME}</strong></p>
-    <hr>
-    ${FOOTER}
-  `;
-
   try {
-    MailApp.sendEmail({ to: email, subject: subject, htmlBody: body, name: SENDER_NAME });
+    const template = HtmlService.createTemplateFromFile('email_confirmation');
+    template.senderName = SENDER_NAME;
+    template.patientName = name;
+    template.requestType = 'sick note';
+    template.phoneNumber = YOUR_PHONE_NUMBER;
+    
+    const subject = "Received: Your Sick Note Request";
+    const htmlBody = template.evaluate().getContent();
+    
+    MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
   } catch (e) {
-    Logger.log("Failed to send sick note confirmation: " + e.toString());
+    reportError('sendSickNoteConfirmation', e, null);
   }
 }
 
@@ -303,7 +300,6 @@ function showEmailDialog(row) {
     subject = "Action Required: Query Regarding Your Prescription Request";
     body = `Dear ${patientName},<br><br>Regarding your prescription request, we have a query that needs to be resolved.<br><br>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.<br><br>Thank you,<br><strong>${SENDER_NAME}</strong>`;
   } else {
-    // This case is already handled in sendDynamicNotification, but as a fallback:
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }
@@ -334,25 +330,16 @@ function sendEmailFromDialog(row) {
     const status = sheet.getRange(row, STATUS_COL).getValue().toString().trim();
     const patientName = sheet.getRange(row, NAME_COL).getValue();
     const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
-    const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
-
-    let subject = '';
-    let body = '';
 
     if (status === STATUS_READY) {
-      subject = `Your Prescription has been sent to ${pharmacy}`;
-      body = `<p>Dear ${patientName},</p><p>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.</p><p>Please contact your pharmacy directly to confirm when your medication will be ready for collection.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+      sendReadyEmail(row);
     } else if (status === STATUS_QUERY) {
-      subject = "Action Required: Query Regarding Your Prescription Request";
-      body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-    } else {
-      Logger.log(`Email not sent from dialog for row ${row} because status was not recognized: ${status}`);
-      return; // Or alert the user
+      const subject = "Action Required: Query Regarding Your Prescription Request";
+      const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+      MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
     }
-
-    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
   } catch (e) {
-    Logger.log(`Error sending email from dialog for row ${row}: ${e.toString()}`);
+    reportError('sendEmailFromDialog', e, row);
     SpreadsheetApp.getUi().alert("Failed to send email. Please check the logs for details.");
   }
 }
@@ -380,7 +367,6 @@ function generateWhatsAppLink(row) {
   } else if (status === STATUS_QUERY) {
     messageText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. We have a query about your recent prescription request. Please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.`;
   } else {
-    // This case is already handled in sendDynamicNotification, but as a fallback:
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }
@@ -401,34 +387,21 @@ function generateWhatsAppLink(row) {
  * Sends an initial confirmation email to the patient when their form is submitted.
  */
 function sendConfirmationNotification(patientName, patientEmail, commPref) {
-  if (!patientEmail) {
-    Logger.log(`Request received for ${patientName}, but no email address was provided. Cannot send confirmation.`);
-    return;
-  }
-
-  const subject = "Confirmation: We've Received Your Prescription Request";
-  const preferredMethod = (commPref && commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'Email';
-
-  const body = `
-    <p>Dear ${patientName},</p>
-    <p>Thank you for your repeat prescription request. This email is to confirm that we have successfully received it and it is now in our queue for processing by our staff.</p>
-    <p>You do not need to take any further action at this time.</p>
-    <p>You will receive a final notification by <strong>${preferredMethod}</strong> once your prescription has been reviewed and sent to your chosen pharmacy.</p>
-    <p>Thank you,</p>
-    <p><strong>${SENDER_NAME}</strong></p>
-    <hr>
-    ${FOOTER}
-  `;
-
+  if (!patientEmail) return;
   try {
-    MailApp.sendEmail({
-      to: patientEmail,
-      subject: subject,
-      htmlBody: body,
-      name: SENDER_NAME
-    });
+    const template = HtmlService.createTemplateFromFile('email_confirmation');
+    template.senderName = SENDER_NAME;
+    template.patientName = patientName;
+    template.requestType = 'prescription';
+    template.preferredMethod = (commPref && commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'Email';
+    template.phoneNumber = YOUR_PHONE_NUMBER;
+
+    const subject = "Confirmation: We've Received Your Prescription Request";
+    const htmlBody = template.evaluate().getContent();
+
+    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
   } catch (e) {
-    Logger.log(`Failed to send confirmation email to ${patientEmail} for ${patientName}. Error: ${e.toString()}`);
+    reportError('sendConfirmationNotification', e, null);
   }
 }
 
@@ -441,18 +414,21 @@ function sendReadyEmail(row) {
   const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
   const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
 
-  if (!patientEmail) {
-    Logger.log(`Email not sent for row ${row}: No email address found for ${patientName}.`);
-    return;
-  }
-
-  const subject = `Your Prescription has been sent to ${pharmacy}`;
-  const body = `<p>Dear ${patientName},</p><p>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.</p><p>Please contact your pharmacy directly to confirm when your medication will be ready for collection.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+  if (!patientEmail) return;
 
   try {
-    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+    const template = HtmlService.createTemplateFromFile('email_ready');
+    template.senderName = SENDER_NAME;
+    template.patientName = patientName;
+    template.pharmacyName = pharmacy;
+    template.phoneNumber = YOUR_PHONE_NUMBER;
+
+    const subject = `Your Prescription has been sent to ${pharmacy}`;
+    const htmlBody = template.evaluate().getContent();
+
+    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
   } catch (e) {
-    Logger.log(`Error sending READY email for row ${row}: ${e.toString()}`);
+    reportError('sendReadyEmail', e, row);
   }
 }
 

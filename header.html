@@ -1,52 +1,53 @@
 <div class="top-bar">
     <div class="top-bar-content">
         <div class="contact-top">
-            <span>📞 (01) 234 5679</span> |
-            <span>📍 123 Main Street, Example Town, Co. Donegal</span>
+            <span>📞 (01) 234 5679</span>
+            <span class="sep">|</span>
+            <span>📍 123 Main Street, Co. Donegal</span>
         </div>
         <div class="emergency-top">
-            Out of Hours (NowDoc): <strong>(01) 987 6543</strong>
+            Out of Hours: <strong>(01) 987 6543</strong>
         </div>
     </div>
 </div>
-<div class="nav-container">
+<div class="nav-container glass">
     <div class="logo">
         <a href="index.html">
             <img src="images/logo.png" alt="Example Health Centre Logo">
         </a>
     </div>
-    <div class="search-container">
-        <input type="search" id="searchInput" placeholder="Search...">
-        <ul id="searchResults"></ul>
-    </div>
-    <div class="menu-toggle">☰</div>
+    
     <nav>
         <ul>
             <li><a href="index.html">Home</a></li>
             <li class="dropdown">
-                <a href="#">Patient Info ▾</a>
-                <div class="dropdown-content">
+                <a href="#" class="dropdown-trigger">Patient Info</a>
+                <div class="dropdown-content glass">
                     <a href="appointments.html">Appointments</a>
                     <a href="prices.html">Fees & Payment</a>
-                    <a href="prescriptions.html">Prescriptions</a>
                     <a href="test-results.html">Test Results</a>
                     <a href="new-patients.html">New Patients</a>
-                    <a href="sick-notes.html">Sick Notes/Certification</a>
-
-
+                    <a href="sick-notes.html">Sick Notes</a>
                     <a href="confidentiality.html">Confidentiality</a>
-                    <a href="zero-tolerance.html">Unacceptable Behaviour</a>
+                    <a href="zero-tolerance.html">Behaviour Policy</a>
                 </div>
             </li>
             <li class="dropdown">
-                <a href="#">Online Services ▾</a>
-                <div class="dropdown-content">
+                <a href="#" class="dropdown-trigger">Online Services</a>
+                <div class="dropdown-content glass">
                     <a href="order-prescription.html">Repeat Prescriptions</a>
                     <a href="sick-notes.html">Sickness Certification</a>
                 </div>
             </li>
-            <li><a href="forms.html">Useful Forms</a></li>
+            <li><a href="forms.html">Forms</a></li>
             <li><a href="contact.html">Contact</a></li>
         </ul>
     </nav>
+
+    <div class="search-container">
+        <input type="search" id="searchInput" placeholder="Search services...">
+        <ul id="searchResults"></ul>
+    </div>
+
+    <button class="menu-toggle" aria-label="Toggle Menu">☰</button>
 </div>

@@ -18,3 +18,43 @@ function reportError(functionName, error, row) {
     Logger.log(`Could not send error report email. Original error in ${functionName}: ${error.message}. Error sending report: ${e.message}`);
   }
 }
+
+/**
+ * Helper to get or create a sheet with standardized headers.
+ * @param {string} sheetName - The name of the sheet.
+ * @param {string[]} [headers] - Optional headers for creation.
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} The sheet object.
+ */
+function getOrCreateSheet(sheetName, headers) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    if (headers && headers.length > 0) {
+      sheet.appendRow(headers);
+      sheet.setFrozenRows(1);
+    }
+  }
+  return sheet;
+}
+
+/**
+ * Validates basic email and phone formats.
+ * @param {string} email - The email to validate.
+ * @param {string} phone - The phone number to validate.
+ * @returns {{isValid: boolean, errors: string[]}} Validation results.
+ */
+function validatePatientData(email, phone) {
+  const errors = [];
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    errors.push("Invalid email address.");
+  }
+  if (!phone || phone.length < 7) {
+    errors.push("Invalid phone number.");
+  }
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+}
