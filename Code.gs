@@ -114,6 +114,10 @@ function onOpen() {
   statusMenu.addItem("Mark as 'Query'", 'setStatusQuery');
 
   menu.addSubMenu(statusMenu);
+
+  menu.addSeparator();
+  menu.addItem('Setup System (Run Once)', 'setupSystem');
+
   menu.addToUi();
 }
 
@@ -579,11 +583,8 @@ function reportError(functionName, error, row) {
  * This function should be run on a time-based trigger (e.g., weekly).
  *
  * TO SET UP:
- * 1. Create a new sheet in your spreadsheet named "Archive".
- * 2. In the Apps Script editor, go to Triggers > Add Trigger.
- *    - Choose 'archiveOldRequests' as the function to run.
- *    - Choose 'Time-driven' as the event source.
- *    - Select 'Week timer' and a time that suits you (e.g., 'Every Monday', '1am to 2am').
+ * Use the "Surgery Tools" -> "Setup System (Run Once)" menu in the Google Sheet.
+ * This will automatically create the "Archive" sheet and set up the time-driven trigger.
  */
 function archiveOldRequests() {
   try {
@@ -629,5 +630,58 @@ function archiveOldRequests() {
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);
+  }
+}
+/**
+ * Sets up the required 'Archive' sheet and time-driven trigger.
+ * This should be run once by the administrator via the custom menu.
+ */
+function setupSystem() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let archiveSheet = ss.getSheetByName("Archive");
+    let messages = [];
+
+    // 1. Create Archive Sheet if it doesn't exist
+    if (!archiveSheet) {
+      archiveSheet = ss.insertSheet("Archive");
+      const sourceSheet = ss.getSheetByName(SHEET_NAME);
+      if (sourceSheet) {
+        // Copy headers to the archive sheet
+        sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
+        messages.push("Created 'Archive' sheet and copied headers.");
+      } else {
+        messages.push("Created 'Archive' sheet, but source sheet '" + SHEET_NAME + "' not found to copy headers.");
+      }
+    } else {
+      messages.push("'Archive' sheet already exists.");
+    }
+
+    // 2. Setup Time-Driven Trigger for archiveOldRequests
+    const triggers = ScriptApp.getProjectTriggers();
+    let triggerExists = false;
+    for (let i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === 'archiveOldRequests') {
+        triggerExists = true;
+        break;
+      }
+    }
+
+    if (!triggerExists) {
+      ScriptApp.newTrigger('archiveOldRequests')
+        .timeBased()
+        .onWeekDay(ScriptApp.WeekDay.MONDAY)
+        .atHour(1)
+        .create();
+      messages.push("Created time-driven trigger for 'archiveOldRequests' (Every Monday at 1 AM).");
+    } else {
+      messages.push("Trigger for 'archiveOldRequests' already exists.");
+    }
+
+    ui.alert('Setup Complete', messages.join('\n'), ui.ButtonSet.OK);
+  } catch (err) {
+    ui.alert('Setup Error', 'An error occurred during setup:\n' + err.message, ui.ButtonSet.OK);
+    Logger.log('Setup Error: ' + err.message);
   }
 }
