@@ -186,12 +186,32 @@ function onEdit(e) {
 }
 
 /**
+ * Sets up the 'onFormSubmit' trigger programmatically.
+ * Run this function once from the Apps Script editor to configure the trigger.
+ */
+function setupFormSubmitTrigger() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet();
+  const triggers = ScriptApp.getProjectTriggers();
+
+  // Check if trigger already exists to avoid duplicates
+  const existingTrigger = triggers.find(trigger => trigger.getHandlerFunction() === 'onFormSubmit');
+
+  if (!existingTrigger) {
+    ScriptApp.newTrigger('onFormSubmit')
+      .forSpreadsheet(sheet)
+      .onFormSubmit()
+      .create();
+    Logger.log("Trigger 'onFormSubmit' created successfully.");
+  } else {
+    Logger.log("Trigger 'onFormSubmit' already exists.");
+  }
+}
+
+/**
  * Triggered on form submission. This function reformats the medication list
  * from a single-line string with delimiters into a clean, multi-line list in the sheet.
  *
- * TO SET UP: In the Apps Script editor, go to Triggers > Add Trigger.
- * Choose 'onFormSubmit' as the function to run, 'From spreadsheet' as the event source,
- * and 'On form submit' as the event type.
+ * TO SET UP: Run the `setupFormSubmitTrigger` function above from the Apps Script editor.
  */
 function onFormSubmit(e) {
   try {
