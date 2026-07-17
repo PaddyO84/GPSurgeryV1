@@ -201,9 +201,13 @@ function setupFormSubmitTrigger() {
       .forSpreadsheet(sheet)
       .onFormSubmit()
       .create();
-    Logger.log("Trigger 'onFormSubmit' created successfully.");
+    const msg = "Trigger 'onFormSubmit' created successfully.";
+    Logger.log(msg);
+    return msg;
   } else {
-    Logger.log("Trigger 'onFormSubmit' already exists.");
+    const msg = "Trigger 'onFormSubmit' already exists.";
+    Logger.log(msg);
+    return msg;
   }
 }
 
@@ -211,7 +215,7 @@ function setupFormSubmitTrigger() {
  * Triggered on form submission. This function reformats the medication list
  * from a single-line string with delimiters into a clean, multi-line list in the sheet.
  *
- * TO SET UP: Run the `setupFormSubmitTrigger` function above from the Apps Script editor.
+ * TO SET UP: Use the "Surgery Tools" -> "Setup System (Run Once)" menu in the Google Sheet.
  */
 function onFormSubmit(e) {
   try {
@@ -698,6 +702,10 @@ function setupSystem() {
     } else {
       messages.push("Trigger for 'archiveOldRequests' already exists.");
     }
+
+    // 3. Setup onFormSubmit Trigger
+    const formSubmitMsg = setupFormSubmitTrigger();
+    messages.push(formSubmitMsg);
 
     ui.alert('Setup Complete', messages.join('\n'), ui.ButtonSet.OK);
   } catch (err) {
