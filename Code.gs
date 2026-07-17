@@ -75,6 +75,10 @@ function onOpen() {
   statusMenu.addItem("Mark as 'Query'", 'setStatusQuery');
 
   menu.addSubMenu(statusMenu);
+
+  menu.addSeparator();
+  menu.addItem('Setup Automated Triggers', 'setupAutomatedTriggers');
+
   menu.addToUi();
 }
 
@@ -148,9 +152,8 @@ function onEdit(e) {
  * Triggered on form submission. This function reformats the medication list
  * from a single-line string with delimiters into a clean, multi-line list in the sheet.
  *
- * TO SET UP: In the Apps Script editor, go to Triggers > Add Trigger.
- * Choose 'onFormSubmit' as the function to run, 'From spreadsheet' as the event source,
- * and 'On form submit' as the event type.
+ * This function is run automatically by an On form submit trigger.
+ * Run 'Surgery Tools > Setup Automated Triggers' from the Google Sheets menu to initialize.
  */
 function onFormSubmit(e) {
   try {
@@ -473,15 +476,70 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
 
 
 /**
+ * Sets up the automated triggers and required sheets.
+ * Creates the 'Archive' sheet if it doesn't exist, configures a weekly trigger
+ * for archiving, and an onFormSubmit trigger for new requests.
+ */
+function setupAutomatedTriggers() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let archiveSheet = ss.getSheetByName("Archive");
+  const sourceSheet = ss.getSheetByName(SHEET_NAME);
+  
+  // 1. Create Archive Sheet
+  if (!archiveSheet) {
+    archiveSheet = ss.insertSheet("Archive");
+    if (sourceSheet) {
+      sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
+    }
+    Logger.log("Created 'Archive' sheet.");
+  } else {
+    Logger.log("'Archive' sheet already exists.");
+  }
+
+  const existingTriggers = ScriptApp.getProjectTriggers();
+  let messages = [];
+
+  // 2. Setup Time-Driven Trigger for archiveOldRequests
+  const archiveFuncName = 'archiveOldRequests';
+  const archiveTriggerExists = existingTriggers.some(trigger => trigger.getHandlerFunction() === archiveFuncName);
+  
+  if (!archiveTriggerExists) {
+    ScriptApp.newTrigger(archiveFuncName)
+      .timeBased()
+      .onWeekDay(ScriptApp.WeekDay.MONDAY)
+      .atHour(1)
+      .create();
+    messages.push("✅ Archive system trigger created (Mondays at 1 AM).");
+  } else {
+    messages.push("ℹ️ Archive system trigger already exists.");
+  }
+
+  // 3. Setup On Form Submit Trigger for onFormSubmit
+  const formSubmitFuncName = 'onFormSubmit';
+  const formSubmitTriggerExists = existingTriggers.some(trigger => trigger.getHandlerFunction() === formSubmitFuncName);
+
+  if (!formSubmitTriggerExists) {
+    ScriptApp.newTrigger(formSubmitFuncName)
+      .forSpreadsheet(ss)
+      .onFormSubmit()
+      .create();
+    messages.push("✅ Form submission trigger created.");
+  } else {
+    messages.push("ℹ️ Form submission trigger already exists.");
+  }
+
+  // Display summary
+  try {
+    SpreadsheetApp.getUi().alert("System Setup Complete", messages.join("\n"), SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) {
+    Logger.log(messages.join("\n"));
+  }
+}
+
+/**
  * Moves rows with a 'Sent to Pharmacy' status older than 180 days to an 'Archive' sheet.
- * This function should be run on a time-based trigger (e.g., weekly).
- *
- * TO SET UP:
- * 1. Create a new sheet in your spreadsheet named "Archive".
- * 2. In the Apps Script editor, go to Triggers > Add Trigger.
- *    - Choose 'archiveOldRequests' as the function to run.
- *    - Choose 'Time-driven' as the event source.
- *    - Select 'Week timer' and a time that suits you (e.g., 'Every Monday', '1am to 2am').
+ * This function is run automatically by a time-based trigger.
+ * Run 'Surgery Tools > Setup Automated Triggers' from the Google Sheets menu to initialize.
  */
 function archiveOldRequests() {
   try {
