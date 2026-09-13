@@ -18,11 +18,11 @@
     <div class="container">
         <h2 class="section-title">Appointments</h2>
 
-        <div class="card" style="margin-bottom: 3rem; background-color: var(--bg-main); border-color: var(--primary);">
-            <h2 class="form-title" style="margin-bottom: 1rem;">Request an Appointment</h2>
-            <p class="form-subtitle" style="margin-bottom: 1.5rem;">This is a <strong>request form</strong>, not a live booking system. Our reception team will contact you to confirm a final date and time.</p>
+        <div class="card" style="margin-bottom: 3rem; background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.06); box-shadow: var(--shadow-md); padding: 3rem; max-width: 900px; margin-left: auto; margin-right: auto;">
+            <h2 class="form-title" style="margin-bottom: 0.5rem; color: var(--primary-dark);">Request an Appointment</h2>
+            <p class="form-subtitle" style="margin-bottom: 2rem; color: var(--text-muted);">This is a <strong>request form</strong>, not a live booking system. Our reception team will contact you to confirm a final date and time.</p>
             <form id="appointmentForm" onsubmit="event.preventDefault(); submitAppointment();">
-                 <fieldset class="form-section" style="background-color: #ffffff;">
+                <fieldset class="form-section">
                     <legend>Patient Details</legend>
                     <div class="grid-2">
                         <div class="form-group">
@@ -47,7 +47,7 @@
                         <textarea id="appAddress" rows="2" required placeholder="Please enter your full address..."></textarea>
                     </div>
                 </fieldset>
-                <fieldset class="form-section" style="background-color: #ffffff;">
+                <fieldset class="form-section">
                     <legend>Appointment Details</legend>
                     <div class="grid-2">
                         <div class="form-group">
