@@ -199,7 +199,7 @@ function onFormSubmit(e) {
 
     // Use Utilities.formatDate for a robust, non-locale-dependent date string.
     const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy");
-    sheet.getRange(row, NOTIFICATION_COL).setValue("Processed on " + timestamp);
+    sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${timestamp}`);
   } catch (err) {
     reportError('onFormSubmit', err, e.range ? e.range.getRow() : null);
   }
@@ -374,7 +374,7 @@ function generateWhatsAppLink(row) {
     return;
   }
 
-  const whatsappNumber = "353" + patientPhone.toString().replace(/\s/g, '').substring(1);
+  const whatsappNumber = formatWhatsAppNumber(patientPhone);
   const prefilledMessage = encodeURIComponent(messageText);
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
 
@@ -455,7 +455,7 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
   }
 
   try {
-    const whatsappNumber = "353" + patientPhone.toString().replace(/\s/g, '').substring(1);
+    const whatsappNumber = formatWhatsAppNumber(patientPhone);
     const prefilledMessage = encodeURIComponent(`Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
 
@@ -545,43 +545,60 @@ function archiveOldRequests() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sourceSheet = ss.getSheetByName(SHEET_NAME);
-    let archiveSheet = ss.getSheetByName("Archive");
+    if (!sourceSheet) return;
 
-    // Create archive sheet if it doesn't exist
+    let archiveSheet = ss.getSheetByName("Archive");
     if (!archiveSheet) {
       archiveSheet = ss.insertSheet("Archive");
-      // Copy headers to the archive sheet
       sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
       Logger.log("Created 'Archive' sheet.");
     }
 
-    const dataRange = sourceSheet.getRange(2, 1, sourceSheet.getLastRow() - 1, sourceSheet.getLastColumn());
-    const data = dataRange.getValues();
-    const today = new Date();
-    const cutOffDate = new Date(today.setDate(today.getDate() - 180));
+    const lastRow = sourceSheet.getLastRow();
+    if (lastRow <= 1) return;
 
-    // Iterate backwards to safely delete rows
-    for (let i = data.length - 1; i >= 0; i--) {
+    const dataRange = sourceSheet.getRange(2, 1, lastRow - 1, sourceSheet.getLastColumn());
+    const data = dataRange.getValues();
+    const cutOffDate = new Date();
+    cutOffDate.setDate(cutOffDate.getDate() - 180);
+
+    const rowsToArchive = [];
+    const rowsToKeep = [];
+
+    for (let i = 0; i < data.length; i++) {
       const rowData = data[i];
       const status = rowData[STATUS_COL - 1];
-      const processedDateStr = rowData[NOTIFICATION_COL - 1]; // Expected format: "Processed on dd/MM/yyyy"
+      const processedDateStr = rowData[NOTIFICATION_COL - 1];
 
-      if (status === STATUS_READY && processedDateStr && processedDateStr.startsWith("Processed on ")) {
-        const dateStr = processedDateStr.replace("Processed on ", ""); // "dd/MM/yyyy"
-        const dateParts = dateStr.split('/'); // ["dd", "MM", "yyyy"]
-
+      let shouldArchive = false;
+      if (status === STATUS_READY && processedDateStr && typeof processedDateStr === 'string' && processedDateStr.startsWith("Processed on ")) {
+        const dateParts = processedDateStr.replace("Processed on ", "").split('/');
         if (dateParts.length === 3) {
-          // new Date(year, monthIndex, day)
           const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
-
           if (processedDate < cutOffDate) {
-            const rowToDelete = i + 2; // +2 because data is 0-indexed and sheet is 1-indexed from row 2
-            archiveSheet.appendRow(rowData);
-            sourceSheet.deleteRow(rowToDelete);
-            Logger.log(`Archived row ${rowToDelete}.`);
+            shouldArchive = true;
           }
         }
       }
+
+      if (shouldArchive) {
+        rowsToArchive.push(rowData);
+      } else {
+        rowsToKeep.push(rowData);
+      }
+    }
+
+    if (rowsToArchive.length > 0) {
+      // Append all archived rows in one batch
+      const archiveLastRow = archiveSheet.getLastRow();
+      archiveSheet.getRange(archiveLastRow + 1, 1, rowsToArchive.length, rowsToArchive[0].length).setValues(rowsToArchive);
+
+      // Overwrite source sheet with kept rows in one operation
+      sourceSheet.getRange(2, 1, data.length, sourceSheet.getLastColumn()).clearContent();
+      if (rowsToKeep.length > 0) {
+        sourceSheet.getRange(2, 1, rowsToKeep.length, rowsToKeep[0].length).setValues(rowsToKeep);
+      }
+      Logger.log(`Batch archived ${rowsToArchive.length} rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

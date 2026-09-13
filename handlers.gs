@@ -20,7 +20,7 @@ function handleAppointmentSubmission(data) {
   rowData[7] = data.notes;
   rowData[COMM_PREF_COL - 1] = "Email";
   rowData[STATUS_COL - 1] = "New Request";
-  rowData[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+  rowData[NOTIFICATION_COL - 1] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
   rowData[11] = data.preferredTime;
 
   sheet.appendRow(rowData);
@@ -54,7 +54,7 @@ function handleSickNoteSubmission(data) {
     data.dates,
     data.returnToWork,
     data.signature || "Not Provided",
-    "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")
+    `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`
   ];
 
   sheet.appendRow(rowData);
@@ -88,7 +88,7 @@ function handlePrescriptionSubmission(data) {
     newRow[MEDS_COL - 1] = medicationString;
     newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
     newRow[STATUS_COL - 1] = "";
-    newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+    newRow[NOTIFICATION_COL - 1] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
 
     sheet.appendRow(newRow);
     const row = sheet.getLastRow();

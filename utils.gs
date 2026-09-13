@@ -58,3 +58,18 @@ function validatePatientData(email, phone) {
     errors: errors
   };
 }
+
+/**
+ * Formats a phone number into international WhatsApp format (353...).
+ * @param {string|number} phone - The phone number to format.
+ * @returns {string} Formatted WhatsApp phone number.
+ */
+function formatWhatsAppNumber(phone) {
+  if (!phone) return "";
+  const cleaned = phone.toString().replace(/[\s\-\(\)]/g, '');
+  if (cleaned.startsWith('+353')) return cleaned.substring(1);
+  if (cleaned.startsWith('00353')) return cleaned.substring(2);
+  if (cleaned.startsWith('353')) return cleaned;
+  if (cleaned.startsWith('0')) return '353' + cleaned.substring(1);
+  return '353' + cleaned;
+}

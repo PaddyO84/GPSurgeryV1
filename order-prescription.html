@@ -312,7 +312,6 @@
     <script src="js/search.js"></script>
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
-        // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
         const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
         const pharmacyOptions = {
             "Pharmacy A, Example Town": "Pharmacy A, Example Town",
@@ -631,7 +630,7 @@
 
             fields.forEach(f => {
                 const el = document.getElementById(f.id);
-                if (!el.value) {
+                if (!el || !el.value) {
                     isValid = false;
                     showError(f.id, f.msg);
                 } else {
@@ -639,7 +638,8 @@
                 }
             });
 
-            if (document.getElementById('medicationList').rows.length === 0) {
+            const medTableBody = document.getElementById('medicationList');
+            if (!medTableBody || medTableBody.rows.length === 0) {
                 isValid = false;
                 showError('medication', "Add at least one medication.");
             }

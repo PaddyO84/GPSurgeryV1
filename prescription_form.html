@@ -409,8 +409,44 @@
         if (!validateForm()) return;
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        let summaryHTML = `<p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Email:</strong> ${patientDetails.email}</p><p><strong>Phone:</strong> ${patientDetails.phone}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><p><strong>Contact Preference:</strong> ${patientDetails.commPref}</p><hr><h3>Medications:</h3><ul>${medicationList.map(med => `<li>${med.name} - ${med.dosage} (${med.freq})</li>`).join('')}</ul>`;
-        document.getElementById('summaryDetails').innerHTML = summaryHTML;
+        const container = document.getElementById('summaryDetails');
+        container.innerHTML = '';
+
+        const div = document.createElement('div');
+        div.style.textAlign = 'left';
+
+        const addDetail = (label, value) => {
+            const p = document.createElement('p');
+            const strong = document.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(value || ''));
+            div.appendChild(p);
+        };
+
+        addDetail('Name', patientDetails.name);
+        addDetail('Email', patientDetails.email);
+        addDetail('Phone', patientDetails.phone);
+        addDetail('Date of Birth', patientDetails.dob);
+        addDetail('Pharmacy', patientDetails.pharmacy);
+        addDetail('Contact Preference', patientDetails.commPref);
+
+        const hr = document.createElement('hr');
+        div.appendChild(hr);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Medications:';
+        div.appendChild(h3);
+
+        const ul = document.createElement('ul');
+        medicationList.forEach(med => {
+            const li = document.createElement('li');
+            li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+            ul.appendChild(li);
+        });
+        div.appendChild(ul);
+
+        container.appendChild(div);
         document.getElementById('summaryModal').style.display = 'flex';
     }
 

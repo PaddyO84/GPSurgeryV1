@@ -444,18 +444,34 @@
             };
 
             const container = document.getElementById('summaryDetails');
-            container.innerHTML = `
-                <p><strong>Name:</strong> ${data.name}</p>
-                <p><strong>DOB:</strong> ${data.dob}</p>
-                <p><strong>Phone:</strong> ${data.phone}</p>
-                <p><strong>Type:</strong> ${data.type}</p>
-                ${data.pps !== 'N/A' ? `<p><strong>PPSN:</strong> ${data.pps}</p>` : ''}
-                <p><strong>Condition:</strong> ${data.condition}</p>
-                <p><strong>Dates:</strong> ${data.dates}</p>
-                <p><strong>Return to Work:</strong> ${data.returnToWork}</p>
-                <p><strong>Signature:</strong> <span style="color:green">✔ Signed</span></p>
-                <p style="margin-top:10px; font-size:0.9rem; color:#666;"><i>Please ensure all details are correct.</i></p>
-            `;
+            container.innerHTML = '';
+
+            const addField = (label, val) => {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                p.appendChild(strong);
+                p.appendChild(document.createTextNode(val || ''));
+                container.appendChild(p);
+            };
+
+            addField('Name', data.name);
+            addField('DOB', data.dob);
+            addField('Phone', data.phone);
+            addField('Type', data.type);
+            if (data.pps !== 'N/A') addField('PPSN', data.pps);
+            addField('Condition', data.condition);
+            addField('Dates', data.dates);
+            addField('Return to Work', data.returnToWork);
+
+            const sigP = document.createElement('p');
+            sigP.innerHTML = '<strong>Signature:</strong> <span style="color:green">✔ Signed</span>';
+            container.appendChild(sigP);
+
+            const noteP = document.createElement('p');
+            noteP.style.cssText = 'margin-top:10px; font-size:0.9rem; color:#666;';
+            noteP.innerHTML = '<i>Please ensure all details are correct.</i>';
+            container.appendChild(noteP);
 
             document.getElementById('summaryModal').style.display = 'flex';
         }

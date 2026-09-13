@@ -1,0 +1,19 @@
+{
+  "name": "gpsurgeryv1",
+  "version": "1.0.0",
+  "description": "GP Surgery web app and Google Apps Script backend",
+  "scripts": {
+    "test": "mocha \"test/**/*.test.js\"",
+    "coverage": "nyc --reporter=text --reporter=html mocha \"test/**/*.test.js\""
+  },
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "dompurify": "^3.1.6",
+    "jsdom": "^24.1.1",
+    "mocha": "^10.7.3",
+    "nyc": "^17.0.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.1.6"
+  }
+}
