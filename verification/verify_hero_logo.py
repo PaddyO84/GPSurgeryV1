@@ -1,9 +1,10 @@
 from playwright.sync_api import sync_playwright, Page, expect
+from pathlib import Path
 import os
 
 def verify_hero_logo(page: Page):
-    cwd = os.getcwd()
-    index_url = f"file://{cwd}/index.html"
+    repo_root = Path(__file__).resolve().parent.parent
+    index_url = (repo_root / "index.html").as_uri()
 
     print(f"Verifying Hero Logo at: {index_url}")
 

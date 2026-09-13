@@ -40,10 +40,9 @@ def inject_script(filepath):
 
 def main():
     failed = False
+    prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     for root, dirs, files in os.walk('.'):
-        for skip_dir in ['.git', 'node_modules', 'coverage']:
-            if skip_dir in dirs:
-                dirs.remove(skip_dir)
+        dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
             if file.endswith('.html') and not file.startswith('email_'):

@@ -1,9 +1,12 @@
 from playwright.sync_api import sync_playwright, Page, expect
+from pathlib import Path
 import os
 
+SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec"
+
 def verify_appointment_form(page: Page):
-    cwd = os.getcwd()
-    app_url = f"file://{cwd}/appointments.html"
+    repo_root = Path(__file__).resolve().parent.parent
+    app_url = (repo_root / "appointments.html").as_uri()
 
     print(f"Testing Appointment Form at: {app_url}")
 
@@ -31,7 +34,7 @@ def verify_appointment_form(page: Page):
     # Route handler to mock Apps Script response
     def handle_route(route):
         request = route.request
-        if "script.google.com" in request.url and request.method == "POST":
+        if request.url == SCRIPT_WEB_APP_URL and request.method == "POST":
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -43,7 +46,7 @@ def verify_appointment_form(page: Page):
     page.route("**/*", handle_route)
 
     # Use expect_request wrapped around submit action
-    with page.expect_request(lambda req: "script.google.com" in req.url and req.method == "POST") as req_info:
+    with page.expect_request(lambda req: req.url == SCRIPT_WEB_APP_URL and req.method == "POST") as req_info:
         page.click("button.submit-btn")
 
     request = req_info.value
@@ -52,7 +55,7 @@ def verify_appointment_form(page: Page):
     print("Payload:", post_data)
 
     # Assertions
-    assert "script.google.com" in request.url
+    assert request.url == SCRIPT_WEB_APP_URL
     assert post_data["formType"] == "appointment"
     assert post_data["name"] == "Test Patient"
     assert post_data["type"] == "Routine GP Visit"

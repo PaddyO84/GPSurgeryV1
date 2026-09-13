@@ -1,8 +1,9 @@
 import os
 import sys
+import json
 
-# Define replacements (Order matters: most specific to least specific)
-replacements = {
+# Default replacements (Order matters: most specific to least specific)
+default_replacements = {
     # Names
     "Carndonagh Health Centre": "Example Health Centre",
     "Carndonagh Medical Practice": "Example Medical Practice",
@@ -52,6 +53,29 @@ replacements = {
     "Carndonagh": "Example Town"
 }
 
+def load_replacements():
+    """Loads replacements from untracked local file or environment config, falling back to default replacements."""
+    replacements = dict(default_replacements)
+    custom_path = os.environ.get("ANONYMIZE_CONFIG_FILE", "anonymize_local.json")
+    if os.path.exists(custom_path):
+        try:
+            with open(custom_path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    replacements.update(loaded)
+        except Exception as err:
+            print(f"Warning: Could not read {custom_path}: {err}")
+    elif os.environ.get("ANONYMIZE_REPLACEMENTS_JSON"):
+        try:
+            loaded = json.loads(os.environ["ANONYMIZE_REPLACEMENTS_JSON"])
+            if isinstance(loaded, dict):
+                replacements.update(loaded)
+        except Exception as err:
+            print(f"Warning: Could not parse ANONYMIZE_REPLACEMENTS_JSON: {err}")
+    return replacements
+
+replacements = load_replacements()
+
 def process_file(filepath):
     temp_path = None
     try:
@@ -82,7 +106,7 @@ def process_file(filepath):
         return False
 
 def main():
-    extensions = ['.html', '.gs', '.md', '.json', '.js', '.css']
+    extensions = ['.html', '.gs', '.md', '.json', '.js', '.css', '.py']
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     for root, dirs, files in os.walk('.'):

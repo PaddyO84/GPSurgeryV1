@@ -1,11 +1,12 @@
 from playwright.sync_api import sync_playwright, Page, expect
+from pathlib import Path
+import os
 
 def verify_forms_wiring(page: Page):
     # Get the absolute path to the HTML files
-    import os
-    cwd = os.getcwd()
-    prescription_url = f"file://{cwd}/order-prescription.html"
-    sick_note_url = f"file://{cwd}/sick-notes.html"
+    repo_root = Path(__file__).resolve().parent.parent
+    prescription_url = (repo_root / "order-prescription.html").as_uri()
+    sick_note_url = (repo_root / "sick-notes.html").as_uri()
 
     print(f"Testing Prescription Form at: {prescription_url}")
 
@@ -52,7 +53,7 @@ def verify_forms_wiring(page: Page):
     # Set up request interception for prescription submit
     def handle_rx_route(route):
         req = route.request
-        if "script.google.com" in req.url and req.method == "POST":
+        if "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST":
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -63,7 +64,7 @@ def verify_forms_wiring(page: Page):
 
     page.route("**/*", handle_rx_route)
 
-    with page.expect_request(lambda req: "script.google.com" in req.url and req.method == "POST") as rx_req_info:
+    with page.expect_request(lambda req: "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST") as rx_req_info:
         page.click("button.btn-confirm")
 
     request = rx_req_info.value
@@ -72,6 +73,7 @@ def verify_forms_wiring(page: Page):
     print("Prescription Payload:", post_data)
 
     assert "script.google.com" in request.url
+    assert target_url_fragment in request.url
     assert post_data["formType"] == "prescription"
     assert post_data["patientDetails"]["name"] == "John Doe"
     assert len(post_data["medicationList"]) == 1
@@ -130,7 +132,7 @@ def verify_forms_wiring(page: Page):
     # Set up request interception for sick note submit
     def handle_sick_route(route):
         req = route.request
-        if "script.google.com" in req.url and req.method == "POST":
+        if "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST":
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -141,7 +143,7 @@ def verify_forms_wiring(page: Page):
 
     page.route("**/*", handle_sick_route)
 
-    with page.expect_request(lambda req: "script.google.com" in req.url and req.method == "POST") as sick_req_info:
+    with page.expect_request(lambda req: "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST") as sick_req_info:
         page.click("button.btn-confirm")
 
     request_sick = sick_req_info.value
@@ -150,6 +152,7 @@ def verify_forms_wiring(page: Page):
     print("Sick Note Payload:", post_data_sick)
 
     assert "script.google.com" in request_sick.url
+    assert target_url_fragment in request_sick.url
     assert post_data_sick["formType"] == "sick-note"
     assert post_data_sick["name"] == "Jane Doe"
     assert post_data_sick["condition"] == "Flu"

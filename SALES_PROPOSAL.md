@@ -60,6 +60,7 @@ graph TD
         Home[Home Page]
         RxForm[Prescription Form]
         SickForm[Sick Note Form]
+        ApptForm[Appointment Request Form]
     end
 
     subgraph Backend_Google_Cloud
@@ -67,12 +68,14 @@ graph TD
         Router{Request Router}
         RxLogic[Prescription Logic]
         SickLogic[Sick Note Logic]
+        ApptLogic[Appointment Logic]
         Trigger[Time-Driven Archive]
     end
 
     subgraph Database_Google_Sheets
         Sheet1[(Rx Responses Sheet)]
         Sheet2[(Sick Notes Sheet)]
+        Sheet3[(Appointments Sheet)]
         Archive[(Archive Sheet)]
     end
 
@@ -85,19 +88,24 @@ graph TD
     Device --> Home
     Home --> RxForm
     Home --> SickForm
+    Home --> ApptForm
 
     RxForm -- JSON POST --> GAS
     SickForm -- JSON POST --> GAS
+    ApptForm -- JSON POST --> GAS
 
     GAS --> Router
     Router -- "Type: Prescription" --> RxLogic
     Router -- "Type: Sick Note" --> SickLogic
+    Router -- "Type: Appointment" --> ApptLogic
 
     RxLogic --> Sheet1
     SickLogic --> Sheet2
+    ApptLogic --> Sheet3
 
     RxLogic --> Email
     SickLogic --> Email
+    ApptLogic --> Email
 
     Sheet1 -.-> WA
     Trigger --> Archive

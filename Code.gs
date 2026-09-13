@@ -112,17 +112,27 @@ function handleEdit(e) {
 
     // Allow triggering on both Prescription and Appointment sheets
     const allowedSheets = [SHEET_NAME, "Appointments"];
-    if (!allowedSheets.includes(sheet.getName()) || range.getColumn() !== STATUS_COL || row < 2) {
+    const sheetName = sheet.getName();
+    if (!allowedSheets.includes(sheetName) || row < 2) {
+      return;
+    }
+
+    const isAppointment = sheetName === "Appointments";
+    const statusCol = isAppointment ? (APPT_LAYOUT.STATUS + 1) : STATUS_COL;
+    const emailCol = isAppointment ? (APPT_LAYOUT.EMAIL + 1) : EMAIL_COL;
+    const nameCol = isAppointment ? (APPT_LAYOUT.NAME + 1) : NAME_COL;
+    const notificationCol = isAppointment ? (APPT_LAYOUT.NOTIFICATION_SENT + 1) : NOTIFICATION_COL;
+
+    if (range.getColumn() !== statusCol) {
       return;
     }
 
     const status = range.getValue().toString().trim();
-    const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
-    const patientName = sheet.getRange(row, NAME_COL).getValue();
+    const patientEmail = sheet.getRange(row, emailCol).getValue();
+    const patientName = sheet.getRange(row, nameCol).getValue();
 
     if (status === STATUS_QUERY) {
       if (!patientEmail) return;
-      const isAppointment = sheet.getName() === "Appointments";
       const subject = isAppointment
         ? "Action Required: Query Regarding Your Appointment Request"
         : "Action Required: Query Regarding Your Prescription Request";
@@ -130,7 +140,7 @@ function handleEdit(e) {
       const body = `<p>Dear ${patientName},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
-    } else if (status === STATUS_READY && sheet.getName() === SHEET_NAME) {
+    } else if (status === STATUS_READY && !isAppointment) {
       const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
       let deliverySuccess = false;
 
@@ -143,9 +153,9 @@ function handleEdit(e) {
       }
 
       if (deliverySuccess) {
-        // Record ready timestamp in NOTIFICATION_COL only after successful notification delivery
+        // Record ready timestamp in notification column only after successful notification delivery
         const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-        sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
+        sheet.getRange(row, notificationCol).setValue(`Ready on ${timestamp}`);
       }
     }
   } catch (err) {
@@ -338,21 +348,32 @@ function showEmailDialog(row) {
  */
 function sendEmailFromDialog(row) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const ui = SpreadsheetApp.getUi();
   try {
     const status = sheet.getRange(row, STATUS_COL).getValue().toString().trim();
     const patientName = sheet.getRange(row, NAME_COL).getValue();
     const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
 
     if (status === STATUS_READY) {
-      sendReadyEmail(row);
+      const success = sendReadyEmail(row);
+      if (success) {
+        const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+        sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
+      } else {
+        ui.alert("Failed to send ready notification email. Please check the logs.");
+      }
     } else if (status === STATUS_QUERY) {
+      if (!patientEmail) {
+        ui.alert(`No email address found for ${patientName}.`);
+        return;
+      }
       const subject = "Action Required: Query Regarding Your Prescription Request";
       const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
     }
   } catch (e) {
     reportError('sendEmailFromDialog', e, row);
-    SpreadsheetApp.getUi().alert("Failed to send email. Please check the logs for details.");
+    ui.alert("Failed to send email. Please check the logs for details.");
   }
 }
 

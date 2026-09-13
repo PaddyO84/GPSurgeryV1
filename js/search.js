@@ -10,15 +10,7 @@
 
         initialized = true;
 
-        // Fetch page data for search index
-        fetch('searchIndex.json')
-            .then(response => response.json())
-            .then(data => {
-                pages = data;
-            })
-            .catch(err => console.error('Could not load search index:', err));
-
-        searchInput.addEventListener('input', () => {
+        function handleSearch() {
             const query = searchInput.value.toLowerCase();
             searchResults.innerHTML = '';
 
@@ -40,7 +32,20 @@
                     searchResults.appendChild(li);
                 }
             }
-        });
+        }
+
+        // Fetch page data for search index
+        fetch('searchIndex.json')
+            .then(response => response.json())
+            .then(data => {
+                pages = data;
+                if (searchInput.value.trim().length > 0) {
+                    handleSearch();
+                }
+            })
+            .catch(err => console.error('Could not load search index:', err));
+
+        searchInput.addEventListener('input', handleSearch);
     }
 
     document.addEventListener('componentLoaded', (e) => {

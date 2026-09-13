@@ -128,7 +128,7 @@ function formatWhatsAppNumber(phone) {
  * @returns {*} Sanitized cell value.
  */
 function sanitizeCellValue(val) {
-  if (typeof val === 'string' && val.startsWith('=')) {
+  if (typeof val === 'string' && /^[=+\-@\t\r]/.test(val)) {
     return "'" + val;
   }
   return val;

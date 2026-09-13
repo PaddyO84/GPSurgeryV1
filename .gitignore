@@ -3,3 +3,6 @@ node_modules/
 coverage/
 Suggestions.txt
 .idea/caches/
+anonymize_local.json
+__pycache__/
+

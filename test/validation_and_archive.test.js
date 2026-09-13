@@ -1,7 +1,26 @@
 const { expect } = require('chai');
-const { validatePatientData, formatWhatsAppNumber, isRowArchivable } = require('../utils.gs');
+const { validatePatientData, formatWhatsAppNumber, isRowArchivable, sanitizeCellValue } = require('../utils.gs');
 
 describe('Backend Utility Logic Tests', () => {
+    describe('sanitizeCellValue()', () => {
+        it('should prepend single quote to string values starting with formula characters =, +, -, @, \\t, \\r', () => {
+            expect(sanitizeCellValue('=SUM(A1:A10)')).to.equal("'=SUM(A1:A10)");
+            expect(sanitizeCellValue('+12345')).to.equal("'+12345");
+            expect(sanitizeCellValue('-10')).to.equal("'-10");
+            expect(sanitizeCellValue('@HYPERLINK("evil.com")')).to.equal("'@HYPERLINK(\"evil.com\")");
+            expect(sanitizeCellValue('\tcmd')).to.equal("'\tcmd");
+            expect(sanitizeCellValue('\rcmd')).to.equal("'\rcmd");
+        });
+
+        it('should leave safe strings and non-string values unchanged', () => {
+            expect(sanitizeCellValue('Regular text')).to.equal('Regular text');
+            expect(sanitizeCellValue('')).to.equal('');
+            expect(sanitizeCellValue(123)).to.equal(123);
+            expect(sanitizeCellValue(true)).to.equal(true);
+            expect(sanitizeCellValue(null)).to.be.null;
+            expect(sanitizeCellValue(undefined)).to.be.undefined;
+        });
+    });
     describe('validatePatientData()', () => {
         it('should validate valid email and phone numbers', () => {
             const res = validatePatientData('patient@example.com', '0871234567');

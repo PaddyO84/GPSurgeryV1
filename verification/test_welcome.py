@@ -54,7 +54,9 @@ def test_welcome_modal(page: Page, base_url: str):
     print("Modal did not appear on second page.")
 
 if __name__ == "__main__":
-    server, port = start_local_server(os.getcwd())
+    from pathlib import Path
+    repo_root = Path(__file__).resolve().parent.parent
+    server, port = start_local_server(str(repo_root))
     base_url = f"http://127.0.0.1:{port}"
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
