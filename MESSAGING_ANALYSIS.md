@@ -15,7 +15,7 @@ The "messaging service" referred to in the project history is identified as the 
 
 ## Feasibility & Hosting
 *   **Static Hosting Compatibility**: This approach is **100% compatible** with static hosting (GitHub Pages, Netlify). It relies entirely on standard HTTP links and the Google Apps Script environment, which runs independently of the frontend host.
-*   **Live Site Comparison**: The current live site (`carndonaghhealthcentre.ie`) does not feature a live chat widget, confirming that this asynchronous, link-based approach is the intended solution.
+*   **Live Site Comparison**: The current live site (`examplehealthcentre.ie`) does not feature a live chat widget, confirming that this asynchronous, link-based approach is the intended solution.
 
 ## Recommendations
 *   **Maintain Current Architecture**: Do not attempt to implement a WebSocket-based chat server, as it would require a separate active server (Node.js/Python) which violates the "zero maintenance / static hosting" requirement.

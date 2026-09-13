@@ -22,6 +22,9 @@ def verify_hero_logo(page: Page):
     # Check dimensions
     box = logo.bounding_box()
     print(f"Desktop Logo Dimensions: {box}")
+    assert box is not None, "Desktop logo bounding box should not be None"
+    assert box["width"] > 0 and box["height"] > 0, "Desktop logo should have non-zero dimensions"
+    assert box["width"] <= 450, f"Desktop logo width {box['width']} exceeds max-width 450px"
 
     # Take screenshot
     page.screenshot(path="verification/hero_logo_desktop.png")
@@ -38,6 +41,9 @@ def verify_hero_logo(page: Page):
 
     box_mobile = logo_mobile.bounding_box()
     print(f"Mobile Logo Dimensions: {box_mobile}")
+    assert box_mobile is not None, "Mobile logo bounding box should not be None"
+    assert box_mobile["width"] > 0 and box_mobile["height"] > 0, "Mobile logo should have non-zero dimensions"
+    assert box_mobile["width"] <= 375, f"Mobile logo width {box_mobile['width']} exceeds viewport width 375px"
 
     page.screenshot(path="verification/hero_logo_mobile.png")
     print("Verification complete.")

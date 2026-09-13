@@ -106,7 +106,7 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
  */
 function formatWhatsAppNumber(phone) {
   if (!phone) return "";
-  const cleaned = phone.toString().replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.toString().replace(/[\s\-\(\)\.]/g, '');
   if (cleaned.startsWith('+353')) return cleaned.substring(1);
   if (cleaned.startsWith('00353')) return cleaned.substring(2);
   if (cleaned.startsWith('353')) return cleaned;

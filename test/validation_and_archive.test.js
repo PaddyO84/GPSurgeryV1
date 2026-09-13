@@ -53,6 +53,10 @@ describe('Backend Utility Logic Tests', () => {
             expect(formatWhatsAppNumber('00353-87-1234567')).to.equal('353871234567');
         });
 
+        it('should format numbers with dot separators', () => {
+            expect(formatWhatsAppNumber('087.123.4567')).to.equal('353871234567');
+        });
+
         it('should return empty string for empty input', () => {
             expect(formatWhatsAppNumber('')).to.equal('');
             expect(formatWhatsAppNumber(null)).to.equal('');

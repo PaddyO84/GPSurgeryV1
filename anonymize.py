@@ -45,6 +45,9 @@ replacements = {
     # Google Maps (Replace specific iframe with a placeholder comment)
     'src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2279.1627050302824!2d-7.273611684179361!3d55.25305598042457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x486027a0d6c0a0d9%3A0x6d0263f91361810!2sCarndonagh%20Health%20Centre!5e0!3m2!1sen!2sie!4v1700000000000!5m2!1sen!2sie"': 'src="" style="background-color: #eee;" data-note="Map removed for anonymization"',
 
+    # Web Domains
+    "carndonaghhealthcentre.ie": "examplehealthcentre.ie",
+
     # Generic Fallback (Must be last)
     "Carndonagh": "Example Town"
 }

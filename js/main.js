@@ -1,53 +1,70 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Off-Canvas Mobile Menu
-    const menuToggle = document.querySelector('.menu-toggle');
-    const nav = document.querySelector('nav');
-    let navOverlay = document.querySelector('.nav-overlay');
+(function() {
+    let navInitialized = false;
 
-    // Create overlay if it doesn't exist
-    if (!navOverlay) {
-        navOverlay = document.createElement('div');
-        navOverlay.className = 'nav-overlay';
-        document.body.appendChild(navOverlay);
-    }
+    function initNav() {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const nav = document.querySelector('nav');
+        if (!menuToggle || !nav) return;
+        if (navInitialized) return;
+        navInitialized = true;
 
-    if (menuToggle && nav) {
+        let navOverlay = document.querySelector('.nav-overlay');
+        if (!navOverlay) {
+            navOverlay = document.createElement('div');
+            navOverlay.className = 'nav-overlay';
+            document.body.appendChild(navOverlay);
+        }
+
+        function toggleMenu() {
+            if (!nav || !navOverlay || !menuToggle) return;
+            const isExpanded = nav.classList.toggle('show');
+            navOverlay.classList.toggle('show');
+            menuToggle.setAttribute('aria-expanded', isExpanded);
+            menuToggle.textContent = isExpanded ? '✕' : '☰';
+            document.body.style.overflow = isExpanded ? 'hidden' : '';
+        }
+
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleMenu();
         });
-    }
 
-    // Toggle function
-    function toggleMenu() {
-        const isExpanded = nav.classList.toggle('show');
-        navOverlay.classList.toggle('show');
-        menuToggle.setAttribute('aria-expanded', isExpanded);
-        menuToggle.textContent = isExpanded ? '✕' : '☰';
-        document.body.style.overflow = isExpanded ? 'hidden' : '';
-    }
-
-    // Close menu when clicking overlay or pressing Esc
-    navOverlay.addEventListener('click', toggleMenu);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && nav.classList.contains('show')) {
-            toggleMenu();
-        }
-    });
-
-
-    // Mobile Dropdown Functionality
-    const dropdowns = document.querySelectorAll('nav .dropdown > a');
-    dropdowns.forEach(dropdown => {
-        dropdown.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                const parent = dropdown.parentElement;
-                parent.classList.toggle('open');
+        // Close menu when clicking overlay or pressing Esc
+        navOverlay.addEventListener('click', toggleMenu);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && nav && nav.classList.contains('show')) {
+                toggleMenu();
             }
         });
-    });
 
+        // Mobile Dropdown Functionality
+        const dropdowns = document.querySelectorAll('nav .dropdown > a');
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const parent = dropdown.parentElement;
+                    if (parent) parent.classList.toggle('open');
+                }
+            });
+        });
+    }
+
+    document.addEventListener('componentLoaded', (e) => {
+        if (e.detail && e.detail.elementId === 'header-placeholder') {
+            initNav();
+        }
+    });
+    document.addEventListener('componentsLoaded', initNav);
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNav);
+    } else {
+        initNav();
+    }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
 
     // Accordion Functionality
     const accordions = document.getElementsByClassName("accordion");

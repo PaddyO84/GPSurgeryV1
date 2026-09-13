@@ -28,11 +28,29 @@ def verify_appointment_form(page: Page):
 
     page.fill("#appNotes", "Routine checkup")
 
-    # Set up request interception
-    with page.expect_request(lambda request: "script.google.com" in request.url and request.method == "POST") as request_info:
-        page.click("button.submit-btn")
+    # Set up request interception and mock route handler
+    intercepted_requests = []
 
-    request = request_info.value
+    def handle_route(route):
+        request = route.request
+        if "script.google.com" in request.url and request.method == "POST":
+            intercepted_requests.append(request)
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"result": "success", "type": "appointment"}'
+            )
+        else:
+            route.continue_()
+
+    page.route("**/*", handle_route)
+
+    page.click("button.submit-btn")
+
+    # Wait for request to be intercepted
+    page.wait_for_timeout(500)
+    assert len(intercepted_requests) > 0, "No request intercepted for Apps Script POST"
+    request = intercepted_requests[0]
     print("Request URL:", request.url)
     post_data = request.post_data_json
     print("Payload:", post_data)

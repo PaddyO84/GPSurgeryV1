@@ -72,12 +72,6 @@ function handleAppointmentSubmission(data) {
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  // Attempt confirmation notification first before committing processed state
-  const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
-  if (!notificationSuccess) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver appointment confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
-  }
-
   const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
   const timestamp = new Date();
   const rowData = [];
@@ -91,12 +85,21 @@ function handleAppointmentSubmission(data) {
   rowData[APPT_LAYOUT.NOTES] = data.notes;
   rowData[APPT_LAYOUT.COMM_PREF] = "Email";
   rowData[APPT_LAYOUT.STATUS] = "New Request";
-  rowData[APPT_LAYOUT.NOTIFICATION_SENT] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
+  rowData[APPT_LAYOUT.NOTIFICATION_SENT] = "";
   rowData[APPT_LAYOUT.PREFERRED_TIME] = data.preferredTime;
 
   sheet.appendRow(rowData);
+  const rowIndex = sheet.getLastRow();
 
-  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment' })).setMimeType(ContentService.MimeType.JSON);
+  // Send confirmation notification after persistence
+  const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
+  if (notificationSuccess) {
+    sheet.getRange(rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+  } else {
+    reportError('handleAppointmentSubmission:notification', new Error('Failed to deliver appointment confirmation email'), rowIndex);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment', 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function handleSickNoteSubmission(data) {
@@ -130,11 +133,6 @@ function handleSickNoteSubmission(data) {
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
-  if (!notificationSuccess) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver sick note confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
-  }
-
   const sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
   const timestamp = new Date();
   const rowData = [];
@@ -151,11 +149,19 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.DATES] = data.dates;
   rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = data.returnToWork;
   rowData[SICK_NOTE_LAYOUT.SIGNATURE] = data.signature || "Not Provided";
-  rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
+  rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "";
 
   sheet.appendRow(rowData);
+  const rowIndex = sheet.getLastRow();
 
-  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note' })).setMimeType(ContentService.MimeType.JSON);
+  const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
+  if (notificationSuccess) {
+    sheet.getRange(rowIndex, SICK_NOTE_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+  } else {
+    reportError('handleSickNoteSubmission:notification', new Error('Failed to deliver sick note confirmation email'), rowIndex);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note', 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function handlePrescriptionSubmission(data) {
@@ -188,11 +194,6 @@ function handlePrescriptionSubmission(data) {
        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
-    if (!notificationSuccess) {
-       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver prescription confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
     const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
     const timestamp = new Date();
     const medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage || ''} (${m.freq || ''})`).join("\n");
@@ -208,10 +209,17 @@ function handlePrescriptionSubmission(data) {
     newRow[MEDS_COL - 1] = medicationString;
     newRow[COMM_PREF_COL - 1] = details.commPref || "Email";
     newRow[STATUS_COL - 1] = "";
-    newRow[NOTIFICATION_COL - 1] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
+    newRow[NOTIFICATION_COL - 1] = "";
 
     sheet.appendRow(newRow);
     const row = sheet.getLastRow();
 
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
+    const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
+    if (notificationSuccess) {
+       sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+    } else {
+       reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row, 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
 }

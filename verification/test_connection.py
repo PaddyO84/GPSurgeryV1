@@ -49,11 +49,27 @@ def verify_forms_wiring(page: Page):
     # Wait for modal
     page.wait_for_selector("#summaryModal", state="visible")
 
-    # Set up request interception for the final submit
-    with page.expect_request(lambda request: "script.google.com" in request.url and request.method == "POST") as request_info:
-        page.click("button.btn-confirm")
+    # Set up request interception for prescription submit
+    rx_requests = []
+    def handle_rx_route(route):
+        req = route.request
+        if "script.google.com" in req.url and req.method == "POST":
+            rx_requests.append(req)
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"result": "success", "row": 2}'
+            )
+        else:
+            route.continue_()
 
-    request = request_info.value
+    page.route("**/*", handle_rx_route)
+
+    page.click("button.btn-confirm")
+
+    page.wait_for_timeout(500)
+    assert len(rx_requests) > 0, "No request intercepted for Prescription POST"
+    request = rx_requests[0]
     print("Prescription Request URL:", request.url)
     post_data = request.post_data_json
     print("Prescription Payload:", post_data)
@@ -65,6 +81,9 @@ def verify_forms_wiring(page: Page):
 
     page.screenshot(path="verification/prescription_success.png")
     print("Prescription verification successful.")
+
+    # Unroute before navigating to sick note
+    page.unroute("**/*")
 
     # 2. Test Sick Note Form
     print(f"Testing Sick Note Form at: {sick_note_url}")
@@ -111,11 +130,27 @@ def verify_forms_wiring(page: Page):
     page.click("button.submit-btn") # Opens modal
     page.wait_for_selector("#summaryModal", state="visible")
 
-    # Intercept
-    with page.expect_request(lambda request: "script.google.com" in request.url and request.method == "POST") as request_info_sick:
-        page.click("button.btn-confirm")
+    # Set up request interception for sick note submit
+    sick_requests = []
+    def handle_sick_route(route):
+        req = route.request
+        if "script.google.com" in req.url and req.method == "POST":
+            sick_requests.append(req)
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"result": "success", "type": "sick-note"}'
+            )
+        else:
+            route.continue_()
 
-    request_sick = request_info_sick.value
+    page.route("**/*", handle_sick_route)
+
+    page.click("button.btn-confirm")
+
+    page.wait_for_timeout(500)
+    assert len(sick_requests) > 0, "No request intercepted for Sick Note POST"
+    request_sick = sick_requests[0]
     print("Sick Note Request URL:", request_sick.url)
     post_data_sick = request_sick.post_data_json
     print("Sick Note Payload:", post_data_sick)

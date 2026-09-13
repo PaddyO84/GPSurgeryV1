@@ -12,7 +12,7 @@ const NOTIFICATION_COL = 11; // Notification Sent is in Column K
 
 // --- SCRIPT SETTINGS ---
 const SENDER_NAME = "Example Health Centre";
-const YOUR_PHONE_NUMBER = "01-234-5678";
+const YOUR_PHONE_NUMBER = "(01) 234 5679";
 const ADMIN_EMAIL = "admin@example.com";
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
@@ -131,16 +131,19 @@ function onEdit(e) {
 
     } else if (status === STATUS_READY && sheet.getName() === SHEET_NAME) {
       const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
-
-      // Record ready timestamp in NOTIFICATION_COL for accurate archiving
-      const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-      sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
+      let deliverySuccess = false;
 
       if (commPref === 'whatsapp') {
         const staffEmail = e.user ? e.user.getEmail() : ADMIN_EMAIL;
-        sendWhatsAppLinkToStaff(row, staffEmail);
+        deliverySuccess = sendWhatsAppLinkToStaff(row, staffEmail);
       } else {
-        sendReadyEmail(row);
+        deliverySuccess = sendReadyEmail(row);
+      }
+
+      if (deliverySuccess) {
+        // Record ready timestamp in NOTIFICATION_COL only after successful notification delivery
+        const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+        sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
       }
     }
   } catch (err) {
@@ -423,7 +426,7 @@ function sendReadyEmail(row) {
   const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
   const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
 
-  if (!patientEmail) return;
+  if (!patientEmail) return false;
 
   try {
     const template = HtmlService.createTemplateFromFile('email_ready');
@@ -436,8 +439,10 @@ function sendReadyEmail(row) {
     const htmlBody = template.evaluate().getContent();
 
     MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
+    return true;
   } catch (e) {
     reportError('sendReadyEmail', e, row);
+    return false;
   }
 }
 
@@ -457,7 +462,7 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
     } catch (e) {
       Logger.log(`Error sending 'missing phone number' email to staff for row ${row}: ${e.toString()}`);
     }
-    return;
+    return false;
   }
 
   try {
@@ -475,8 +480,11 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
     `;
 
     MailApp.sendEmail({ to: staffEmail, subject: subject, htmlBody: body });
+    return true;
   } catch (e) {
     Logger.log(`Error sending WhatsApp link to staff for row ${row}: ${e.toString()}`);
+    reportError('sendWhatsAppLinkToStaff', e, row);
+    return false;
   }
 }
 
@@ -532,6 +540,20 @@ function setupAutomatedTriggers() {
     messages.push("✅ Form submission trigger created.");
   } else {
     messages.push("ℹ️ Form submission trigger already exists.");
+  }
+
+  // 4. Setup On Edit Trigger for onEdit
+  const onEditFuncName = 'onEdit';
+  const onEditTriggerExists = existingTriggers.some(trigger => trigger.getHandlerFunction() === onEditFuncName);
+
+  if (!onEditTriggerExists) {
+    ScriptApp.newTrigger(onEditFuncName)
+      .forSpreadsheet(ss)
+      .onEdit()
+      .create();
+    messages.push("✅ Spreadsheet onEdit trigger created.");
+  } else {
+    messages.push("ℹ️ Spreadsheet onEdit trigger already exists.");
   }
 
   // Display summary

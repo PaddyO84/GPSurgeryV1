@@ -407,6 +407,7 @@
             const hasMeds = document.getElementById('medicationList').rows.length > 0;
 
             table.style.display = hasMeds ? '' : 'none';
+            message.style.display = hasMeds ? 'none' : 'block';
             message.classList.toggle('show', !hasMeds);
         }
 
