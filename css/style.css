@@ -135,6 +135,16 @@ ul {
 
 /* Header & Navigation */
 .top-bar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1100;
+    background: var(--primary-dark);
+    color: white;
+    font-size: 0.85rem;
+    padding: 0.5rem 0;
+}
     background: var(--primary-dark);
     color: white;
     font-size: 0.85rem;
@@ -163,6 +173,16 @@ ul {
 }
 
 header {
+    /* Removed sticky positioning to avoid double-sticky gap */
+    position: static;
+    top: 0;
+    z-index: 1000;
+    padding: 0;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    transition: 0.3s;
+    width: 100%;
+}
     position: sticky;
     top: 0;
     z-index: 1000;
