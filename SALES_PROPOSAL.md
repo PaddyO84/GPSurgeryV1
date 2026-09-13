@@ -2,9 +2,9 @@
 
 ## 1. Executive Summary
 
-We propose a comprehensive digital transformation of the Example Medical Practice's online presence. This solution replaces the legacy system with a modern, responsive, and secure web platform designed to streamline patient requests, reduce administrative overhead, and ensure GDPR compliance.
+We propose a comprehensive digital transformation of the Example Medical Practice's online presence. This solution replaces the legacy system with a modern, responsive, and secure web platform designed to streamline patient requests, reduce administrative overhead, and facilitate GDPR compliance workflows.
 
-By leveraging a serverless architecture (Google Apps Script) combined with high-performance static hosting, we deliver a cost-effective, zero-maintenance solution that integrates directly with your existing workflows (Google Sheets).
+By leveraging a serverless architecture (Google Apps Script) combined with high-performance static hosting, we deliver a cost-effective, low-maintenance solution that integrates directly with your existing workflows (Google Sheets).
 
 ## 2. Solution Overview
 
@@ -32,8 +32,9 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 
 ### 🛡️ Compliance & Security
 *   **Zero Tolerance & Confidentiality:** Dedicated pages clearly outlining practice policies.
-*   **Data Protection:** No patient data is stored on the web server; it flows directly to your secure, private Google Drive environment.
-*   **No-CORS Security:** Frontend inputs are sanitized, and the backend accepts only specific JSON payloads.
+*   **Data Protection:** No patient data is stored on the static web hosting server; it transmits directly to your private Google Workspace/Drive environment over HTTPS.
+*   **Input Sanitization & Validation:** Frontend inputs are validated and sanitized (via DOMPurify), and backend handlers validate payload structures. *Note: CORS mode (`mode: 'no-cors'`) allows browser cross-origin submission without exposing headers; it does not perform authentication or server-side sanitization.*
+*   **Security & Compliance Review Required:** Prior to production deployment, a formal security and compliance assessment must be conducted covering data retention schedules, access control and role-based permissions, patient data deletion procedures, audit logging, and incident response controls for data stored in Google Sheets or transmitted via automated emails.
 
 ## 4. Technical Specifications & Statistics
 
@@ -43,8 +44,8 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 | **Frontend Code** | ~3,500 Lines | Semantic HTML5 for accessibility and SEO. |
 | **Styling (CSS)** | 855 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
 | **Backend Logic** | 633 Lines | Google Apps Script handling routing, emails, and cleaning. |
-| **Performance** | < 1.0s | Initial Load Time (Static Content). |
-| **Uptime** | 99.9% | Hosted on enterprise-grade CDNs (GitHub Pages / Netlify). |
+| **Performance Target** | < 1.0s | Target Initial Load Time for static assets under 4G/broadband conditions (subject to client network and CDN caching). |
+| **Uptime Target** | 99.9% | Target availability backed by static CDN infrastructure SLA (e.g., GitHub Pages / Netlify), excluding Google Apps Script quota limits or scheduled maintenance. |
 
 ## 5. Architectural Drawings
 

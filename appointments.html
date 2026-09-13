@@ -190,9 +190,10 @@
             const btn = document.querySelector('#appointmentForm .submit-btn');
             const form = document.getElementById('appointmentForm');
             const successMsg = document.getElementById('appSuccessMessage');
+            const originalBtnHtml = btn.innerHTML;
 
             btn.disabled = true;
-            btn.textContent = "Sending...";
+            btn.innerHTML = "Sending...";
 
             const data = {
                 formType: 'appointment',
@@ -223,7 +224,7 @@
                 console.error('Error:', error);
                 alert('An error occurred. Please try again or call reception.');
                 btn.disabled = false;
-                btn.textContent = "Request Appointment";
+                btn.innerHTML = originalBtnHtml;
             });
         }
     </script>

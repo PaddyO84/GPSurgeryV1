@@ -75,6 +75,7 @@ describe('Theme Management Utility (theme.js)', () => {
             setTheme('accessible', mockWindow, mockStorage, dom.window.document);
             expect(mockStorage.getItem('siteTheme')).to.equal('accessible');
             expect(dom.window.document.documentElement.getAttribute('data-theme')).to.equal('accessible');
+            expect(mockWindow.location.href).to.include('theme=accessible');
         });
     });
 });

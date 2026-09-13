@@ -3,27 +3,37 @@ function testReportError() {
   mockError.name = "TestError";
   mockError.stack = "Stack trace line 1\nStack trace line 2";
 
-  // Mock MailApp
+  const calls = [];
+  // Mock MailApp to capture 4-argument sendEmail(recipient, subject, body, options)
   const mockMailApp = {
-    sendEmail: function(message) {
-      console.log("MailApp.sendEmail called with:", message);
-      if (!message.to || !message.subject || !message.htmlBody) {
-        throw new Error("MailApp.sendEmail called with invalid arguments");
-      }
+    sendEmail: function(recipient, subject, body, options) {
+      calls.push({ recipient, subject, body, options });
+      console.log("MailApp.sendEmail called with:", { recipient, subject, body, options });
     }
   };
   // Replace the real MailApp with the mock
-  const realMailApp = MailApp;
+  const realMailApp = typeof MailApp !== 'undefined' ? MailApp : undefined;
   MailApp = mockMailApp;
 
   try {
     console.log("Running testReportError...");
     reportError("testFunction", mockError, 123);
+    
+    if (calls.length !== 1) {
+      throw new Error(`Expected exactly 1 call to MailApp.sendEmail, got ${calls.length}`);
+    }
+    const call = calls[0];
+    if (call.recipient !== ADMIN_EMAIL) {
+      throw new Error(`Expected recipient to be ${ADMIN_EMAIL}, got ${call.recipient}`);
+    }
+    if (!call.options || !call.options.htmlBody || !call.options.htmlBody.includes("row <strong>123</strong>")) {
+      throw new Error(`Expected options.htmlBody to contain 'row <strong>123</strong>', got: ${call.options ? call.options.htmlBody : 'undefined'}`);
+    }
     console.log("testReportError completed successfully.");
-  } catch (e) {
-    console.error("testReportError failed:", e);
   } finally {
     // Restore the real MailApp
-    MailApp = realMailApp;
+    if (realMailApp !== undefined) {
+      MailApp = realMailApp;
+    }
   }
 }

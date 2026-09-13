@@ -4,9 +4,15 @@
         return;
     }
 
+    // Save currently focused element to restore upon dismissal
+    const previouslyFocusedElement = document.activeElement;
+
     // Create the modal container
     const modalOverlay = document.createElement('div');
     modalOverlay.id = 'demo-welcome-modal';
+    modalOverlay.setAttribute('role', 'dialog');
+    modalOverlay.setAttribute('aria-modal', 'true');
+    modalOverlay.setAttribute('aria-labelledby', 'demo-welcome-title');
     modalOverlay.style.position = 'fixed';
     modalOverlay.style.top = '0';
     modalOverlay.style.left = '0';
@@ -31,6 +37,7 @@
 
     // Title
     const title = document.createElement('h2');
+    title.id = 'demo-welcome-title';
     title.textContent = 'Welcome to the Demo Site';
     title.style.color = '#d32f2f'; // Warning red
     title.style.marginTop = '0';
@@ -58,11 +65,17 @@
     closeBtn.style.marginTop = '20px';
     closeBtn.style.fontWeight = 'bold';
 
-    closeBtn.addEventListener('click', function() {
+    function closeModal() {
         localStorage.setItem('demo_welcome_seen', 'true');
+        document.removeEventListener('keydown', handleKeyDown);
         modalOverlay.style.display = 'none';
         modalOverlay.remove();
-    });
+        if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+            previouslyFocusedElement.focus();
+        }
+    }
+
+    closeBtn.addEventListener('click', closeModal);
 
     closeBtn.addEventListener('mouseover', function() {
         closeBtn.style.backgroundColor = '#05220e';
@@ -70,6 +83,38 @@
     closeBtn.addEventListener('mouseout', function() {
         closeBtn.style.backgroundColor = '#106b40';
     });
+
+    // Keyboard navigation and focus trap
+    function handleKeyDown(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+            return;
+        }
+        if (e.key === 'Tab') {
+            const focusableElements = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const focusable = Array.from(focusableElements);
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            const firstElement = focusable[0];
+            const lastElement = focusable[focusable.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
 
     // Assemble
     modalContent.appendChild(title);
@@ -79,4 +124,9 @@
 
     // Add to DOM
     document.body.appendChild(modalOverlay);
+
+    // Focus close button initially
+    setTimeout(() => {
+        closeBtn.focus();
+    }, 50);
 })();

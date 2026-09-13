@@ -63,5 +63,6 @@ if __name__ == "__main__":
             verify_address_submission(page)
         except Exception as e:
             print(f"Test failed: {e}")
+            raise
         finally:
             browser.close()

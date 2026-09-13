@@ -1,12 +1,13 @@
 import os
+import re
 
 def inject_script(filepath):
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Check if already injected
-        if 'src="js/welcome.js"' in content:
+        # Check if already injected (handling single/double quotes and relative paths)
+        if re.search(r'src=["\'](?:\./)?js/welcome\.js["\']', content):
             print(f"Skipping {filepath}: already injected")
             return
 

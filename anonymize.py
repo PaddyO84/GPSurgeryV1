@@ -1,4 +1,5 @@
 import os
+import sys
 
 # Define replacements (Order matters: most specific to least specific)
 replacements = {
@@ -49,6 +50,7 @@ replacements = {
 }
 
 def process_file(filepath):
+    temp_path = None
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -58,24 +60,39 @@ def process_file(filepath):
             new_content = new_content.replace(old, new)
 
         if new_content != content:
-            with open(filepath, 'w', encoding='utf-8') as f:
+            temp_path = f"{filepath}.tmp"
+            with open(temp_path, 'w', encoding='utf-8') as f:
                 f.write(new_content)
+            os.replace(temp_path, filepath)
+            temp_path = None
             print(f"Updated: {filepath}")
         else:
             print(f"No changes: {filepath}")
-
+        return True
     except Exception as e:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
         print(f"Error processing {filepath}: {e}")
+        return False
 
 def main():
     extensions = ['.html', '.gs', '.md', '.json', '.js', '.css']
+    failed = False
     for root, dirs, files in os.walk('.'):
         if '.git' in dirs:
             dirs.remove('.git')
 
         for file in files:
             if any(file.endswith(ext) for ext in extensions):
-                process_file(os.path.join(root, file))
+                success = process_file(os.path.join(root, file))
+                if not success:
+                    failed = True
+
+    if failed:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

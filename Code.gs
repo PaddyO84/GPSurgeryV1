@@ -1,14 +1,3 @@
-// --- Antigravity Connectivity Test ---
-/**
- * Test function pushed by Antigravity to verify clasp connectivity.
- * @returns {string} A success message.
- */
-function antigravityTest() {
-  const timestamp = new Date().toISOString();
-  Logger.log(`Connectivity test successful at ${timestamp}`);
-  return `Antigravity connection active: ${timestamp}`;
-}
-
 // --- 1. FINAL CORRECT CONFIGURATION ---
 
 const SHEET_NAME = "Form responses 1";
@@ -37,7 +26,10 @@ const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is 
  */
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  const hasLock = lock.tryLock(10000);
+  if (!hasLock) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
+  }
 
   try {
     const data = JSON.parse(e.postData.contents);
@@ -133,7 +125,7 @@ function onEdit(e) {
       const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
-    } else if (status === STATUS_READY) {
+    } else if (status === STATUS_READY && sheet.getName() === SHEET_NAME) {
       const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
 
       if (commPref === 'whatsapp') {
@@ -214,6 +206,8 @@ function sendAppointmentConfirmation(name, email, type, time) {
     template.senderName = SENDER_NAME;
     template.patientName = name;
     template.requestType = 'appointment';
+    template.appointmentType = type;
+    template.preferredTime = time;
     template.phoneNumber = YOUR_PHONE_NUMBER;
     
     const subject = "Received: Your Appointment Request";
@@ -542,6 +536,13 @@ function setupAutomatedTriggers() {
  * Run 'Surgery Tools > Setup Automated Triggers' from the Google Sheets menu to initialize.
  */
 function archiveOldRequests() {
+  const lock = LockService.getScriptLock();
+  const hasLock = lock.tryLock(30000);
+  if (!hasLock) {
+    Logger.log("Could not acquire lock for archiveOldRequests. Skipping run.");
+    return;
+  }
+
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sourceSheet = ss.getSheetByName(SHEET_NAME);
@@ -592,6 +593,7 @@ function archiveOldRequests() {
       // Append all archived rows in one batch
       const archiveLastRow = archiveSheet.getLastRow();
       archiveSheet.getRange(archiveLastRow + 1, 1, rowsToArchive.length, rowsToArchive[0].length).setValues(rowsToArchive);
+      SpreadsheetApp.flush();
 
       // Overwrite source sheet with kept rows in one operation
       sourceSheet.getRange(2, 1, data.length, sourceSheet.getLastColumn()).clearContent();
@@ -602,5 +604,7 @@ function archiveOldRequests() {
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);
+  } finally {
+    lock.releaseLock();
   }
 }

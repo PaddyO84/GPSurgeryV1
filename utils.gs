@@ -12,10 +12,13 @@ function reportError(functionName, error, row) {
     if (row) {
       body += `<br><br>The error was related to row <strong>${row}</strong>.`;
     }
-    body += `<br><br><strong>Error Details:</strong><br>Name: ${error.name}<br>Message: ${error.message}<br>Stack Trace:<br>${error.stack.replace(/\n/g, '<br>')}`;
+    const errName = (error && error.name) ? error.name : 'Error';
+    const errMessage = (error && error.message) ? error.message : (error ? String(error) : 'Unknown error');
+    const errStack = (error && error.stack) ? error.stack.replace(/\n/g, '<br>') : 'No stack trace available';
+    body += `<br><br><strong>Error Details:</strong><br>Name: ${errName}<br>Message: ${errMessage}<br>Stack Trace:<br>${errStack}`;
     MailApp.sendEmail(ADMIN_EMAIL, subject, "", { htmlBody: body });
   } catch (e) {
-    Logger.log(`Could not send error report email. Original error in ${functionName}: ${error.message}. Error sending report: ${e.message}`);
+    Logger.log(`Could not send error report email. Original error in ${functionName}: ${error && error.message ? error.message : error}. Error sending report: ${e.message}`);
   }
 }
 
@@ -50,7 +53,7 @@ function validatePatientData(email, phone) {
   if (!email || !emailRegex.test(email)) {
     errors.push("Invalid email address.");
   }
-  if (!phone || phone.length < 7) {
+  if (!phone || typeof phone !== 'string' || phone.trim().length < 7) {
     errors.push("Invalid phone number.");
   }
   return {

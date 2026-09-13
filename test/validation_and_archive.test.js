@@ -5,7 +5,7 @@ describe('Backend Utility Logic Tests', () => {
         const errors = [];
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email)) errors.push("Invalid email address.");
-        if (!phone || phone.length < 7) errors.push("Invalid phone number.");
+        if (!phone || typeof phone !== 'string' || phone.trim().length < 7) errors.push("Invalid phone number.");
         return { isValid: errors.length === 0, errors };
     }
 
@@ -34,6 +34,12 @@ describe('Backend Utility Logic Tests', () => {
 
         it('should reject short or missing phone numbers', () => {
             const res = validatePatientData('patient@example.com', '123');
+            expect(res.isValid).to.be.false;
+            expect(res.errors).to.include("Invalid phone number.");
+        });
+
+        it('should reject non-string phone numbers', () => {
+            const res = validatePatientData('patient@example.com', 871234567);
             expect(res.isValid).to.be.false;
             expect(res.errors).to.include("Invalid phone number.");
         });
