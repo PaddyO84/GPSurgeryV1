@@ -1,10 +1,26 @@
-from playwright.sync_api import sync_playwright, Page, expect
 import os
+import socket
+import threading
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from playwright.sync_api import sync_playwright, Page, expect
 
-def test_welcome_modal(page: Page):
-    cwd = os.getcwd()
-    index_url = f"file://{cwd}/index.html"
-    contact_url = f"file://{cwd}/contact.html"
+def get_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+def start_local_server(directory):
+    port = get_free_port()
+    handler = partial(SimpleHTTPRequestHandler, directory=directory)
+    server = ThreadingHTTPServer(('127.0.0.1', port), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, port
+
+def test_welcome_modal(page: Page, base_url: str):
+    index_url = f"{base_url}/index.html"
+    contact_url = f"{base_url}/contact.html"
 
     print(f"Testing Welcome Modal at: {index_url}")
 
@@ -32,22 +48,25 @@ def test_welcome_modal(page: Page):
     expect(modal).not_to_be_visible()
     print("Modal did not appear on reload.")
 
-    # 4. Visit another page: Modal should NOT appear (shared local storage)
+    # 4. Visit another page: Modal should NOT appear (shared local storage across same origin)
     page.goto(contact_url)
     expect(modal).not_to_be_visible()
     print("Modal did not appear on second page.")
 
 if __name__ == "__main__":
+    server, port = start_local_server(os.getcwd())
+    base_url = f"http://127.0.0.1:{port}"
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         # Create a context to simulate a fresh session/storage
         context = browser.new_context()
         page = context.new_page()
         try:
-            test_welcome_modal(page)
+            test_welcome_modal(page, base_url)
         except Exception as e:
             print(f"Verification Failed: {e}")
             page.screenshot(path="verification/welcome_failure.png")
             raise e
         finally:
             browser.close()
+            server.shutdown()

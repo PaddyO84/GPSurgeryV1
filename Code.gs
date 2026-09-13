@@ -101,9 +101,10 @@ function setStatusQuery() {
 }
 
 /**
- * Runs when a cell is edited. Handles automated status-change notifications.
+ * Handles automated status-change notifications on edit.
+ * Triggered by an installable onEdit trigger (handleEdit).
  */
-function onEdit(e) {
+function handleEdit(e) {
   try {
     const range = e.range;
     const sheet = range.getSheet();
@@ -147,7 +148,7 @@ function onEdit(e) {
       }
     }
   } catch (err) {
-    reportError('onEdit', err, e.range ? e.range.getRow() : null);
+    reportError('handleEdit', err, e.range ? e.range.getRow() : null);
   }
 }
 
@@ -542,8 +543,8 @@ function setupAutomatedTriggers() {
     messages.push("ℹ️ Form submission trigger already exists.");
   }
 
-  // 4. Setup On Edit Trigger for onEdit
-  const onEditFuncName = 'onEdit';
+  // 4. Setup On Edit Trigger for handleEdit
+  const onEditFuncName = 'handleEdit';
   const onEditTriggerExists = existingTriggers.some(trigger => trigger.getHandlerFunction() === onEditFuncName);
 
   if (!onEditTriggerExists) {
@@ -551,9 +552,9 @@ function setupAutomatedTriggers() {
       .forSpreadsheet(ss)
       .onEdit()
       .create();
-    messages.push("✅ Spreadsheet onEdit trigger created.");
+    messages.push("✅ Spreadsheet handleEdit trigger created.");
   } else {
-    messages.push("ℹ️ Spreadsheet onEdit trigger already exists.");
+    messages.push("ℹ️ Spreadsheet handleEdit trigger already exists.");
   }
 
   // Display summary

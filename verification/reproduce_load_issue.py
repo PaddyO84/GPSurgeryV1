@@ -13,7 +13,7 @@ def reproduce_issue(page):
     file_input.set_input_files("test_prescription.json")
 
     # Wait for processing
-    page.wait_for_timeout(1000)
+    expect(page.locator("#patientName")).to_have_value("John Doe")
 
     # Check if Name is populated
     name_val = page.locator("#patientName").input_value()

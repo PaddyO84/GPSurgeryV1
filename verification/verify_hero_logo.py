@@ -44,6 +44,8 @@ def verify_hero_logo(page: Page):
     assert box_mobile is not None, "Mobile logo bounding box should not be None"
     assert box_mobile["width"] > 0 and box_mobile["height"] > 0, "Mobile logo should have non-zero dimensions"
     assert box_mobile["width"] <= 375, f"Mobile logo width {box_mobile['width']} exceeds viewport width 375px"
+    assert box_mobile["x"] >= 0, f"Mobile logo left offset {box_mobile['x']} is negative"
+    assert box_mobile["x"] + box_mobile["width"] <= 375, f"Mobile logo right edge {box_mobile['x'] + box_mobile['width']} exceeds viewport width 375px"
 
     page.screenshot(path="verification/hero_logo_mobile.png")
     print("Verification complete.")

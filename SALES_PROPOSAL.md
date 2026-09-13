@@ -14,7 +14,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 ### Value Proposition
 *   **Efficiency:** Automates the sorting and processing of hundreds of weekly requests.
 *   **Accessibility:** Fully responsive design ensures patients can access services from any device (Mobile, Tablet, Desktop).
-*   **Control:** Ownership of your data (Google Sheets) rather than relying on third-party SaaS silos.
+*   **Control:** Data remains in your existing Google Workspace environment.
 *   **Cost:** "One-time build" architecture with negligible ongoing hosting costs.
 
 ## 3. Key Features

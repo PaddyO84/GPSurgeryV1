@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < accordions.length; i++) {
         const accordion = accordions[i];
         const panel = accordion.nextElementSibling;
+        if (!panel) continue;
+
         const panelId = `panel-${i}`;
         panel.setAttribute('id', panelId);
         accordion.setAttribute('aria-controls', panelId);
