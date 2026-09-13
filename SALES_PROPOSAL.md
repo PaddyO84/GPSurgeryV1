@@ -125,4 +125,4 @@ Designed for touchscreens, this page features a large canvas area where patients
 
 This proposal represents a significant upgrade to the practice's operations. By automating the intake of the two most common administrative tasks—prescriptions and certs—we free up valuable reception phone lines for clinical emergencies.
 
-**Status:** Ready for Deployment.
+**Status:** Development & Demo Stage — Pending formal pre-deployment security and compliance review (data retention, access controls, deletion procedures, and audit logging) prior to production release.

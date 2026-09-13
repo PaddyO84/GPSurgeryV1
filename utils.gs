@@ -53,13 +53,50 @@ function validatePatientData(email, phone) {
   if (!email || !emailRegex.test(email)) {
     errors.push("Invalid email address.");
   }
-  if (!phone || typeof phone !== 'string' || phone.trim().length < 7) {
+  if (!phone || typeof phone !== 'string') {
     errors.push("Invalid phone number.");
+  } else {
+    // Normalize permitted separators (spaces, hyphens, parentheses, dots)
+    const normalized = phone.replace(/[\s\-\(\)\.]/g, '');
+    // Irish domestic (e.g. 0871234567, 01234567, 0741234567) or international (+353/00353/353)
+    const phoneRegex = /^(\+353|00353|353|0)[1-9]\d{6,9}$/;
+    if (!phoneRegex.test(normalized)) {
+      errors.push("Invalid phone number.");
+    }
   }
   return {
     isValid: errors.length === 0,
     errors: errors
   };
+}
+
+/**
+ * Checks if a given row is eligible for archiving based on status, transition/processed date, and cutoff date.
+ * @param {string} status - Current status of the request.
+ * @param {string} notificationDateStr - The string in NOTIFICATION_COL (e.g. "Ready on dd/MM/yyyy HH:mm:ss" or "Processed on dd/MM/yyyy").
+ * @param {Date} cutOffDate - The threshold date before which rows are archived.
+ * @param {string} [readyStatus="Sent to Pharmacy"] - The ready status string.
+ * @returns {boolean} True if eligible for archive.
+ */
+function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = "Sent to Pharmacy") {
+  if (status !== readyStatus || !notificationDateStr || typeof notificationDateStr !== 'string') {
+    return false;
+  }
+  let datePart = null;
+  if (notificationDateStr.startsWith("Ready on ")) {
+    datePart = notificationDateStr.replace("Ready on ", "").split(' ')[0];
+  } else if (notificationDateStr.startsWith("Processed on ")) {
+    datePart = notificationDateStr.replace("Processed on ", "").split(' ')[0];
+  }
+
+  if (datePart) {
+    const dateParts = datePart.split('/');
+    if (dateParts.length === 3) {
+      const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
+      return !isNaN(processedDate.getTime()) && processedDate < cutOffDate;
+    }
+  }
+  return false;
 }
 
 /**
@@ -75,4 +112,14 @@ function formatWhatsAppNumber(phone) {
   if (cleaned.startsWith('353')) return cleaned;
   if (cleaned.startsWith('0')) return '353' + cleaned.substring(1);
   return '353' + cleaned;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    reportError: reportError,
+    getOrCreateSheet: getOrCreateSheet,
+    validatePatientData: validatePatientData,
+    formatWhatsAppNumber: formatWhatsAppNumber,
+    isRowArchivable: isRowArchivable
+  };
 }

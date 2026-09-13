@@ -1,15 +1,22 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
+(function() {
+    let initialized = false;
     let pages = [];
 
-    if (searchInput && searchResults) {
+    function initSearch() {
+        if (initialized) return;
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        if (!searchInput || !searchResults) return;
+
+        initialized = true;
+
         // Fetch page data for search index
         fetch('searchIndex.json')
             .then(response => response.json())
             .then(data => {
                 pages = data;
-            });
+            })
+            .catch(err => console.error('Could not load search index:', err));
 
         searchInput.addEventListener('input', () => {
             const query = searchInput.value.toLowerCase();
@@ -17,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (query.length > 2) {
                 const results = pages.filter(page => {
-                    return page.title.toLowerCase().includes(query) || page.content.toLowerCase().includes(query);
+                    return (page.title && page.title.toLowerCase().includes(query)) ||
+                           (page.content && page.content.toLowerCase().includes(query));
                 });
 
                 if (results.length > 0) {
@@ -34,4 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+
+    document.addEventListener('componentLoaded', (e) => {
+        if (e.detail && e.detail.elementId === 'header-placeholder') {
+            initSearch();
+        }
+    });
+
+    document.addEventListener('componentsLoaded', initSearch);
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSearch);
+    } else {
+        initSearch();
+    }
+})();

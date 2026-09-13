@@ -1,8 +1,10 @@
 (function() {
     // Check if the user has already seen the welcome message
-    if (localStorage.getItem('demo_welcome_seen') === 'true') {
-        return;
-    }
+    try {
+        if (localStorage.getItem('demo_welcome_seen') === 'true') {
+            return;
+        }
+    } catch (e) {}
 
     // Save currently focused element to restore upon dismissal
     const previouslyFocusedElement = document.activeElement;
@@ -66,13 +68,15 @@
     closeBtn.style.fontWeight = 'bold';
 
     function closeModal() {
-        localStorage.setItem('demo_welcome_seen', 'true');
         document.removeEventListener('keydown', handleKeyDown);
         modalOverlay.style.display = 'none';
         modalOverlay.remove();
         if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
             previouslyFocusedElement.focus();
         }
+        try {
+            localStorage.setItem('demo_welcome_seen', 'true');
+        } catch (e) {}
     }
 
     closeBtn.addEventListener('click', closeModal);
@@ -91,8 +95,13 @@
             return;
         }
         if (e.key === 'Tab') {
-            const focusableElements = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            const focusable = Array.from(focusableElements);
+            const rawFocusable = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const focusable = Array.from(rawFocusable).filter(el => {
+                return !el.disabled &&
+                       el.getAttribute('aria-hidden') !== 'true' &&
+                       el.offsetParent !== null &&
+                       window.getComputedStyle(el).visibility !== 'hidden';
+            });
             if (focusable.length === 0) {
                 e.preventDefault();
                 return;

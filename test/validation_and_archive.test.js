@@ -1,27 +1,16 @@
 const { expect } = require('chai');
+const { validatePatientData, formatWhatsAppNumber, isRowArchivable } = require('../utils.gs');
 
 describe('Backend Utility Logic Tests', () => {
-    function validatePatientData(email, phone) {
-        const errors = [];
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) errors.push("Invalid email address.");
-        if (!phone || typeof phone !== 'string' || phone.trim().length < 7) errors.push("Invalid phone number.");
-        return { isValid: errors.length === 0, errors };
-    }
-
-    function formatWhatsAppNumber(phone) {
-        if (!phone) return "";
-        const cleaned = phone.toString().replace(/[\s\-\(\)]/g, '');
-        if (cleaned.startsWith('+353')) return cleaned.substring(1);
-        if (cleaned.startsWith('00353')) return cleaned.substring(2);
-        if (cleaned.startsWith('353')) return cleaned;
-        if (cleaned.startsWith('0')) return '353' + cleaned.substring(1);
-        return '353' + cleaned;
-    }
-
     describe('validatePatientData()', () => {
         it('should validate valid email and phone numbers', () => {
             const res = validatePatientData('patient@example.com', '0871234567');
+            expect(res.isValid).to.be.true;
+            expect(res.errors).to.be.empty;
+        });
+
+        it('should validate phone with international +353 prefix', () => {
+            const res = validatePatientData('patient@example.com', '+353 87 123 4567');
             expect(res.isValid).to.be.true;
             expect(res.errors).to.be.empty;
         });
@@ -40,6 +29,12 @@ describe('Backend Utility Logic Tests', () => {
 
         it('should reject non-string phone numbers', () => {
             const res = validatePatientData('patient@example.com', 871234567);
+            expect(res.isValid).to.be.false;
+            expect(res.errors).to.include("Invalid phone number.");
+        });
+
+        it('should reject invalid characters or plus-only phone numbers', () => {
+            const res = validatePatientData('patient@example.com', '+353abcdef');
             expect(res.isValid).to.be.false;
             expect(res.errors).to.include("Invalid phone number.");
         });
@@ -64,28 +59,24 @@ describe('Backend Utility Logic Tests', () => {
         });
     });
 
-    describe('Archive Date Filtering Logic', () => {
-        function shouldArchiveRow(status, processedDateStr, cutOffDate) {
-            const STATUS_READY = "Sent to Pharmacy";
-            if (status === STATUS_READY && processedDateStr && typeof processedDateStr === 'string' && processedDateStr.startsWith("Processed on ")) {
-                const dateParts = processedDateStr.replace("Processed on ", "").split('/');
-                if (dateParts.length === 3) {
-                    const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
-                    return processedDate < cutOffDate;
-                }
-            }
-            return false;
-        }
-
-        it('should identify rows older than cutoff date for archiving', () => {
+    describe('Archive Date Filtering Logic (isRowArchivable)', () => {
+        it('should identify rows older than cutoff date for archiving using Ready on timestamp', () => {
             const cutOffDate = new Date(2026, 0, 1); // 1 Jan 2026
-            const oldRowArchivable = shouldArchiveRow('Sent to Pharmacy', 'Processed on 15/06/2025', cutOffDate);
-            const recentRowArchivable = shouldArchiveRow('Sent to Pharmacy', 'Processed on 15/03/2026', cutOffDate);
-            const queryRowArchivable = shouldArchiveRow('Query - Please Contact Us', 'Processed on 15/06/2025', cutOffDate);
+            const oldRowReady = isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 14:30:00', cutOffDate);
+            const recentRowReady = isRowArchivable('Sent to Pharmacy', 'Ready on 15/03/2026 10:00:00', cutOffDate);
+            const oldRowProcessed = isRowArchivable('Sent to Pharmacy', 'Processed on 15/06/2025', cutOffDate);
+            const queryRowArchivable = isRowArchivable('Query - Please Contact Us', 'Ready on 15/06/2025 14:30:00', cutOffDate);
 
-            expect(oldRowArchivable).to.be.true;
-            expect(recentRowArchivable).to.be.false;
+            expect(oldRowReady).to.be.true;
+            expect(oldRowProcessed).to.be.true;
+            expect(recentRowReady).to.be.false;
             expect(queryRowArchivable).to.be.false;
+        });
+
+        it('should reject invalid or malformed dates gracefully', () => {
+            const cutOffDate = new Date(2026, 0, 1);
+            expect(isRowArchivable('Sent to Pharmacy', null, cutOffDate)).to.be.false;
+            expect(isRowArchivable('Sent to Pharmacy', 'Invalid date format', cutOffDate)).to.be.false;
         });
     });
 });

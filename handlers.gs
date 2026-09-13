@@ -60,13 +60,25 @@ function handleAppointmentSubmission(data) {
   headers[APPT_LAYOUT.NOTIFICATION_SENT] = "Notification Sent";
   headers[APPT_LAYOUT.PREFERRED_TIME] = "Preferred Time";
 
-  const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
-
+  const errors = [];
+  if (!data.name || typeof data.name !== 'string' || !data.name.trim()) errors.push("Patient name is required.");
+  if (!data.dob || typeof data.dob !== 'string' || !data.dob.trim()) errors.push("Date of birth is required.");
+  if (!data.type || typeof data.type !== 'string' || !data.type.trim()) errors.push("Appointment type is required.");
   const validation = validatePatientData(data.email, data.phone);
   if (!validation.isValid) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': validation.errors })).setMimeType(ContentService.MimeType.JSON);
+    errors.push(...validation.errors);
+  }
+  if (errors.length > 0) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
   }
 
+  // Attempt confirmation notification first before committing processed state
+  const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
+  if (!notificationSuccess) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver appointment confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
   const timestamp = new Date();
   const rowData = [];
   rowData[APPT_LAYOUT.TIMESTAMP] = timestamp;
@@ -83,7 +95,6 @@ function handleAppointmentSubmission(data) {
   rowData[APPT_LAYOUT.PREFERRED_TIME] = data.preferredTime;
 
   sheet.appendRow(rowData);
-  sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
 
   return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment' })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -106,13 +117,25 @@ function handleSickNoteSubmission(data) {
   headers[SICK_NOTE_LAYOUT.SIGNATURE] = "Signature";
   headers[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "Notification Sent";
 
-  const sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
-
+  const errors = [];
+  if (!data.name || typeof data.name !== 'string' || !data.name.trim()) errors.push("Patient name is required.");
+  if (!data.dob || typeof data.dob !== 'string' || !data.dob.trim()) errors.push("Date of birth is required.");
+  if (!data.type || typeof data.type !== 'string' || !data.type.trim()) errors.push("Cert type is required.");
+  if (!data.pps || typeof data.pps !== 'string' || !data.pps.trim()) errors.push("PPS number is required.");
   const validation = validatePatientData(data.email, data.phone);
   if (!validation.isValid) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': validation.errors })).setMimeType(ContentService.MimeType.JSON);
+    errors.push(...validation.errors);
+  }
+  if (errors.length > 0) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
   }
 
+  const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
+  if (!notificationSuccess) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver sick note confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
   const timestamp = new Date();
   const rowData = [];
   rowData[SICK_NOTE_LAYOUT.TIMESTAMP] = timestamp;
@@ -131,46 +154,64 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
 
   sheet.appendRow(rowData);
-  sendSickNoteConfirmation(data.name, data.email);
 
   return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note' })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function handlePrescriptionSubmission(data) {
-    const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
-
+    const errors = [];
     if (!data || !data.patientDetails || typeof data.patientDetails !== 'object') {
        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': ["Missing or invalid patientDetails payload."] })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    const validation = validatePatientData(data.patientDetails.email, data.patientDetails.phone);
-    if (!validation.isValid) {
-       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': validation.errors })).setMimeType(ContentService.MimeType.JSON);
+    const details = data.patientDetails;
+    if (!details.name || typeof details.name !== 'string' || !details.name.trim()) errors.push("Patient name is required.");
+    if (!details.dob || typeof details.dob !== 'string' || !details.dob.trim()) errors.push("Date of birth is required.");
+    if (!details.pharmacy || typeof details.pharmacy !== 'string' || !details.pharmacy.trim()) errors.push("Pharmacy selection is required.");
+
+    if (!data.medicationList || !Array.isArray(data.medicationList) || data.medicationList.length === 0) {
+       errors.push("At least one medication is required.");
+    } else {
+       data.medicationList.forEach((med, idx) => {
+          if (!med || !med.name || typeof med.name !== 'string' || !med.name.trim()) {
+             errors.push(`Medication #${idx + 1} is missing a valid name.`);
+          }
+       });
     }
 
-    const timestamp = new Date();
-    let medicationString = "";
-    if (data.medicationList && Array.isArray(data.medicationList)) {
-       medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
+    const validation = validatePatientData(details.email, details.phone);
+    if (!validation.isValid) {
+       errors.push(...validation.errors);
     }
+
+    if (errors.length > 0) {
+       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
+    if (!notificationSuccess) {
+       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Failed to deliver prescription confirmation notification.' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
+    const timestamp = new Date();
+    const medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage || ''} (${m.freq || ''})`).join("\n");
 
     const newRow = [];
     newRow[0] = timestamp;
-    newRow[EMAIL_COL - 1] = data.patientDetails.email;
-    newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
-    newRow[NAME_COL - 1] = data.patientDetails.name;
-    newRow[4] = data.patientDetails.address || "";
-    newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone;
-    newRow[6] = data.patientDetails.dob;
+    newRow[EMAIL_COL - 1] = details.email;
+    newRow[PHARMACY_COL - 1] = details.pharmacy;
+    newRow[NAME_COL - 1] = details.name;
+    newRow[4] = details.address || "";
+    newRow[PHONE_COL - 1] = "'" + details.phone;
+    newRow[6] = details.dob;
     newRow[MEDS_COL - 1] = medicationString;
-    newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
+    newRow[COMM_PREF_COL - 1] = details.commPref || "Email";
     newRow[STATUS_COL - 1] = "";
     newRow[NOTIFICATION_COL - 1] = `Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`;
 
     sheet.appendRow(newRow);
     const row = sheet.getLastRow();
-
-    sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
 
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
 }

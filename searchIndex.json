@@ -43,5 +43,15 @@
         "url": "zero-tolerance.html",
         "title": "Zero Tolerance Policy",
         "content": "Unacceptable behaviour, dignity and respect at work."
+    },
+    {
+        "url": "forms.html",
+        "title": "Useful Forms",
+        "content": "Download useful forms, medical card application, GP visit card, driving licence medical report, eyesight report, European health insurance card EHIC."
+    },
+    {
+        "url": "confidentiality.html",
+        "title": "Confidentiality & Patient Records",
+        "content": "Data protection, GDPR, patient privacy, medical records access, confidentiality policies."
     }
 ]

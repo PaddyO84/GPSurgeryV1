@@ -121,15 +121,23 @@ function onEdit(e) {
 
     if (status === STATUS_QUERY) {
       if (!patientEmail) return;
-      const subject = "Action Required: Query Regarding Your Prescription Request";
-      const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+      const isAppointment = sheet.getName() === "Appointments";
+      const subject = isAppointment
+        ? "Action Required: Query Regarding Your Appointment Request"
+        : "Action Required: Query Regarding Your Prescription Request";
+      const requestDesc = isAppointment ? "appointment request" : "prescription request";
+      const body = `<p>Dear ${patientName},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
     } else if (status === STATUS_READY && sheet.getName() === SHEET_NAME) {
       const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
 
+      // Record ready timestamp in NOTIFICATION_COL for accurate archiving
+      const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+      sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
+
       if (commPref === 'whatsapp') {
-        const staffEmail = e.user.getEmail();
+        const staffEmail = e.user ? e.user.getEmail() : ADMIN_EMAIL;
         sendWhatsAppLinkToStaff(row, staffEmail);
       } else {
         sendReadyEmail(row);
@@ -197,10 +205,8 @@ function onFormSubmit(e) {
   }
 }
 
-// --- APPOINTMENT HANDLERS ---
-
 function sendAppointmentConfirmation(name, email, type, time) {
-  if (!email) return;
+  if (!email) return false;
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;
@@ -214,15 +220,17 @@ function sendAppointmentConfirmation(name, email, type, time) {
     const htmlBody = template.evaluate().getContent();
     
     MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
+    return true;
   } catch (e) {
     reportError('sendAppointmentConfirmation', e, null);
+    return false;
   }
 }
 
 // --- SICK NOTE HANDLERS ---
 
 function sendSickNoteConfirmation(name, email) {
-  if (!email) return;
+  if (!email) return false;
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;
@@ -234,8 +242,10 @@ function sendSickNoteConfirmation(name, email) {
     const htmlBody = template.evaluate().getContent();
     
     MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
+    return true;
   } catch (e) {
     reportError('sendSickNoteConfirmation', e, null);
+    return false;
   }
 }
 
@@ -384,7 +394,7 @@ function generateWhatsAppLink(row) {
  * Sends an initial confirmation email to the patient when their form is submitted.
  */
 function sendConfirmationNotification(patientName, patientEmail, commPref) {
-  if (!patientEmail) return;
+  if (!patientEmail) return false;
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;
@@ -397,8 +407,10 @@ function sendConfirmationNotification(patientName, patientEmail, commPref) {
     const htmlBody = template.evaluate().getContent();
 
     MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
+    return true;
   } catch (e) {
     reportError('sendConfirmationNotification', e, null);
+    return false;
   }
 }
 
@@ -571,36 +583,42 @@ function archiveOldRequests() {
       const status = rowData[STATUS_COL - 1];
       const processedDateStr = rowData[NOTIFICATION_COL - 1];
 
-      let shouldArchive = false;
-      if (status === STATUS_READY && processedDateStr && typeof processedDateStr === 'string' && processedDateStr.startsWith("Processed on ")) {
-        const dateParts = processedDateStr.replace("Processed on ", "").split('/');
-        if (dateParts.length === 3) {
-          const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
-          if (processedDate < cutOffDate) {
-            shouldArchive = true;
-          }
-        }
-      }
-
-      if (shouldArchive) {
-        rowsToArchive.push(rowData);
-      } else {
-        rowsToKeep.push(rowData);
+      if (isRowArchivable(status, processedDateStr, cutOffDate, STATUS_READY)) {
+        rowsToArchive.push({ rowData, sheetRowIndex: i + 2 });
       }
     }
 
     if (rowsToArchive.length > 0) {
-      // Append all archived rows in one batch
+      // 1. Append all archived rows to archiveSheet first
       const archiveLastRow = archiveSheet.getLastRow();
-      archiveSheet.getRange(archiveLastRow + 1, 1, rowsToArchive.length, rowsToArchive[0].length).setValues(rowsToArchive);
+      const archiveValues = rowsToArchive.map(r => r.rowData);
+      archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
       SpreadsheetApp.flush();
 
-      // Overwrite source sheet with kept rows in one operation
-      sourceSheet.getRange(2, 1, data.length, sourceSheet.getLastColumn()).clearContent();
-      if (rowsToKeep.length > 0) {
-        sourceSheet.getRange(2, 1, rowsToKeep.length, rowsToKeep[0].length).setValues(rowsToKeep);
+      // 2. Identify contiguous batches of row indices in bottom-up order to safely delete only confirmed archived rows
+      const rowIndices = rowsToArchive.map(r => r.sheetRowIndex).sort((a, b) => b - a);
+      const batches = [];
+      let currentBatch = null;
+
+      for (let idx of rowIndices) {
+        if (!currentBatch) {
+          currentBatch = { startRow: idx, numRows: 1 };
+        } else if (idx === currentBatch.startRow - 1) {
+          currentBatch.startRow = idx;
+          currentBatch.numRows += 1;
+        } else {
+          batches.push(currentBatch);
+          currentBatch = { startRow: idx, numRows: 1 };
+        }
       }
-      Logger.log(`Batch archived ${rowsToArchive.length} rows.`);
+      if (currentBatch) batches.push(currentBatch);
+
+      // Execute deletions bottom-up
+      for (let batch of batches) {
+        sourceSheet.deleteRows(batch.startRow, batch.numRows);
+      }
+      SpreadsheetApp.flush();
+      Logger.log(`Batch archived and deleted ${rowsToArchive.length} rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

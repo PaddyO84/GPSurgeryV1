@@ -268,7 +268,7 @@
 <script>
     // --- CONFIGURATION ---------
     const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
-
+    const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
     const pharmacyOptions = {
         "Pharmacy A, Example Town": "Pharmacy A, Example Town",
         "Pharmacy B, Example Town": "Pharmacy B, Example Town",
@@ -564,8 +564,57 @@
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style></head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${med.name}</td><td>${med.dosage}</td><td>${med.freq}</td></tr>`).join('')}</tbody></table></body></html>`);
-        printWindow.document.close();
+        const doc = printWindow.document;
+        doc.open();
+        doc.write('<!DOCTYPE html><html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style></head><body></body></html>');
+        doc.close();
+
+        const body = doc.body;
+        const h1 = doc.createElement('h1');
+        h1.textContent = 'Prescription Request';
+        body.appendChild(h1);
+
+        const createDetailP = (label, value) => {
+            const p = doc.createElement('p');
+            const strong = doc.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(doc.createTextNode(value || ''));
+            return p;
+        };
+
+        body.appendChild(createDetailP('Name', patientDetails.name));
+        body.appendChild(createDetailP('Date of Birth', patientDetails.dob));
+        body.appendChild(createDetailP('Pharmacy', patientDetails.pharmacy));
+
+        const h3 = doc.createElement('h3');
+        h3.textContent = 'Medications';
+        body.appendChild(h3);
+
+        const table = doc.createElement('table');
+        const thead = doc.createElement('thead');
+        const headRow = doc.createElement('tr');
+        ['Name', 'Dosage', 'Frequency'].forEach(headerText => {
+            const th = doc.createElement('th');
+            th.textContent = headerText;
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = doc.createElement('tbody');
+        medicationList.forEach(med => {
+            const row = doc.createElement('tr');
+            ['name', 'dosage', 'freq'].forEach(prop => {
+                const td = doc.createElement('td');
+                td.textContent = med[prop] || '';
+                row.appendChild(td);
+            });
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        body.appendChild(table);
+
         printWindow.print();
     }
     
