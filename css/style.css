@@ -707,12 +707,21 @@ label {
 }
 
 input:not([type="checkbox"]):not([type="radio"]), select, textarea {
-    padding: 0.875rem 1rem;
+    height: 48px;
+    padding: 0 1rem;
+    box-sizing: border-box;
     border-radius: var(--radius-sm);
     border: 1px solid #e2e8f0;
     font-family: inherit;
     font-size: 1rem;
+    line-height: 48px;
     transition: 0.2s;
+}
+
+textarea {
+    height: auto;
+    padding: 0.875rem 1rem;
+    line-height: 1.5;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus {
@@ -765,7 +774,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:f
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 46px;
+    height: 48px;
     padding: 0 1.75rem;
     box-sizing: border-box;
     border-radius: var(--radius-sm);
@@ -779,6 +788,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:f
     transition: 0.2s ease-in-out;
     box-shadow: var(--shadow-sm);
     white-space: nowrap;
+    align-self: flex-end;
 }
 
 .add-med-group .form-group {
