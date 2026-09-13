@@ -1,8 +1,12 @@
+import os
+from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 import json
 
 def verify_address_submission(page):
-    page.goto("file:///app/appointments.html")
+    repo_root = Path(__file__).resolve().parent.parent
+    appointments_file = (repo_root / "appointments.html").as_uri()
+    page.goto(appointments_file)
 
     # Handle Welcome Modal if present
     try:

@@ -72,7 +72,8 @@ describe('Backend Utility Logic Tests', () => {
             const queryRowArchivable = isRowArchivable('Query - Please Contact Us', 'Ready on 15/06/2025 14:30:00', cutOffDate);
 
             expect(oldRowReady).to.be.true;
-            expect(oldRowProcessed).to.be.true;
+            // Processed on only represents submission confirmation, not proof of ready notification
+            expect(oldRowProcessed).to.be.false;
             expect(recentRowReady).to.be.false;
             expect(queryRowArchivable).to.be.false;
         });

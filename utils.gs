@@ -85,8 +85,6 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
   let datePart = null;
   if (notificationDateStr.startsWith("Ready on ")) {
     datePart = notificationDateStr.replace("Ready on ", "").split(' ')[0];
-  } else if (notificationDateStr.startsWith("Processed on ")) {
-    datePart = notificationDateStr.replace("Processed on ", "").split(' ')[0];
   }
 
   if (datePart) {
