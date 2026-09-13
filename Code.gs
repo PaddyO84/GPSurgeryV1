@@ -301,26 +301,33 @@ function sendDynamicNotification() {
 function showEmailDialog(row) {
   const ui = SpreadsheetApp.getUi();
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const rowValues = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-  const patientName = sheet.getRange(row, NAME_COL).getValue();
-  const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
-  const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
-  const status = sheet.getRange(row, STATUS_COL).getValue().toString().trim();
+  const patientName = rowValues[NAME_COL - 1];
+  const patientEmail = rowValues[EMAIL_COL - 1];
+  const pharmacy = rowValues[PHARMACY_COL - 1];
+  const status = (rowValues[STATUS_COL - 1] || '').toString().trim();
 
   if (!patientEmail) {
     ui.alert(`No email address found in row ${row} for ${patientName}.`);
     return;
   }
 
+  const safeName = escapeHtml(patientName);
+  const safeEmail = escapeHtml(patientEmail);
+  const safePharmacy = escapeHtml(pharmacy);
+  const safePhone = escapeHtml(YOUR_PHONE_NUMBER);
+  const safeSender = escapeHtml(SENDER_NAME);
+
   let subject = '';
   let body = '';
 
   if (status === STATUS_READY) {
-    subject = `Your Prescription has been sent to ${pharmacy}`;
-    body = `Dear ${patientName},<br><br>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.<br><br>Please contact your pharmacy directly to confirm when your medication will be ready for collection.<br><br>Thank you,<br><strong>${SENDER_NAME}</strong>`;
+    subject = `Your Prescription has been sent to ${safePharmacy}`;
+    body = `Dear ${safeName},<br><br>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${safePharmacy}</strong>.<br><br>Please contact your pharmacy directly to confirm when your medication will be ready for collection.<br><br>Thank you,<br><strong>${safeSender}</strong>`;
   } else if (status === STATUS_QUERY) {
     subject = "Action Required: Query Regarding Your Prescription Request";
-    body = `Dear ${patientName},<br><br>Regarding your prescription request, we have a query that needs to be resolved.<br><br>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.<br><br>Thank you,<br><strong>${SENDER_NAME}</strong>`;
+    body = `Dear ${safeName},<br><br>Regarding your prescription request, we have a query that needs to be resolved.<br><br>Please contact the surgery by phone at <strong>${safePhone}</strong>.<br><br>Thank you,<br><strong>${safeSender}</strong>`;
   } else {
     ui.alert(`No notification template for status: "${status}".`);
     return;
@@ -328,8 +335,8 @@ function showEmailDialog(row) {
 
   const html = `
     <div style="font-family: sans-serif;">
-      <h3>Preview Email to ${patientName}</h3>
-      <p><b>To:</b> ${patientEmail}</p>
+      <h3>Preview Email to ${safeName}</h3>
+      <p><b>To:</b> ${safeEmail}</p>
       <p><b>Subject:</b> ${subject}</p>
       <hr>
       <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color:#f9f9f9;">${body}</div>
@@ -340,7 +347,7 @@ function showEmailDialog(row) {
   `;
 
   const htmlOutput = HtmlService.createHtmlOutput(html).setWidth(500).setHeight(400);
-  ui.showModalDialog(htmlOutput, `Confirm Email to ${patientName}`);
+  ui.showModalDialog(htmlOutput, `Confirm Email to ${safeName}`);
 }
 
 /**
@@ -350,9 +357,10 @@ function sendEmailFromDialog(row) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   const ui = SpreadsheetApp.getUi();
   try {
-    const status = sheet.getRange(row, STATUS_COL).getValue().toString().trim();
-    const patientName = sheet.getRange(row, NAME_COL).getValue();
-    const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
+    const rowValues = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const status = (rowValues[STATUS_COL - 1] || '').toString().trim();
+    const patientName = rowValues[NAME_COL - 1];
+    const patientEmail = rowValues[EMAIL_COL - 1];
 
     if (status === STATUS_READY) {
       const success = sendReadyEmail(row);
@@ -383,11 +391,12 @@ function sendEmailFromDialog(row) {
 function generateWhatsAppLink(row) {
   const ui = SpreadsheetApp.getUi();
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const rowValues = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-  const patientName = sheet.getRange(row, NAME_COL).getValue();
-  const patientPhone = sheet.getRange(row, PHONE_COL).getValue();
-  const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
-  const status = sheet.getRange(row, STATUS_COL).getValue().toString().trim();
+  const patientName = rowValues[NAME_COL - 1];
+  const patientPhone = rowValues[PHONE_COL - 1];
+  const pharmacy = rowValues[PHARMACY_COL - 1];
+  const status = (rowValues[STATUS_COL - 1] || '').toString().trim();
 
   if (!patientPhone) {
     ui.alert(`No phone number found in row ${row} for ${patientName}.`);
@@ -407,9 +416,10 @@ function generateWhatsAppLink(row) {
   const whatsappNumber = formatWhatsAppNumber(patientPhone);
   const prefilledMessage = encodeURIComponent(messageText);
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+  const safeName = escapeHtml(patientName);
 
   const htmlOutput = HtmlService.createHtmlOutput(
-      `<h3>Send Notification to ${patientName}</h3><p>Click the link below to open WhatsApp on your device.</p><p><a href="${whatsappUrl}" target="_blank" style="font-size:1.2em;">Open WhatsApp</a></p>`
+      `<h3>Send Notification to ${safeName}</h3><p>Click the link below to open WhatsApp on your device.</p><p><a href="${whatsappUrl}" target="_blank" style="font-size:1.2em;">Open WhatsApp</a></p>`
     ).setWidth(350).setHeight(150);
   ui.showModalDialog(htmlOutput, 'WhatsApp Notification Link');
 }
@@ -492,11 +502,12 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
     const whatsappNumber = formatWhatsAppNumber(patientPhone);
     const prefilledMessage = encodeURIComponent(`Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+    const safeName = escapeHtml(patientName);
 
     const subject = `Action Required: Send WhatsApp to ${patientName}`;
     const body = `
       <p>Hi,</p>
-      <p>Please send the prescription notification to <strong>${patientName}</strong> by clicking the link below. This will open WhatsApp on your device with a pre-filled message.</p>
+      <p>Please send the prescription notification to <strong>${safeName}</strong> by clicking the link below. This will open WhatsApp on your device with a pre-filled message.</p>
       <p><a href="${whatsappUrl}" target="_blank" style="font-size:1.2em; font-weight:bold; color: #25D366;">Click Here to Send WhatsApp Message</a></p>
       <p>If the link does not work, please contact them manually.</p>
       <p>Thank you.</p>
@@ -513,25 +524,36 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
 
 
 /**
- * Sets up the automated triggers and required sheets.
- * Creates the 'Archive' sheet if it doesn't exist, configures a weekly trigger
- * for archiving, and an onFormSubmit trigger for new requests.
+ * Helper to get or create the 'Archive' sheet and copy headers from source sheet if needed.
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - The active spreadsheet.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} [sourceSheet] - The source sheet to copy headers from.
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} The archive sheet.
  */
-function setupAutomatedTriggers() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+function ensureArchiveSheet(ss, sourceSheet) {
   let archiveSheet = ss.getSheetByName("Archive");
-  const sourceSheet = ss.getSheetByName(SHEET_NAME);
-  
-  // 1. Create Archive Sheet
   if (!archiveSheet) {
     archiveSheet = ss.insertSheet("Archive");
-    if (sourceSheet) {
+    if (sourceSheet && sourceSheet.getLastColumn() > 0) {
       sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
     }
     Logger.log("Created 'Archive' sheet.");
   } else {
     Logger.log("'Archive' sheet already exists.");
   }
+  return archiveSheet;
+}
+
+/**
+ * Sets up the automated triggers and required sheets.
+ * Creates the 'Archive' sheet if it doesn't exist, configures a weekly trigger
+ * for archiving, and an onFormSubmit trigger for new requests.
+ */
+function setupAutomatedTriggers() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sourceSheet = ss.getSheetByName(SHEET_NAME);
+  
+  // 1. Create Archive Sheet
+  const archiveSheet = ensureArchiveSheet(ss, sourceSheet);
 
   const existingTriggers = ScriptApp.getProjectTriggers();
   let messages = [];
@@ -605,12 +627,7 @@ function archiveOldRequests() {
     const sourceSheet = ss.getSheetByName(SHEET_NAME);
     if (!sourceSheet) return;
 
-    let archiveSheet = ss.getSheetByName("Archive");
-    if (!archiveSheet) {
-      archiveSheet = ss.insertSheet("Archive");
-      sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
-      Logger.log("Created 'Archive' sheet.");
-    }
+    const archiveSheet = ensureArchiveSheet(ss, sourceSheet);
 
     const lastRow = sourceSheet.getLastRow();
     if (lastRow <= 1) return;

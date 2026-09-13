@@ -37,3 +37,34 @@ function testReportError() {
     }
   }
 }
+
+function testReportErrorFailurePath() {
+  const mockError = new Error("Original catastrophic failure");
+  let sendEmailAttempted = false;
+
+  // Mock MailApp to simulate email failure
+  const mockMailApp = {
+    sendEmail: function() {
+      sendEmailAttempted = true;
+      throw new Error("MailApp quota exceeded or service unavailable");
+    }
+  };
+
+  const realMailApp = typeof MailApp !== 'undefined' ? MailApp : undefined;
+  MailApp = mockMailApp;
+
+  try {
+    console.log("Running testReportErrorFailurePath...");
+    // reportError should catch the sendEmail exception and log it without re-throwing
+    reportError("testFailingFunction", mockError, 456);
+
+    if (!sendEmailAttempted) {
+      throw new Error("Expected MailApp.sendEmail to have been attempted");
+    }
+    console.log("testReportErrorFailurePath completed successfully.");
+  } finally {
+    if (realMailApp !== undefined) {
+      MailApp = realMailApp;
+    }
+  }
+}

@@ -134,6 +134,21 @@ function sanitizeCellValue(val) {
   return val;
 }
 
+/**
+ * Escapes HTML characters in a string to prevent XSS.
+ * @param {string} str - Raw string.
+ * @returns {string} Escaped HTML string.
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     reportError: reportError,
@@ -141,6 +156,7 @@ if (typeof module !== 'undefined' && module.exports) {
     validatePatientData: validatePatientData,
     formatWhatsAppNumber: formatWhatsAppNumber,
     isRowArchivable: isRowArchivable,
-    sanitizeCellValue: sanitizeCellValue
+    sanitizeCellValue: sanitizeCellValue,
+    escapeHtml: escapeHtml
   };
 }

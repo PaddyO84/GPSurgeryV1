@@ -1,7 +1,20 @@
 const { expect } = require('chai');
-const { validatePatientData, formatWhatsAppNumber, isRowArchivable, sanitizeCellValue } = require('../utils.gs');
+const { validatePatientData, formatWhatsAppNumber, isRowArchivable, sanitizeCellValue, escapeHtml } = require('../utils.gs');
 
 describe('Backend Utility Logic Tests', () => {
+    describe('escapeHtml()', () => {
+        it('should escape HTML special characters &, <, >, ", and \'', () => {
+            expect(escapeHtml('<script>alert("xss")</script>')).to.equal('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+            expect(escapeHtml("John & Mary's Clinic")).to.equal('John &amp; Mary&#39;s Clinic');
+        });
+
+        it('should handle empty or null values gracefully', () => {
+            expect(escapeHtml('')).to.equal('');
+            expect(escapeHtml(null)).to.equal('');
+            expect(escapeHtml(undefined)).to.equal('');
+        });
+    });
+
     describe('sanitizeCellValue()', () => {
         it('should prepend single quote to string values starting with formula characters =, +, -, @, \\t, \\r', () => {
             expect(sanitizeCellValue('=SUM(A1:A10)')).to.equal("'=SUM(A1:A10)");
