@@ -187,7 +187,8 @@ nav a:hover {
 }
 
 @media (min-width: 769px) {
-    .dropdown:hover .dropdown-content {
+    .dropdown:hover .dropdown-content,
+    .dropdown:focus-within .dropdown-content {
         display: flex;
     }
 }

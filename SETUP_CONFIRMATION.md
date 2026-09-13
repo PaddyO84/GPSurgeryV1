@@ -42,10 +42,10 @@ While the primary data entry is now handled by the `doPost` Web App function, th
 *Note: The `onFormSubmit` trigger is NO LONGER REQUIRED for new submissions, as the `doPost` function now handles the processing logic directly.*
 
 ### Environment Variables (Hardcoded in Script)
-Ensure these constants in `Code.gs` match the practice's details:
-*   `SENDER_NAME`: "Example Health Centre"
-*   `YOUR_PHONE_NUMBER`: "01-234-5678"
-*   `ADMIN_EMAIL`: "admin@example.com"
+The following constants in `Code.gs` are deployment placeholders. Every value must be replaced with real deployment-specific values before deployment:
+*   `SENDER_NAME`: Placeholder (e.g. `"Example Health Centre"` - replace with official surgery name)
+*   `YOUR_PHONE_NUMBER`: Placeholder (e.g. `"(01) 234 5679"` - replace with official surgery contact number)
+*   `ADMIN_EMAIL`: Placeholder (e.g. `"admin@example.com"` - replace with surgery administrator/reception email)
 
 ## 3. Frontend Configuration
 The file `prescription_form.html` has been updated to submit data to the Web App URL.

@@ -22,6 +22,15 @@
             menuToggle.setAttribute('aria-expanded', isExpanded);
             menuToggle.textContent = isExpanded ? '✕' : '☰';
             document.body.style.overflow = isExpanded ? 'hidden' : '';
+
+            if (isExpanded) {
+                const firstFocusable = nav.querySelector('a, button, input, [tabindex]:not([tabindex="-1"])');
+                if (firstFocusable) {
+                    firstFocusable.focus();
+                }
+            } else {
+                menuToggle.focus();
+            }
         }
 
         menuToggle.addEventListener('click', (e) => {
@@ -32,8 +41,32 @@
         // Close menu when clicking overlay or pressing Esc
         navOverlay.addEventListener('click', toggleMenu);
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && nav && nav.classList.contains('show')) {
+            if (!nav || !nav.classList.contains('show')) return;
+
+            if (e.key === 'Escape') {
                 toggleMenu();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const focusableElements = Array.from(nav.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])'))
+                    .filter(el => !el.disabled && el.offsetParent !== null);
+                if (focusableElements.length === 0) return;
+
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement || !nav.contains(document.activeElement)) {
+                        e.preventDefault();
+                        lastElement.focus();
+                    }
+                } else {
+                    if (document.activeElement === lastElement || !nav.contains(document.activeElement)) {
+                        e.preventDefault();
+                        firstElement.focus();
+                    }
+                }
             }
         });
 

@@ -211,18 +211,29 @@
 
             fetch(SCRIPT_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(data)
             })
-            .then(() => {
-                form.reset();
-                form.style.display = 'none';
-                successMsg.style.display = 'block';
+            .then(async response => {
+                if (response.type === 'opaque') {
+                    throw new Error('Opaque response received; cannot verify appointment submission.');
+                }
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP ${response.status}`);
+                }
+                const result = await response.json();
+                if (result && result.result === 'success') {
+                    form.reset();
+                    form.style.display = 'none';
+                    successMsg.style.display = 'block';
+                } else {
+                    const errorMsg = (result && result.errors) ? result.errors.join(' ') : ((result && result.error) || 'Submission was not accepted.');
+                    throw new Error(errorMsg);
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again or call reception.');
+                alert('An error occurred. Please try again or call reception: ' + (error.message || ''));
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
             });

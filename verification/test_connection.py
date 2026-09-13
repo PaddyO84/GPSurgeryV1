@@ -50,11 +50,9 @@ def verify_forms_wiring(page: Page):
     page.wait_for_selector("#summaryModal", state="visible")
 
     # Set up request interception for prescription submit
-    rx_requests = []
     def handle_rx_route(route):
         req = route.request
         if "script.google.com" in req.url and req.method == "POST":
-            rx_requests.append(req)
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -65,11 +63,10 @@ def verify_forms_wiring(page: Page):
 
     page.route("**/*", handle_rx_route)
 
-    page.click("button.btn-confirm")
+    with page.expect_request(lambda req: "script.google.com" in req.url and req.method == "POST") as rx_req_info:
+        page.click("button.btn-confirm")
 
-    page.wait_for_timeout(500)
-    assert len(rx_requests) > 0, "No request intercepted for Prescription POST"
-    request = rx_requests[0]
+    request = rx_req_info.value
     print("Prescription Request URL:", request.url)
     post_data = request.post_data_json
     print("Prescription Payload:", post_data)
@@ -131,11 +128,9 @@ def verify_forms_wiring(page: Page):
     page.wait_for_selector("#summaryModal", state="visible")
 
     # Set up request interception for sick note submit
-    sick_requests = []
     def handle_sick_route(route):
         req = route.request
         if "script.google.com" in req.url and req.method == "POST":
-            sick_requests.append(req)
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -146,11 +141,10 @@ def verify_forms_wiring(page: Page):
 
     page.route("**/*", handle_sick_route)
 
-    page.click("button.btn-confirm")
+    with page.expect_request(lambda req: "script.google.com" in req.url and req.method == "POST") as sick_req_info:
+        page.click("button.btn-confirm")
 
-    page.wait_for_timeout(500)
-    assert len(sick_requests) > 0, "No request intercepted for Sick Note POST"
-    request_sick = sick_requests[0]
+    request_sick = sick_req_info.value
     print("Sick Note Request URL:", request_sick.url)
     post_data_sick = request_sick.post_data_json
     print("Sick Note Payload:", post_data_sick)

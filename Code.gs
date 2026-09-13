@@ -135,7 +135,8 @@ function handleEdit(e) {
       let deliverySuccess = false;
 
       if (commPref === 'whatsapp') {
-        const staffEmail = e.user ? e.user.getEmail() : ADMIN_EMAIL;
+        const userEmail = e.user ? e.user.getEmail() : '';
+        const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
         deliverySuccess = sendWhatsAppLinkToStaff(row, staffEmail);
       } else {
         deliverySuccess = sendReadyEmail(row);

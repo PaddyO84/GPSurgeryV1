@@ -84,9 +84,9 @@ def process_file(filepath):
 def main():
     extensions = ['.html', '.gs', '.md', '.json', '.js', '.css']
     failed = False
+    prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     for root, dirs, files in os.walk('.'):
-        if '.git' in dirs:
-            dirs.remove('.git')
+        dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
             if any(file.endswith(ext) for ext in extensions):

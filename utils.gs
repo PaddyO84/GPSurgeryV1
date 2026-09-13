@@ -92,8 +92,18 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
   if (datePart) {
     const dateParts = datePart.split('/');
     if (dateParts.length === 3) {
-      const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
-      return !isNaN(processedDate.getTime()) && processedDate < cutOffDate;
+      const day = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10);
+      const year = parseInt(dateParts[2], 10);
+      const processedDate = new Date(year, month - 1, day);
+      if (
+        !isNaN(processedDate.getTime()) &&
+        processedDate.getDate() === day &&
+        processedDate.getMonth() === month - 1 &&
+        processedDate.getFullYear() === year
+      ) {
+        return processedDate < cutOffDate;
+      }
     }
   }
   return false;
@@ -114,12 +124,25 @@ function formatWhatsAppNumber(phone) {
   return '353' + cleaned;
 }
 
+/**
+ * Sanitizes a cell value to prevent formula injection by prepending a single quote if it starts with '='.
+ * @param {*} val - Cell value to sanitize.
+ * @returns {*} Sanitized cell value.
+ */
+function sanitizeCellValue(val) {
+  if (typeof val === 'string' && val.startsWith('=')) {
+    return "'" + val;
+  }
+  return val;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     reportError: reportError,
     getOrCreateSheet: getOrCreateSheet,
     validatePatientData: validatePatientData,
     formatWhatsAppNumber: formatWhatsAppNumber,
-    isRowArchivable: isRowArchivable
+    isRowArchivable: isRowArchivable,
+    sanitizeCellValue: sanitizeCellValue
   };
 }

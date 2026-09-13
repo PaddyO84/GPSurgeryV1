@@ -76,20 +76,27 @@ function handleAppointmentSubmission(data) {
   const timestamp = new Date();
   const rowData = [];
   rowData[APPT_LAYOUT.TIMESTAMP] = timestamp;
-  rowData[APPT_LAYOUT.EMAIL] = data.email;
-  rowData[APPT_LAYOUT.TYPE] = data.type;
-  rowData[APPT_LAYOUT.NAME] = data.name;
-  rowData[APPT_LAYOUT.ADDRESS] = data.address || "";
+  rowData[APPT_LAYOUT.EMAIL] = sanitizeCellValue(data.email);
+  rowData[APPT_LAYOUT.TYPE] = sanitizeCellValue(data.type);
+  rowData[APPT_LAYOUT.NAME] = sanitizeCellValue(data.name);
+  rowData[APPT_LAYOUT.ADDRESS] = sanitizeCellValue(data.address || "");
   rowData[APPT_LAYOUT.PHONE] = "'" + data.phone;
-  rowData[APPT_LAYOUT.DOB] = data.dob;
-  rowData[APPT_LAYOUT.NOTES] = data.notes;
+  rowData[APPT_LAYOUT.DOB] = sanitizeCellValue(data.dob);
+  rowData[APPT_LAYOUT.NOTES] = sanitizeCellValue(data.notes || "");
   rowData[APPT_LAYOUT.COMM_PREF] = "Email";
   rowData[APPT_LAYOUT.STATUS] = "New Request";
   rowData[APPT_LAYOUT.NOTIFICATION_SENT] = "";
-  rowData[APPT_LAYOUT.PREFERRED_TIME] = data.preferredTime;
+  rowData[APPT_LAYOUT.PREFERRED_TIME] = sanitizeCellValue(data.preferredTime || "");
 
-  sheet.appendRow(rowData);
-  const rowIndex = sheet.getLastRow();
+  const lock = LockService.getScriptLock();
+  let rowIndex = null;
+  try {
+    lock.waitLock(10000);
+    sheet.appendRow(rowData);
+    rowIndex = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
 
   // Send confirmation notification after persistence
   const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
@@ -138,21 +145,28 @@ function handleSickNoteSubmission(data) {
   const rowData = [];
   rowData[SICK_NOTE_LAYOUT.TIMESTAMP] = timestamp;
   rowData[SICK_NOTE_LAYOUT.STATUS] = "New Request";
-  rowData[SICK_NOTE_LAYOUT.NAME] = data.name;
-  rowData[SICK_NOTE_LAYOUT.DOB] = data.dob;
+  rowData[SICK_NOTE_LAYOUT.NAME] = sanitizeCellValue(data.name);
+  rowData[SICK_NOTE_LAYOUT.DOB] = sanitizeCellValue(data.dob);
   rowData[SICK_NOTE_LAYOUT.PHONE] = "'" + data.phone;
-  rowData[SICK_NOTE_LAYOUT.EMAIL] = data.email;
-  rowData[SICK_NOTE_LAYOUT.ADDRESS] = data.address || "";
-  rowData[SICK_NOTE_LAYOUT.CERT_TYPE] = data.type;
-  rowData[SICK_NOTE_LAYOUT.PPS] = data.pps;
-  rowData[SICK_NOTE_LAYOUT.CONDITION] = data.condition;
-  rowData[SICK_NOTE_LAYOUT.DATES] = data.dates;
-  rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = data.returnToWork;
-  rowData[SICK_NOTE_LAYOUT.SIGNATURE] = data.signature || "Not Provided";
+  rowData[SICK_NOTE_LAYOUT.EMAIL] = sanitizeCellValue(data.email);
+  rowData[SICK_NOTE_LAYOUT.ADDRESS] = sanitizeCellValue(data.address || "");
+  rowData[SICK_NOTE_LAYOUT.CERT_TYPE] = sanitizeCellValue(data.type);
+  rowData[SICK_NOTE_LAYOUT.PPS] = sanitizeCellValue(data.pps);
+  rowData[SICK_NOTE_LAYOUT.CONDITION] = sanitizeCellValue(data.condition || "");
+  rowData[SICK_NOTE_LAYOUT.DATES] = sanitizeCellValue(data.dates || "");
+  rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = sanitizeCellValue(data.returnToWork || "");
+  rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(data.signature || "Not Provided");
   rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "";
 
-  sheet.appendRow(rowData);
-  const rowIndex = sheet.getLastRow();
+  const lock = LockService.getScriptLock();
+  let rowIndex = null;
+  try {
+    lock.waitLock(10000);
+    sheet.appendRow(rowData);
+    rowIndex = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
 
   const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
   if (notificationSuccess) {
@@ -200,19 +214,26 @@ function handlePrescriptionSubmission(data) {
 
     const newRow = [];
     newRow[0] = timestamp;
-    newRow[EMAIL_COL - 1] = details.email;
-    newRow[PHARMACY_COL - 1] = details.pharmacy;
-    newRow[NAME_COL - 1] = details.name;
-    newRow[4] = details.address || "";
+    newRow[EMAIL_COL - 1] = sanitizeCellValue(details.email);
+    newRow[PHARMACY_COL - 1] = sanitizeCellValue(details.pharmacy);
+    newRow[NAME_COL - 1] = sanitizeCellValue(details.name);
+    newRow[4] = sanitizeCellValue(details.address || "");
     newRow[PHONE_COL - 1] = "'" + details.phone;
-    newRow[6] = details.dob;
-    newRow[MEDS_COL - 1] = medicationString;
-    newRow[COMM_PREF_COL - 1] = details.commPref || "Email";
+    newRow[6] = sanitizeCellValue(details.dob);
+    newRow[MEDS_COL - 1] = sanitizeCellValue(medicationString);
+    newRow[COMM_PREF_COL - 1] = sanitizeCellValue(details.commPref || "Email");
     newRow[STATUS_COL - 1] = "";
     newRow[NOTIFICATION_COL - 1] = "";
 
-    sheet.appendRow(newRow);
-    const row = sheet.getLastRow();
+    const lock = LockService.getScriptLock();
+    let row = null;
+    try {
+      lock.waitLock(10000);
+      sheet.appendRow(newRow);
+      row = sheet.getLastRow();
+    } finally {
+      lock.releaseLock();
+    }
 
     const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
     if (notificationSuccess) {

@@ -81,6 +81,8 @@ describe('Backend Utility Logic Tests', () => {
             const cutOffDate = new Date(2026, 0, 1);
             expect(isRowArchivable('Sent to Pharmacy', null, cutOffDate)).to.be.false;
             expect(isRowArchivable('Sent to Pharmacy', 'Invalid date format', cutOffDate)).to.be.false;
+            // 31st of February would roll over into March in loose Date parsing
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 31/02/2025 10:00:00', cutOffDate)).to.be.false;
         });
     });
 });
