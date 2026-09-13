@@ -490,12 +490,13 @@
                 const ref = generateReferenceNumber();
                 document.getElementById('prescriptionForm').style.display = 'none';
                 const successDiv = document.getElementById('successMessage');
+                const commMethod = (patientDetails.commPref && patientDetails.commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'email';
                 successDiv.innerHTML = `
                     <div class="success-animation">
                         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
                     </div>
                     <h2 class="success-title">Request Submitted</h2>
-                    <p class="success-message">Your reference number is: <strong>${ref}</strong>. A confirmation has been sent to your email. Please allow 48 hours for processing.</p>
+                    <p class="success-message">Your reference number is: <strong>${ref}</strong>. A confirmation has been sent via ${commMethod}. Please allow 48 hours for processing.</p>
                     <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
                 successDiv.style.display = 'block';

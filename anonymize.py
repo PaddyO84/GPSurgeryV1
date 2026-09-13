@@ -109,10 +109,13 @@ def main():
     extensions = ['.html', '.gs', '.md', '.json', '.js', '.css', '.py']
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
+    skip_files = {'anonymize.py', 'anonymize_local.json'}
     for root, dirs, files in os.walk('.'):
         dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
+            if file in skip_files:
+                continue
             if any(file.endswith(ext) for ext in extensions):
                 success = process_file(os.path.join(root, file))
                 if not success:
