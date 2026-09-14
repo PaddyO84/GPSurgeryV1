@@ -3,10 +3,14 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 import json
 
-def verify_address_submission(page):
-    repo_root = Path(__file__).resolve().parent.parent
-    appointments_file = (repo_root / "appointments.html").as_uri()
-    page.goto(appointments_file)
+def verify_address_submission(page, base_url: str = None):
+    if base_url:
+        appointments_url = f"{base_url}/appointments.html"
+    else:
+        repo_root = Path(__file__).resolve().parent.parent
+        appointments_url = (repo_root / "appointments.html").as_uri()
+
+    page.goto(appointments_url)
 
     # Handle Welcome Modal if present
     try:
@@ -47,7 +51,6 @@ def verify_address_submission(page):
             route.continue_()
 
     # Route interception
-    # Note: Using a wildcard for the Google Script URL to be safe, or just intercepting all POSTs if unique enough
     page.route("**/*", handle_route)
 
     # Click Submit
@@ -60,13 +63,27 @@ def verify_address_submission(page):
     page.screenshot(path="verification/appointment_address_verified.png")
 
 if __name__ == "__main__":
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from functools import partial
+    import threading
+
+    repo_root = Path(__file__).resolve().parent.parent
+    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    port = server.server_address[1]
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+    base_url = f"http://127.0.0.1:{port}"
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            verify_address_submission(page)
+            verify_address_submission(page, base_url=base_url)
         except Exception as e:
             print(f"Test failed: {e}")
             raise
         finally:
             browser.close()
+            server.shutdown()
+            server_thread.join()

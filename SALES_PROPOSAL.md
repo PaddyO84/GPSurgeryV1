@@ -14,7 +14,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 ### Value Proposition
 *   **Efficiency:** Automates the sorting and processing of hundreds of weekly requests.
 *   **Accessibility:** Fully responsive design ensures patients can access services from any device (Mobile, Tablet, Desktop).
-*   **Control:** Data remains in your existing Google Workspace environment.
+*   **Control:** Primary records remain in the existing Google Workspace environment.
 *   **Cost:** "One-time build" architecture with negligible ongoing hosting costs.
 
 ## 3. Key Features
@@ -23,7 +23,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 *   **Interactive Form:** Users can add multiple medications to a "digital cart" before submitting.
 *   **Validation:** Built-in checks ensure all required patient details (DOB, Phone, Pharmacy) are captured.
 *   **Intelligent Routing:** Submissions are automatically routed to a central "Form Responses" sheet, timestamped and status-tracked.
-*   **Notification System:** Automated email confirmations to patients and WhatsApp integration for "Ready for Collection" alerts.
+*   **Notification System:** Automated email confirmations to patients and staff-assisted WhatsApp notification for "Ready for Collection" alerts.
 
 ### 📝 Digital Sick Notes
 *   **E-Signature:** Integrated signature pad allows patients to sign requests digitally on their phone.
@@ -32,7 +32,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 
 ### 🛡️ Compliance & Security
 *   **Zero Tolerance & Confidentiality:** Dedicated pages clearly outlining practice policies.
-*   **Data Protection:** No patient data is stored on the static web hosting server; it transmits directly to your private Google Workspace/Drive environment over HTTPS.
+*   **Data Protection & Privacy:** No patient data is stored on the static web hosting server; it transmits directly to your private Google Workspace/Drive environment over HTTPS. Patient notification pathways encompass direct patient email confirmations and secure, staff-sent wa.me recipient messaging initiated by practice staff.
 *   **Input Sanitization & Validation:** Frontend inputs are validated and sanitized (via DOMPurify), and backend handlers validate payload structures. *Note: CORS mode (`mode: 'no-cors'`) allows browser cross-origin submission without exposing headers; it does not perform authentication or server-side sanitization.*
 *   **Security & Compliance Review Required:** Prior to production deployment, a formal security and compliance assessment must be conducted covering data retention schedules, access control and role-based permissions, patient data deletion procedures, audit logging, and incident response controls for data stored in Google Sheets or transmitted via automated emails.
 
@@ -45,7 +45,8 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 | **Styling (CSS)** | 855 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
 | **Backend Logic** | 633 Lines | Google Apps Script handling routing, emails, and cleaning. |
 | **Performance Target** | < 1.0s | Target Initial Load Time for static assets under 4G/broadband conditions (subject to client network and CDN caching). |
-| **Uptime Target** | 99.9% | Target availability backed by static CDN infrastructure SLA (e.g., GitHub Pages / Netlify), excluding Google Apps Script quota limits or scheduled maintenance. |
+| **Uptime Target (Static Site / CDN)** | 99.9% | Static-site / CDN availability SLA for frontend portals (e.g., GitHub Pages / Netlify). |
+| **End-to-End Forms Availability Target** | 99.5% | End-to-end form processing availability accounting for Google Apps Script execution quotas, backend dependencies, and service maintenance. |
 
 ## 5. Architectural Drawings
 
@@ -55,6 +56,7 @@ The system utilizes a **Serverless Headless Architecture**. The frontend is deco
 graph TD
     User((Patient))
     Device[Mobile / Desktop]
+    Staff[Practice Staff]
 
     subgraph Frontend_Static_Site
         Home[Home Page]
@@ -81,7 +83,8 @@ graph TD
 
     subgraph Notifications
         Email(Gmail Service)
-        WA(WhatsApp API Link)
+        StaffEmail(Email to Staff)
+        WA(wa.me link)
     end
 
     User --> Device
@@ -107,7 +110,10 @@ graph TD
     SickLogic --> Email
     ApptLogic --> Email
 
-    Sheet1 -.-> WA
+    Sheet1 -- "Status: Ready (WhatsApp Pref)" --> StaffEmail
+    StaffEmail --> Staff
+    Staff -- "Click wa.me link" --> WA
+    WA --> User
     Trigger --> Archive
 ```
 

@@ -31,3 +31,10 @@ def test_appointments_accordion_styling(page: Page, base_url: str):
     page.wait_for_timeout(400)
     page.screenshot(path="verification/appointments_accordion_expanded.png")
     print("Expanded screenshot saved to verification/appointments_accordion_expanded.png")
+
+    # Click second accordion and verify first closes while second opens
+    second_accordion = accordions.nth(1)
+    second_accordion.click()
+    page.wait_for_timeout(400)
+    expect(second_accordion).to_have_class(re.compile(r"\bactive\b"))
+    expect(first_accordion).not_to_have_class(re.compile(r"\bactive\b"))

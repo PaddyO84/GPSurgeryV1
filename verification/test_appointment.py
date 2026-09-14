@@ -34,19 +34,24 @@ def verify_appointment_form(page: Page):
     # Route handler to mock Apps Script response
     def handle_route(route):
         request = route.request
-        if request.url == SCRIPT_WEB_APP_URL and request.method == "POST":
-            route.fulfill(
-                status=200,
-                content_type="application/json",
-                body='{"result": "success", "type": "appointment"}'
-            )
+        if request.method == "POST":
+            # Compare endpoint against CONFIG.SCRIPT_WEB_APP_URL evaluated in page
+            config_url = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
+            if request.url == config_url:
+                route.fulfill(
+                    status=200,
+                    content_type="application/json",
+                    body='{"result": "success", "type": "appointment"}'
+                )
+            else:
+                route.abort()
         else:
             route.continue_()
 
     page.route("**/*", handle_route)
 
     # Use expect_request wrapped around submit action
-    with page.expect_request(lambda req: req.url == SCRIPT_WEB_APP_URL and req.method == "POST") as req_info:
+    with page.expect_request(lambda req: req.method == "POST") as req_info:
         page.click("button.submit-btn")
 
     request = req_info.value
@@ -54,8 +59,9 @@ def verify_appointment_form(page: Page):
     post_data = request.post_data_json
     print("Payload:", post_data)
 
+    config_endpoint = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
     # Assertions
-    assert request.url == SCRIPT_WEB_APP_URL
+    assert request.url == config_endpoint
     assert post_data["formType"] == "appointment"
     assert post_data["name"] == "Test Patient"
     assert post_data["type"] == "Routine GP Visit"

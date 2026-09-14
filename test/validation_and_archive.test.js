@@ -89,6 +89,12 @@ describe('Backend Utility Logic Tests', () => {
             expect(formatWhatsAppNumber('087.123.4567')).to.equal('353871234567');
         });
 
+        it('should format international numbers without prepending 353', () => {
+            expect(formatWhatsAppNumber('+44 7911 123456')).to.equal('447911123456');
+            expect(formatWhatsAppNumber('0044 7911 123456')).to.equal('447911123456');
+            expect(formatWhatsAppNumber('+1 555 123 4567')).to.equal('15551234567');
+        });
+
         it('should return empty string for empty input', () => {
             expect(formatWhatsAppNumber('')).to.equal('');
             expect(formatWhatsAppNumber(null)).to.equal('');

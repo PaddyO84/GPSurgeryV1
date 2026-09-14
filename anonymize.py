@@ -54,25 +54,33 @@ default_replacements = {
 }
 
 def load_replacements():
-    """Loads replacements from untracked local file or environment config, falling back to default replacements."""
-    replacements = dict(default_replacements)
+    """Loads replacements from untracked local file or environment config, falling back to default replacements,
+    ensuring custom configured entries are prioritized and all source strings are sorted from most specific to least specific."""
+    configured = {}
     custom_path = os.environ.get("ANONYMIZE_CONFIG_FILE", "anonymize_local.json")
     if os.path.exists(custom_path):
         try:
             with open(custom_path, "r", encoding="utf-8") as f:
                 loaded = json.load(f)
                 if isinstance(loaded, dict):
-                    replacements.update(loaded)
+                    configured.update(loaded)
         except Exception as err:
             print(f"Warning: Could not read {custom_path}: {err}")
     elif os.environ.get("ANONYMIZE_REPLACEMENTS_JSON"):
         try:
             loaded = json.loads(os.environ["ANONYMIZE_REPLACEMENTS_JSON"])
             if isinstance(loaded, dict):
-                replacements.update(loaded)
+                configured.update(loaded)
         except Exception as err:
             print(f"Warning: Could not parse ANONYMIZE_REPLACEMENTS_JSON: {err}")
-    return replacements
+
+    # Merge configured with defaults, letting configured override defaults
+    combined = dict(default_replacements)
+    combined.update(configured)
+
+    # Order all source strings from most specific (longest) to least specific (shortest)
+    sorted_items = sorted(combined.items(), key=lambda item: len(item[0]), reverse=True)
+    return dict(sorted_items)
 
 replacements = load_replacements()
 

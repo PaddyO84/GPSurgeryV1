@@ -49,7 +49,8 @@
             }
 
             if (e.key === 'Tab') {
-                const focusableElements = Array.from(nav.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])'))
+                const focusScope = document.querySelector('.nav-container') || nav;
+                const focusableElements = Array.from(focusScope.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])'))
                     .filter(el => !el.disabled && el.offsetParent !== null);
                 if (focusableElements.length === 0) return;
 
@@ -57,12 +58,12 @@
                 const lastElement = focusableElements[focusableElements.length - 1];
 
                 if (e.shiftKey) {
-                    if (document.activeElement === firstElement || !nav.contains(document.activeElement)) {
+                    if (document.activeElement === firstElement || !focusScope.contains(document.activeElement)) {
                         e.preventDefault();
                         lastElement.focus();
                     }
                 } else {
-                    if (document.activeElement === lastElement || !nav.contains(document.activeElement)) {
+                    if (document.activeElement === lastElement || !focusScope.contains(document.activeElement)) {
                         e.preventDefault();
                         firstElement.focus();
                     }
@@ -75,8 +76,8 @@
         dropdowns.forEach(dropdown => {
             dropdown.setAttribute('aria-expanded', 'false');
             dropdown.addEventListener('click', (e) => {
+                e.preventDefault();
                 if (window.innerWidth <= 768) {
-                    e.preventDefault();
                     const parent = dropdown.parentElement;
                     if (parent) {
                         const isOpen = parent.classList.toggle('open');
@@ -116,7 +117,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Accordion Functionality
+    // Accordion Functionality - closes open accordions when one is opened
     const accordions = document.getElementsByClassName("accordion");
     for (let i = 0; i < accordions.length; i++) {
         const accordion = accordions[i];
@@ -129,12 +130,23 @@ document.addEventListener('DOMContentLoaded', () => {
         accordion.setAttribute('aria-expanded', 'false');
 
         accordion.addEventListener("click", function() {
-            this.classList.toggle("active");
-            const isExpanded = this.classList.contains("active");
-            this.setAttribute('aria-expanded', isExpanded);
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-            } else {
+            const isCurrentlyActive = this.classList.contains("active");
+
+            // Close all accordions
+            for (let j = 0; j < accordions.length; j++) {
+                const otherAcc = accordions[j];
+                const otherPanel = otherAcc.nextElementSibling;
+                otherAcc.classList.remove("active");
+                otherAcc.setAttribute('aria-expanded', 'false');
+                if (otherPanel) {
+                    otherPanel.style.maxHeight = null;
+                }
+            }
+
+            // If it wasn't active before, open it
+            if (!isCurrentlyActive) {
+                this.classList.add("active");
+                this.setAttribute('aria-expanded', 'true');
                 panel.style.maxHeight = panel.scrollHeight + "px";
             }
         });

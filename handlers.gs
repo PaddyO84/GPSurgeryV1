@@ -88,15 +88,8 @@ function handleAppointmentSubmission(data) {
   rowData[APPT_LAYOUT.NOTIFICATION_SENT] = "";
   rowData[APPT_LAYOUT.PREFERRED_TIME] = sanitizeCellValue(data.preferredTime || "");
 
-  const lock = LockService.getScriptLock();
-  let rowIndex = null;
-  try {
-    lock.waitLock(10000);
-    sheet.appendRow(rowData);
-    rowIndex = sheet.getLastRow();
-  } finally {
-    lock.releaseLock();
-  }
+  sheet.appendRow(rowData);
+  const rowIndex = sheet.getLastRow();
 
   // Send confirmation notification after persistence
   const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
@@ -158,15 +151,8 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(data.signature || "Not Provided");
   rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "";
 
-  const lock = LockService.getScriptLock();
-  let rowIndex = null;
-  try {
-    lock.waitLock(10000);
-    sheet.appendRow(rowData);
-    rowIndex = sheet.getLastRow();
-  } finally {
-    lock.releaseLock();
-  }
+  sheet.appendRow(rowData);
+  const rowIndex = sheet.getLastRow();
 
   const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
   if (notificationSuccess) {
@@ -225,15 +211,8 @@ function handlePrescriptionSubmission(data) {
     newRow[STATUS_COL - 1] = "";
     newRow[NOTIFICATION_COL - 1] = "";
 
-    const lock = LockService.getScriptLock();
-    let row = null;
-    try {
-      lock.waitLock(10000);
-      sheet.appendRow(newRow);
-      row = sheet.getLastRow();
-    } finally {
-      lock.releaseLock();
-    }
+    sheet.appendRow(newRow);
+    const row = sheet.getLastRow();
 
     const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
     if (notificationSuccess) {

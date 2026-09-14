@@ -2,11 +2,15 @@ from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
 
-def verify_forms_wiring(page: Page):
-    # Get the absolute path to the HTML files
-    repo_root = Path(__file__).resolve().parent.parent
-    prescription_url = (repo_root / "order-prescription.html").as_uri()
-    sick_note_url = (repo_root / "sick-notes.html").as_uri()
+def verify_forms_wiring(page: Page, base_url: str = None):
+    # Get base_url or serve via provided base_url
+    if base_url:
+        prescription_url = f"{base_url}/order-prescription.html"
+        sick_note_url = f"{base_url}/sick-notes.html"
+    else:
+        repo_root = Path(__file__).resolve().parent.parent
+        prescription_url = (repo_root / "order-prescription.html").as_uri()
+        sick_note_url = (repo_root / "sick-notes.html").as_uri()
 
     print(f"Testing Prescription Form at: {prescription_url}")
 
@@ -162,14 +166,28 @@ def verify_forms_wiring(page: Page):
     print("Sick Note verification successful.")
 
 if __name__ == "__main__":
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from functools import partial
+    import threading
+
+    repo_root = Path(__file__).resolve().parent.parent
+    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    port = server.server_address[1]
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+    base_url = f"http://127.0.0.1:{port}"
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            verify_forms_wiring(page)
+            verify_forms_wiring(page, base_url=base_url)
         except Exception as e:
             print(f"Verification Failed: {e}")
             page.screenshot(path="verification/failure.png")
             raise e
         finally:
             browser.close()
+            server.shutdown()
+            server_thread.join()

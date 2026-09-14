@@ -17,9 +17,12 @@ def inject_script(filepath):
         file_dir = os.path.dirname(filepath)
         rel_script_path = os.path.relpath(os.path.join('.', 'js', 'welcome.js'), file_dir).replace('\\', '/')
 
-        # Inject before </body>
-        if '</body>' in content:
-            new_content = content.replace('</body>', f'<script src="{rel_script_path}"></script>\n</body>')
+        # Inject before </body> (case-insensitive)
+        body_match = re.search(r'</body\s*>', content, re.IGNORECASE)
+        if body_match:
+            start, end = body_match.span()
+            matched_tag = body_match.group(0)
+            new_content = content[:start] + f'<script src="{rel_script_path}"></script>\n' + matched_tag + content[end:]
             temp_path = f"{filepath}.tmp"
             with open(temp_path, 'w', encoding='utf-8') as f:
                 f.write(new_content)

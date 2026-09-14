@@ -584,7 +584,8 @@ nav a:hover {
         opacity: 1;
         visibility: visible;
     }
-    .section { padding: 4rem 0; }
+    .section:not(.container) { padding: 4rem 0; }
+    .section.container { padding-top: 4rem; padding-bottom: 4rem; }
 }
 
 /* Footer Layout & Shared Rules */
@@ -719,25 +720,25 @@ footer {
     overflow-x: hidden;
 }
 
-/* Freeze Actions panel (sidebar) */
+/* Sidebar Actions Panel */
 .sidebar {
-    position: fixed;
+    position: sticky;
     top: 80px; /* same as header sticky height */
-    left: 0;
-    width: 260px;
-    height: calc(100vh - 80px);
+    height: fit-content;
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 10;
     background: var(--bg-card);
     backdrop-filter: blur(6px);
-    border-right: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
 }
 
-/* Adjust main form area to account for fixed sidebar */
+/* Main Form Area */
 .main-form-area {
-    padding-left: 280px; /* offset for fixed sidebar */
-    padding: 2rem 2.5rem;
     background: white;
+    padding: 2rem 2.5rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     min-width: 0;
@@ -766,20 +767,6 @@ footer {
     display: block;
 }
 
-@media (max-width: 900px) {
-    .sidebar {
-        position: static;
-        width: auto;
-        height: auto;
-        margin-bottom: 1rem;
-    }
-    .main-form-area {
-        margin-left: 0;
-    }
-    .add-med-group {
-        grid-template-columns: 1fr;
-    }
-}
 .sidebar h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;
@@ -811,15 +798,6 @@ footer {
     background: #fff5f5;
     border-color: #feb2b2;
     color: #c53030;
-}
-
-.main-form-area {
-    background: white;
-    padding: 2rem 2.5rem;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    min-width: 0;
-    box-sizing: border-box;
 }
 
 .form-section {
@@ -1022,11 +1000,12 @@ input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:f
     color: var(--text-main);
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 900px) {
     .form-app-container { grid-template-columns: 1fr; }
-    .sidebar { position: static; flex-direction: row; flex-wrap: wrap; }
+    .sidebar { position: static; max-height: none; width: auto; flex-direction: row; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .sidebar button { width: auto; }
-    .main-form-area { padding: 2rem; }
+    .main-form-area { padding: 2rem 1.5rem; }
+    .add-med-group { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {

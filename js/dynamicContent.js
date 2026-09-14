@@ -36,6 +36,11 @@
             footerNowdoc.textContent = siteData.contact.nowDoc;
             footerNowdoc.href = siteData.contact.nowDocLink;
         }
+
+        const contactAddress = document.getElementById('contact-address');
+        if (contactAddress && siteData.contact.address) {
+            contactAddress.textContent = siteData.contact.address;
+        }
     }
 
     function populateAll() {

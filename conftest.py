@@ -37,9 +37,9 @@ import os
 def base_url(tmp_path_factory):
     # Serve files from the project root (where index.html resides)
     repo_root = pathlib.Path(__file__).resolve().parent
-    port = get_free_port()
     handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
-    server = ThreadingHTTPServer(('127.0.0.1', port), handler)
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base = f"http://127.0.0.1:{port}"

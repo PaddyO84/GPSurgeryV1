@@ -58,8 +58,8 @@ function validatePatientData(email, phone) {
   } else {
     // Normalize permitted separators (spaces, hyphens, parentheses, dots)
     const normalized = phone.replace(/[\s\-\(\)\.]/g, '');
-    // Irish domestic (e.g. 0871234567, 01234567, 0741234567) or international (+353/00353/353)
-    const phoneRegex = /^(\+353|00353|353|0)[1-9]\d{6,9}$/;
+    // Irish domestic (e.g. 0871234567, 01234567, 0741234567), Irish international (+353/00353/353), or generic international (+[1-9]\d{6,14} / 00[1-9]\d{6,14})
+    const phoneRegex = /^(\+353|00353|353|0)[1-9]\d{6,9}$|^(\+|00)[1-9]\d{6,14}$/;
     if (!phoneRegex.test(normalized)) {
       errors.push("Invalid phone number.");
     }
@@ -108,7 +108,7 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
 }
 
 /**
- * Formats a phone number into international WhatsApp format (353...).
+ * Formats a phone number into international WhatsApp format (353... or non-Irish international format).
  * @param {string|number} phone - The phone number to format.
  * @returns {string} Formatted WhatsApp phone number.
  */
@@ -118,8 +118,10 @@ function formatWhatsAppNumber(phone) {
   if (cleaned.startsWith('+353')) return cleaned.substring(1);
   if (cleaned.startsWith('00353')) return cleaned.substring(2);
   if (cleaned.startsWith('353')) return cleaned;
+  if (cleaned.startsWith('00')) return cleaned.substring(2);
+  if (cleaned.startsWith('+')) return cleaned.substring(1);
   if (cleaned.startsWith('0')) return '353' + cleaned.substring(1);
-  return '353' + cleaned;
+  return cleaned;
 }
 
 /**
