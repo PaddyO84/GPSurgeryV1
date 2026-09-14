@@ -564,6 +564,10 @@
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
+        if (!printWindow || !printWindow.document) {
+            alert('Could not open print window. Please allow popups for this website.');
+            return;
+        }
         const doc = printWindow.document;
         doc.open();
         doc.write('<!DOCTYPE html><html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style></head><body></body></html>');

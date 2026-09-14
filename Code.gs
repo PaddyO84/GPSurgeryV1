@@ -296,6 +296,33 @@ function sendDynamicNotification() {
 }
 
 /**
+ * Builds the patient email subject and htmlBody for preview or sending.
+ * @param {string} status - Request status (STATUS_READY or STATUS_QUERY).
+ * @param {string} patientName - Patient's name.
+ * @param {string} pharmacy - Chosen pharmacy.
+ * @returns {{subject: string, htmlBody: string}|null}
+ */
+function buildPatientMessage(status, patientName, pharmacy) {
+  if (status === STATUS_READY) {
+    const template = HtmlService.createTemplateFromFile('email_ready');
+    template.senderName = SENDER_NAME;
+    template.patientName = patientName;
+    template.pharmacyName = pharmacy;
+    template.phoneNumber = YOUR_PHONE_NUMBER;
+
+    const subject = `Your Prescription has been sent to ${pharmacy}`;
+    const htmlBody = template.evaluate().getContent();
+    return { subject, htmlBody };
+  } else if (status === STATUS_QUERY) {
+    const subject = "Action Required: Query Regarding Your Prescription Request";
+    const safeName = escapeHtml(patientName);
+    const htmlBody = `<p>Dear ${safeName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+    return { subject, htmlBody };
+  }
+  return null;
+}
+
+/**
  * Displays a dialog with the email preview and a "Send" button.
  */
 function showEmailDialog(row) {
@@ -313,33 +340,23 @@ function showEmailDialog(row) {
     return;
   }
 
-  const safeName = escapeHtml(patientName);
-  const safeEmail = escapeHtml(patientEmail);
-  const safePharmacy = escapeHtml(pharmacy);
-  const safePhone = escapeHtml(YOUR_PHONE_NUMBER);
-  const safeSender = escapeHtml(SENDER_NAME);
-
-  let subject = '';
-  let body = '';
-
-  if (status === STATUS_READY) {
-    subject = `Your Prescription has been sent to ${safePharmacy}`;
-    body = `Dear ${safeName},<br><br>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${safePharmacy}</strong>.<br><br>Please contact your pharmacy directly to confirm when your medication will be ready for collection.<br><br>Thank you,<br><strong>${safeSender}</strong>`;
-  } else if (status === STATUS_QUERY) {
-    subject = "Action Required: Query Regarding Your Prescription Request";
-    body = `Dear ${safeName},<br><br>Regarding your prescription request, we have a query that needs to be resolved.<br><br>Please contact the surgery by phone at <strong>${safePhone}</strong>.<br><br>Thank you,<br><strong>${safeSender}</strong>`;
-  } else {
+  const message = buildPatientMessage(status, patientName, pharmacy);
+  if (!message) {
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }
+
+  const safeName = escapeHtml(patientName);
+  const safeEmail = escapeHtml(patientEmail);
+  const safeSubject = escapeHtml(message.subject);
 
   const html = `
     <div style="font-family: sans-serif;">
       <h3>Preview Email to ${safeName}</h3>
       <p><b>To:</b> ${safeEmail}</p>
-      <p><b>Subject:</b> ${subject}</p>
+      <p><b>Subject:</b> ${safeSubject}</p>
       <hr>
-      <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color:#f9f9f9;">${body}</div>
+      <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color:#f9f9f9; max-height: 220px; overflow-y: auto;">${message.htmlBody}</div>
       <br><br>
       <button onclick="google.script.run.withSuccessHandler(google.script.host.close).sendEmailFromDialog(${row});" style="background-color:#28a745;color:white;padding:8px 15px;border:none;border-radius:4px;font-size:14px;cursor:pointer;">Send Email</button>
       <button onclick="google.script.host.close()" style="padding:8px 15px;border:1px solid #ccc;border-radius:4px;font-size:14px;cursor:pointer;">Cancel</button>
@@ -361,23 +378,24 @@ function sendEmailFromDialog(row) {
     const status = (rowValues[STATUS_COL - 1] || '').toString().trim();
     const patientName = rowValues[NAME_COL - 1];
     const patientEmail = rowValues[EMAIL_COL - 1];
+    const pharmacy = rowValues[PHARMACY_COL - 1];
+
+    if (!patientEmail) {
+      ui.alert(`No email address found for ${patientName}.`);
+      return;
+    }
+
+    const message = buildPatientMessage(status, patientName, pharmacy);
+    if (!message) {
+      ui.alert(`No notification template for status: "${status}".`);
+      return;
+    }
+
+    MailApp.sendEmail({ to: patientEmail, subject: message.subject, htmlBody: message.htmlBody, name: SENDER_NAME });
 
     if (status === STATUS_READY) {
-      const success = sendReadyEmail(row);
-      if (success) {
-        const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-        sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
-      } else {
-        ui.alert("Failed to send ready notification email. Please check the logs.");
-      }
-    } else if (status === STATUS_QUERY) {
-      if (!patientEmail) {
-        ui.alert(`No email address found for ${patientName}.`);
-        return;
-      }
-      const subject = "Action Required: Query Regarding Your Prescription Request";
-      const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-      MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+      const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+      sheet.getRange(row, NOTIFICATION_COL).setValue(`Ready on ${timestamp}`);
     }
   } catch (e) {
     reportError('sendEmailFromDialog', e, row);
@@ -414,6 +432,10 @@ function generateWhatsAppLink(row) {
   }
 
   const whatsappNumber = formatWhatsAppNumber(patientPhone);
+  if (!whatsappNumber) {
+    ui.alert(`Invalid phone number format for WhatsApp: "${patientPhone}".`);
+    return;
+  }
   const prefilledMessage = encodeURIComponent(messageText);
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
   const safeWhatsappUrl = escapeHtml(whatsappUrl);
@@ -501,6 +523,15 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
 
   try {
     const whatsappNumber = formatWhatsAppNumber(patientPhone);
+    if (!whatsappNumber) {
+      const message = `Could not generate WhatsApp link for ${patientName} (row ${row}) because the phone number format is invalid: "${patientPhone}". Please update the sheet and send the notification manually.`;
+      try {
+        MailApp.sendEmail({ to: staffEmail, subject: "Action Required: Invalid WhatsApp Phone Number", body: message });
+      } catch (e) {
+        Logger.log(`Error sending 'invalid phone number' email to staff for row ${row}: ${e.toString()}`);
+      }
+      return false;
+    }
     const prefilledMessage = encodeURIComponent(`Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
     const safeWhatsappUrl = escapeHtml(whatsappUrl);

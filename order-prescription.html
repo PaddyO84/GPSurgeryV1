@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Order repeat prescriptions online from Example Health Centre. Secure and convenient.">
+    <meta name="description"
+        content="Order repeat prescriptions online from Example Health Centre. Secure and convenient.">
     <title>Order Repeat Prescription - Example Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +17,38 @@
 
         .med-table {
             width: 100%;
+            table-layout: fixed;
             border-radius: var(--radius-md);
             overflow: hidden;
             border-collapse: collapse;
+            display: table;
+        }
+
+        .med-table th,
+        .med-table td {
+            box-sizing: border-box;
+        }
+
+        .med-table th:nth-child(1),
+        .med-table td:nth-child(1) {
+            width: 38%;
+        }
+
+        .med-table th:nth-child(2),
+        .med-table td:nth-child(2) {
+            width: 20%;
+        }
+
+        .med-table th:nth-child(3),
+        .med-table td:nth-child(3) {
+            width: 22%;
+        }
+
+        .med-table th:nth-child(4),
+        .med-table td:nth-child(4) {
+            width: 20%;
+            text-align: right;
+            white-space: nowrap;
         }
 
         .med-table th {
@@ -31,6 +62,20 @@
         .med-table td {
             padding: 1rem;
             border-bottom: 1px solid #edf2f7;
+            word-break: break-word;
+        }
+
+        .edit-btn {
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .edit-btn:hover {
+            text-decoration: underline;
         }
 
         .remove-btn {
@@ -39,14 +84,108 @@
             border: none;
             cursor: pointer;
             font-weight: 600;
+            padding: 0.25rem 0.5rem;
         }
 
-        .remove-btn:hover { text-decoration: underline; }
+        .remove-btn:hover {
+            text-decoration: underline;
+        }
 
+        /* Success Submission Animation & Styling */
+        .success-animation {
+            margin: 1.5rem auto 1rem;
+            width: 70px;
+            height: 70px;
+        }
+
+        .checkmark {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 2.5;
+            stroke: #10b981;
+            stroke-miterlimit: 10;
+            box-shadow: inset 0px 0px 0px #10b981;
+            animation: fillCheck 0.4s ease-in-out 0.4s forwards, scaleCheck 0.3s ease-in-out 0.9s both;
+        }
+
+        .checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2.5;
+            stroke-miterlimit: 10;
+            stroke: #10b981;
+            fill: none;
+            animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            stroke: #10b981;
+            animation: strokeCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+
+        @keyframes strokeCircle {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes strokeCheck {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes scaleCheck {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+
+        .success-title {
+            color: var(--primary-dark);
+            font-size: 1.75rem;
+            margin: 0.5rem 0 1rem;
+            font-weight: 700;
+        }
+
+        .success-message {
+            color: var(--text-main);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Post-submission layout adjustment: keep sidebar in place, resize form frame to fit notification */
+        .form-submitted {
+            margin: 2rem auto !important;
+            scroll-margin-top: 100px;
+        }
+
+        .form-submitted .sidebar button:not(.clear-btn) {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .form-submitted .main-form-area {
+            padding: 3rem 2rem !important;
+            text-align: center;
+        }
+
+        #successMessage {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     <script src="js/theme.js"></script>
     <script src="js/config.js"></script>
 </head>
+
 <body>
     <header id="header-placeholder"></header>
 
@@ -54,23 +193,28 @@
         <!-- Sidebar Controls -->
         <div class="sidebar">
             <h3>Actions</h3>
-            <button type="button" onclick="document.getElementById('loadFile').click()">📂 Load Saved Request</button>
-            <button type="button" onclick="saveRequestToFile()">💾 Save Request to File</button>
-            <button type="button" onclick="printSummary()">🖨️ Print Summary</button>
-            <button type="button" class="clear-btn" onclick="clearAllFields()">❌ Clear Form</button>
-            <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json" style="display: none;">
-            <div id="notification-area" style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;"></div>
+            <button type="button" id="btnLoadFile" onclick="document.getElementById('loadFile').click()">📂 Load Saved Request</button>
+            <button type="button" id="btnSaveFile" onclick="saveRequestToFile()">💾 Save Request to File</button>
+            <button type="button" id="btnPrintSummary" onclick="printSummary()">🖨️ Print Summary</button>
+            <button type="button" class="clear-btn" id="btnClearForm" onclick="clearAllFields()">❌ Clear Form</button>
+            <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json"
+                style="display: none;">
+            <div id="notification-area"
+                style="grid-column: 1 / -1; margin-top: 5px; padding: 10px; background: #e3f2fd; color: #0d47a1; font-size: 0.9rem; border-radius: 4px; display: none;">
+            </div>
         </div>
 
         <!-- Main Form -->
         <div class="main-form-area" id="formContainer">
             <div id="prescriptionForm">
                 <h2 class="form-title">Repeat Prescription Request</h2>
-                <p class="form-subtitle">Please allow <strong>48 hours</strong> for your prescription to be processed and sent to your pharmacy.</p>
+                <p class="form-subtitle">Please allow <strong>48 hours</strong> for your prescription to be processed
+                    and sent to your pharmacy.</p>
 
                 <div class="alert-card" style="border-left-color: var(--error-color); margin-bottom: 2rem;">
                     <h3 style="color: var(--error-color);">Do Not Order Antibiotics</h3>
-                    <p>Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection, please contact reception directly.</p>
+                    <p>Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection,
+                        please contact reception directly.</p>
                 </div>
 
                 <fieldset class="form-section">
@@ -97,9 +241,10 @@
                             <span class="error-message" id="patientEmail-error"></span>
                         </div>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <label for="patientAddress">Home Address</label>
-                        <textarea id="patientAddress" rows="3" required placeholder="Please enter your full address"></textarea>
+                        <textarea id="patientAddress" rows="3" required
+                            placeholder="Please enter your full address"></textarea>
                         <span class="error-message" id="patientAddress-error"></span>
                     </div>
                     <div class="grid-2">
@@ -124,7 +269,18 @@
                     <div class="add-med-group">
                         <div class="form-group">
                             <label for="medName">Medication Name</label>
-                            <input type="text" id="medName" list="medication-list" placeholder="Start typing...">
+                            <div class="med-combobox" id="medCombobox">
+                                <input type="text" id="medName" placeholder="Select or type..." autocomplete="off">
+                                <button type="button" class="med-combobox-toggle" id="medComboboxToggle"
+                                    aria-label="Toggle medication suggestions" tabindex="-1">
+                                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                                        <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                            stroke-linejoin="round" stroke-width="1.75" d="m6 8 4 4 4-4" />
+                                    </svg>
+                                </button>
+                                <ul class="med-combobox-options" id="medComboboxOptions" role="listbox"
+                                    aria-label="Medication options"></ul>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="medDosage">Dosage</label>
@@ -139,7 +295,7 @@
                     <span class="error-message" id="medication-error"></span>
 
                     <table class="med-table" id="medicationTable" aria-live="polite">
-                         <thead>
+                        <thead>
                             <tr>
                                 <th>Medication</th>
                                 <th>Dosage</th>
@@ -151,12 +307,17 @@
                             <!-- Medications will be added here -->
                         </tbody>
                     </table>
-                     <p id="no-meds-message" class="empty-table-message">No medications added yet.</p>
+                    <p id="no-meds-message" class="empty-table-message">No medications added yet.</p>
                 </fieldset>
 
                 <div class="submit-area">
                     <button class="submit-btn" onclick="showSummary()">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20" style="margin-right: 8px;" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20"
+                            height="20" style="margin-right: 8px;" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
                         Review & Submit Request
                     </button>
                 </div>
@@ -174,7 +335,8 @@
             <h3 style="color: var(--primary-color);">Confirm Your Request</h3>
             <div id="summaryDetails" style="margin: 1.5rem 0;"></div>
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="document.getElementById('summaryModal').style.display='none'">Cancel</button>
+                <button class="btn-cancel"
+                    onclick="document.getElementById('summaryModal').style.display='none'">Cancel</button>
                 <button class="btn-confirm" onclick="submitToGoogleForm()">Confirm & Submit</button>
             </div>
         </div>
@@ -201,10 +363,11 @@
         const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateDatalist('medication-list', commonMedications);
+            initMedicationCombobox(commonMedications);
             populateSelect('chosenPharmacy', pharmacyOptions);
             populateSelect('medFreq', frequencyOptions);
             loadFromLocalStorage();
+            updateMedicationVisibility();
 
             // Auto-save on input
             const inputs = document.querySelectorAll('#prescriptionForm input, #prescriptionForm textarea, #prescriptionForm select');
@@ -216,12 +379,105 @@
             });
         });
 
-        function populateDatalist(id, options) {
-            const datalist = document.getElementById(id);
-            options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option;
-                datalist.appendChild(optionElement);
+        function initMedicationCombobox(items) {
+            const input = document.getElementById('medName');
+            const toggleBtn = document.getElementById('medComboboxToggle');
+            const optionsList = document.getElementById('medComboboxOptions');
+            let highlightedIndex = -1;
+
+            function renderOptions(filter = '') {
+                optionsList.innerHTML = '';
+                const query = filter.toLowerCase().trim();
+                const matched = query ? items.filter(it => it.toLowerCase().includes(query)) : items;
+
+                if (matched.length === 0) {
+                    const emptyLi = document.createElement('li');
+                    emptyLi.className = 'med-combobox-empty';
+                    emptyLi.textContent = 'No suggestions, please type your medication name';
+                    optionsList.appendChild(emptyLi);
+                } else {
+                    matched.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'med-combobox-option';
+                        li.textContent = item;
+                        li.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            input.value = item;
+                            closeDropdown();
+                            clearError('medication');
+                            saveToLocalStorage();
+                            document.getElementById('medDosage').focus();
+                        });
+                        optionsList.appendChild(li);
+                    });
+                }
+            }
+
+            function openDropdown() {
+                renderOptions(input.value);
+                optionsList.classList.add('show');
+                highlightedIndex = -1;
+            }
+
+            function closeDropdown() {
+                optionsList.classList.remove('show');
+                highlightedIndex = -1;
+            }
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (optionsList.classList.contains('show')) {
+                    closeDropdown();
+                } else {
+                    input.focus();
+                    openDropdown();
+                }
+            });
+
+            input.addEventListener('focus', () => {
+                openDropdown();
+            });
+
+            input.addEventListener('input', () => {
+                openDropdown();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                const options = optionsList.querySelectorAll('.med-combobox-option');
+                if (!optionsList.classList.contains('show')) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        openDropdown();
+                        return;
+                    }
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (options.length === 0) return;
+                    highlightedIndex = (highlightedIndex + 1) % options.length;
+                    options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (options.length === 0) return;
+                    highlightedIndex = (highlightedIndex - 1 + options.length) % options.length;
+                    options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    if (optionsList.classList.contains('show') && highlightedIndex >= 0 && options[highlightedIndex]) {
+                        e.preventDefault();
+                        input.value = options[highlightedIndex].textContent;
+                        closeDropdown();
+                        document.getElementById('medDosage').focus();
+                    }
+                } else if (e.key === 'Escape') {
+                    closeDropdown();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('medCombobox').contains(e.target)) {
+                    closeDropdown();
+                }
             });
         }
 
@@ -230,11 +486,20 @@
             if (id === 'chosenPharmacy') {
                 select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
             }
-            for (const [value, text] of Object.entries(options)) {
-                const optionElement = document.createElement('option');
-                optionElement.value = value;
-                optionElement.textContent = text;
-                select.appendChild(optionElement);
+            if (Array.isArray(options)) {
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            } else {
+                for (const [value, text] of Object.entries(options)) {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = value;
+                    optionElement.textContent = text;
+                    select.appendChild(optionElement);
+                }
             }
         }
 
@@ -382,11 +647,32 @@
 
         function clearAllFields() {
             if (confirm("Are you sure you want to clear the entire form?")) {
+                resetSubmittedState();
                 populateFormFromData({ patientDetails: {}, medicationList: [] });
                 localStorage.removeItem('prescriptionFormData');
                 showNotification("Form cleared.");
                 updateMedicationVisibility();
             }
+        }
+
+        function resetSubmittedState() {
+            const appContainer = document.querySelector('.form-app-container');
+            if (appContainer) {
+                appContainer.classList.remove('form-submitted');
+            }
+            const formEl = document.getElementById('prescriptionForm');
+            if (formEl) {
+                formEl.style.display = '';
+            }
+            const successDiv = document.getElementById('successMessage');
+            if (successDiv) {
+                successDiv.style.display = 'none';
+                successDiv.innerHTML = '';
+            }
+            ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = false;
+            });
         }
 
         function updateMedicationVisibility() {
@@ -473,13 +759,24 @@
                 },
                 body: JSON.stringify(payload)
             })
-            .then(() => {
-                document.getElementById('summaryModal').style.display = 'none';
-                const ref = generateReferenceNumber();
-                document.getElementById('prescriptionForm').style.display = 'none';
-                const successDiv = document.getElementById('successMessage');
-                const commMethod = (patientDetails.commPref && patientDetails.commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'email';
-                successDiv.innerHTML = `
+                .then(() => {
+                    document.getElementById('summaryModal').style.display = 'none';
+                    const ref = generateReferenceNumber();
+                    document.getElementById('prescriptionForm').style.display = 'none';
+
+                    // Keep sidebar, style frame for submitted state, disable other actions
+                    const appContainer = document.querySelector('.form-app-container');
+                    if (appContainer) {
+                        appContainer.classList.add('form-submitted');
+                    }
+                    ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
+                        const btn = document.getElementById(id);
+                        if (btn) btn.disabled = true;
+                    });
+
+                    const successDiv = document.getElementById('successMessage');
+                    const commMethod = (patientDetails.commPref && patientDetails.commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'email';
+                    successDiv.innerHTML = `
                     <div class="success-animation">
                         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
                     </div>
@@ -487,15 +784,22 @@
                     <p class="success-message">Your reference number is: <strong>${ref}</strong>. A confirmation has been sent via ${commMethod}. Please allow 48 hours for processing.</p>
                     <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
-                successDiv.style.display = 'block';
-                localStorage.removeItem('prescriptionFormData');
-            })
-            .catch(error => {
-                console.error("Submission Error:", error);
-                alert("An error occurred. Please try again.");
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = "Confirm & Submit";
-            });
+                    successDiv.style.display = 'block';
+                    localStorage.removeItem('prescriptionFormData');
+
+                    // Scroll viewport up to focus on the confirmation card
+                    if (appContainer) {
+                        appContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                })
+                .catch(error => {
+                    console.error("Submission Error:", error);
+                    alert("An error occurred. Please try again.");
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = "Confirm & Submit";
+                });
         }
 
         function validateForm() {
@@ -554,12 +858,16 @@
         function generateReferenceNumber() {
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
-            return `CHC-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+            return `CHC-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
         }
 
         function printSummary() {
             const { patientDetails, medicationList } = getFormDataAsObject();
             const w = window.open('', '_blank');
+            if (!w || !w.document) {
+                alert('Could not open print window. Please allow popups for this website.');
+                return;
+            }
             w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
 </head><body>
             <h1>Prescription Request</h1>
@@ -577,12 +885,12 @@
 
         function saveRequestToFile() {
             const data = getFormDataAsObject();
-             if (!data.patientDetails.name) { alert("Please enter a name first."); return; }
-             const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-             const a = document.createElement('a');
-             a.href = URL.createObjectURL(blob);
-             a.download = `prescription_${data.patientDetails.name.replace(/\s+/g,'_')}.json`;
-             a.click();
+            if (!data.patientDetails.name) { alert("Please enter a name first."); return; }
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `prescription_${data.patientDetails.name.replace(/\s+/g, '_')}.json`;
+            a.click();
         }
 
         function loadRequestFromFile(e) {
@@ -594,7 +902,7 @@
                     populateFormFromData(JSON.parse(evt.target.result));
                     saveToLocalStorage();
                     showNotification("Loaded successfully.");
-                } catch(err) {
+                } catch (err) {
                     console.error(err);
                     alert("Invalid file.");
                 }
@@ -604,6 +912,7 @@
             r.readAsText(file);
         }
     </script>
-<script src="js/welcome.js"></script>
+    <script src="js/welcome.js"></script>
 </body>
+
 </html>

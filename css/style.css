@@ -190,20 +190,20 @@ header {
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
-nav ul {
+#main-nav ul {
     display: flex;
     gap: 2rem;
     align-items: center;
 }
 
-nav a {
+#main-nav a {
     font-weight: 500;
     font-size: 0.95rem;
     color: var(--text-main);
     opacity: 0.8;
 }
 
-nav a:hover {
+#main-nav a:hover {
     color: var(--primary);
     opacity: 1;
 }
@@ -530,7 +530,7 @@ nav a:hover {
     .nav-container { border-radius: 0; }
     .menu-toggle { display: block; }
     .search-container { order: -1; margin-right: auto; }
-    nav {
+    #main-nav {
         display: block;
         position: fixed;
         top: 0;
@@ -545,11 +545,11 @@ nav a:hover {
         transition: left 0.3s ease-in-out;
         visibility: hidden;
     }
-    nav.show {
+    #main-nav.show {
         left: 0;
         visibility: visible;
     }
-    nav ul {
+    #main-nav ul {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
@@ -716,7 +716,6 @@ footer {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 1.5rem;
-    overflow-x: hidden;
 }
 
 /* Sidebar Actions Panel */
@@ -750,8 +749,8 @@ footer {
     padding: 1.5rem;
     border-radius: var(--radius-md);
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) auto;
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1.35fr) auto;
+    gap: 0.85rem;
     align-items: flex-end;
     margin-bottom: 2rem;
     width: 100%;
@@ -761,6 +760,104 @@ footer {
 .add-med-group .form-group {
     margin-bottom: 0;
     min-width: 0;
+    width: 100%;
+}
+
+.add-med-group select,
+.add-med-group input {
+    width: 100%;
+    font-size: clamp(0.85rem, 0.95vw, 0.95rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-med-group select {
+    padding-right: 1.75rem;
+    cursor: pointer;
+}
+
+.med-combobox {
+    position: relative;
+    width: 100%;
+}
+
+.med-combobox input {
+    padding-right: 2.25rem !important;
+    background-color: white;
+}
+
+.med-combobox-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #1e293b;
+    user-select: none;
+    z-index: 2;
+}
+
+.med-combobox-toggle svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.med-combobox-toggle:hover svg {
+    opacity: 1;
+}
+
+.med-combobox-options {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+}
+
+.med-combobox-options.show {
+    display: block;
+}
+
+.med-combobox-option {
+    padding: 0.6rem 1rem;
+    font-size: clamp(0.85rem, 0.95vw, 0.95rem);
+    color: var(--text-main);
+    cursor: pointer;
+    line-height: 1.4;
+    transition: background 0.15s;
+}
+
+.med-combobox-option:hover,
+.med-combobox-option.highlighted {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.med-combobox-empty {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .add-med-group .add-med-btn {
@@ -769,12 +866,11 @@ footer {
     margin-top: 0;
 }
 
-/* Ensure medication table is scrollable on small screens */
+/* Ensure medication table is full width */
 .med-table {
     width: 100%;
     border-collapse: collapse;
-    overflow-x: auto;
-    display: block;
+    display: table;
 }
 
 .sidebar h3 {
