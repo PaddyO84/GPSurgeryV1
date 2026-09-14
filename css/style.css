@@ -747,16 +747,27 @@ footer {
 
 /* Responsive Add Medications layout */
 .add-med-group {
+    background: var(--bg-main);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) auto;
     gap: 1rem;
-    align-items: end;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.add-med-group .form-group {
+    margin-bottom: 0;
+    min-width: 0;
 }
 
 .add-med-group .add-med-btn {
     justify-self: start;
     width: auto;
-    margin-top: 0.5rem;
+    margin-top: 0;
 }
 
 /* Ensure medication table is scrollable on small screens */
@@ -1000,12 +1011,23 @@ input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:f
     color: var(--text-main);
 }
 
+@media (max-width: 1060px) {
+    .add-med-group {
+        grid-template-columns: 1fr 1fr;
+    }
+    .add-med-group .add-med-btn {
+        grid-column: span 2;
+        width: 100%;
+    }
+}
+
 @media (max-width: 900px) {
     .form-app-container { grid-template-columns: 1fr; }
     .sidebar { position: static; max-height: none; width: auto; flex-direction: row; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .sidebar button { width: auto; }
     .main-form-area { padding: 2rem 1.5rem; }
     .add-med-group { grid-template-columns: 1fr; }
+    .add-med-group .add-med-btn { grid-column: auto; width: 100%; }
 }
 
 @media (max-width: 768px) {
