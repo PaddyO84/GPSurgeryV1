@@ -62,17 +62,23 @@ def load_replacements():
         try:
             with open(custom_path, "r", encoding="utf-8") as f:
                 loaded = json.load(f)
-                if isinstance(loaded, dict):
-                    configured.update(loaded)
         except Exception as err:
-            print(f"Warning: Could not read {custom_path}: {err}")
+            print(f"Error: Could not read or parse {custom_path}: {err}", file=sys.stderr)
+            sys.exit(1)
+        if not isinstance(loaded, dict):
+            print(f"Error: Configuration in {custom_path} must be a JSON object", file=sys.stderr)
+            sys.exit(1)
+        configured.update(loaded)
     elif os.environ.get("ANONYMIZE_REPLACEMENTS_JSON"):
         try:
             loaded = json.loads(os.environ["ANONYMIZE_REPLACEMENTS_JSON"])
-            if isinstance(loaded, dict):
-                configured.update(loaded)
         except Exception as err:
-            print(f"Warning: Could not parse ANONYMIZE_REPLACEMENTS_JSON: {err}")
+            print(f"Error: Could not parse ANONYMIZE_REPLACEMENTS_JSON: {err}", file=sys.stderr)
+            sys.exit(1)
+        if not isinstance(loaded, dict):
+            print("Error: ANONYMIZE_REPLACEMENTS_JSON must be a JSON object", file=sys.stderr)
+            sys.exit(1)
+        configured.update(loaded)
 
     # Merge configured with defaults, letting configured override defaults
     combined = dict(default_replacements)

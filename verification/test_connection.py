@@ -17,9 +17,9 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     # 1. Test Prescription Form
     page.goto(prescription_url)
 
-    # Mock the network request to the Google Script
-    # We want to verify it sends the right data to the right URL
-    target_url_fragment = "/exec"
+    # Read configured script web app URL from the page
+    script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    assert script_web_app_url, "CONFIG.SCRIPT_WEB_APP_URL must be defined"
 
     # Handle Welcome Modal if it appears
     if page.is_visible("#demo-welcome-modal"):
@@ -57,7 +57,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     # Set up request interception for prescription submit
     def handle_rx_route(route):
         req = route.request
-        if "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST":
+        if req.url == script_web_app_url and req.method == "POST":
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -68,7 +68,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
 
     page.route("**/*", handle_rx_route)
 
-    with page.expect_request(lambda req: "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST") as rx_req_info:
+    with page.expect_request(lambda req: req.url == script_web_app_url and req.method == "POST") as rx_req_info:
         page.click("button.btn-confirm")
 
     request = rx_req_info.value
@@ -76,8 +76,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     post_data = request.post_data_json
     print("Prescription Payload:", post_data)
 
-    assert "script.google.com" in request.url
-    assert target_url_fragment in request.url
+    assert request.url == script_web_app_url
     assert post_data["formType"] == "prescription"
     assert post_data["patientDetails"]["name"] == "John Doe"
     assert len(post_data["medicationList"]) == 1
@@ -133,10 +132,14 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     page.click("button.submit-btn") # Opens modal
     page.wait_for_selector("#summaryModal", state="visible")
 
+    # Read configured script web app URL from the sick note page
+    script_web_app_url_sick = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    assert script_web_app_url_sick, "CONFIG.SCRIPT_WEB_APP_URL must be defined on sick note page"
+
     # Set up request interception for sick note submit
     def handle_sick_route(route):
         req = route.request
-        if "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST":
+        if req.url == script_web_app_url_sick and req.method == "POST":
             route.fulfill(
                 status=200,
                 content_type="application/json",
@@ -147,7 +150,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
 
     page.route("**/*", handle_sick_route)
 
-    with page.expect_request(lambda req: "script.google.com" in req.url and target_url_fragment in req.url and req.method == "POST") as sick_req_info:
+    with page.expect_request(lambda req: req.url == script_web_app_url_sick and req.method == "POST") as sick_req_info:
         page.click("button.btn-confirm")
 
     request_sick = sick_req_info.value
@@ -155,8 +158,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     post_data_sick = request_sick.post_data_json
     print("Sick Note Payload:", post_data_sick)
 
-    assert "script.google.com" in request_sick.url
-    assert target_url_fragment in request_sick.url
+    assert request_sick.url == script_web_app_url_sick
     assert post_data_sick["formType"] == "sick-note"
     assert post_data_sick["name"] == "Jane Doe"
     assert post_data_sick["condition"] == "Flu"

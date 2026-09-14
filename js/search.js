@@ -23,7 +23,10 @@
                 if (results.length > 0) {
                     results.forEach(result => {
                         const li = document.createElement('li');
-                        li.innerHTML = `<a href="${result.url}">${result.title}</a>`;
+                        const a = document.createElement('a');
+                        a.href = result.url;
+                        a.textContent = result.title;
+                        li.appendChild(a);
                         searchResults.appendChild(li);
                     });
                 } else {

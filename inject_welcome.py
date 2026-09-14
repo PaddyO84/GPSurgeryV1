@@ -31,6 +31,7 @@ def inject_script(filepath):
             print(f"Injected into {filepath}")
         else:
             print(f"Warning: No </body> tag in {filepath}")
+            return False
         return True
     except Exception as e:
         if temp_path and os.path.exists(temp_path):

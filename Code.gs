@@ -416,10 +416,11 @@ function generateWhatsAppLink(row) {
   const whatsappNumber = formatWhatsAppNumber(patientPhone);
   const prefilledMessage = encodeURIComponent(messageText);
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+  const safeWhatsappUrl = escapeHtml(whatsappUrl);
   const safeName = escapeHtml(patientName);
 
   const htmlOutput = HtmlService.createHtmlOutput(
-      `<h3>Send Notification to ${safeName}</h3><p>Click the link below to open WhatsApp on your device.</p><p><a href="${whatsappUrl}" target="_blank" style="font-size:1.2em;">Open WhatsApp</a></p>`
+      `<h3>Send Notification to ${safeName}</h3><p>Click the link below to open WhatsApp on your device.</p><p><a href="${safeWhatsappUrl}" target="_blank" style="font-size:1.2em;">Open WhatsApp</a></p>`
     ).setWidth(350).setHeight(150);
   ui.showModalDialog(htmlOutput, 'WhatsApp Notification Link');
 }
@@ -502,13 +503,14 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
     const whatsappNumber = formatWhatsAppNumber(patientPhone);
     const prefilledMessage = encodeURIComponent(`Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+    const safeWhatsappUrl = escapeHtml(whatsappUrl);
     const safeName = escapeHtml(patientName);
 
     const subject = `Action Required: Send WhatsApp to ${patientName}`;
     const body = `
       <p>Hi,</p>
       <p>Please send the prescription notification to <strong>${safeName}</strong> by clicking the link below. This will open WhatsApp on your device with a pre-filled message.</p>
-      <p><a href="${whatsappUrl}" target="_blank" style="font-size:1.2em; font-weight:bold; color: #25D366;">Click Here to Send WhatsApp Message</a></p>
+      <p><a href="${safeWhatsappUrl}" target="_blank" style="font-size:1.2em; font-weight:bold; color: #25D366;">Click Here to Send WhatsApp Message</a></p>
       <p>If the link does not work, please contact them manually.</p>
       <p>Thank you.</p>
     `;
