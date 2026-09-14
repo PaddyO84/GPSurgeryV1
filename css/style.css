@@ -427,7 +427,13 @@ nav a:hover {
 
 /* Section Styling */
 .section {
-    padding: 8rem 0;
+    background: var(--bg-card);
+    backdrop-filter: blur(6px);
+    border-radius: var(--radius-md);
+    padding: 6rem 2rem;
+    margin: 2rem auto;
+    max-width: 1200px;
+    box-shadow: var(--shadow-md);
 }
 
 .section-title {
@@ -461,6 +467,12 @@ nav a:hover {
 .card:hover {
     transform: scale(1.02);
     box-shadow: var(--shadow-lg);
+}
+
+.card h3 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+    font-size: 1.35rem;
 }
 
 /* Forms & Specific Cards */
@@ -620,30 +632,154 @@ footer {
     font-size: 0.85rem;
 }
 
-/* Shared Form Application Styles */
+/* Accordion Component Styling */
+.accordion {
+    background: transparent;
+    color: var(--primary-dark);
+    cursor: pointer;
+    padding: 1.25rem 1rem;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: left;
+    outline: none;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: var(--radius-sm);
+}
+
+.accordion::after {
+    content: '+';
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--primary);
+    transition: transform 0.25s ease-in-out;
+    line-height: 1;
+    margin-left: 1rem;
+}
+
+.accordion:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    padding-left: 1.25rem;
+}
+
+.accordion.active {
+    color: var(--primary);
+    background-color: hsla(var(--primary-h), var(--primary-s), 95%, 0.6);
+    border-bottom-color: transparent;
+}
+
+.accordion.active::after {
+    content: '−';
+    transform: rotate(180deg);
+}
+
+.panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    padding: 0 1rem;
+}
+
+.panel p {
+    padding: 0.75rem 0 1.25rem;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.panel ul {
+    padding: 0.5rem 0 1.25rem 1.5rem;
+    list-style: disc;
+}
+
+.panel ul li {
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+
+/* Ensure the form container is centered and does not cause horizontal scroll */
 .form-app-container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 1.5rem;
-    margin: 2rem auto;
-    max-width: 1100px;
-    width: 100%;
-    padding: 0 1.5rem;
-    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
+/* Freeze Actions panel (sidebar) */
 .sidebar {
-    position: sticky;
-    top: 80px;
-    height: fit-content;
-    padding: 1.5rem;
+    position: fixed;
+    top: 80px; /* same as header sticky height */
+    left: 0;
+    width: 260px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    z-index: 1000;
+    background: var(--bg-card);
+    backdrop-filter: blur(6px);
+    border-right: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Adjust main form area to account for fixed sidebar */
+.main-form-area {
+    padding-left: 280px; /* offset for fixed sidebar */
+    padding: 2rem 2.5rem;
+    background: white;
     border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    box-shadow: var(--shadow-lg);
+    min-width: 0;
     box-sizing: border-box;
 }
 
+/* Responsive Add Medications layout */
+.add-med-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.add-med-group .add-med-btn {
+    justify-self: start;
+    width: auto;
+    margin-top: 0.5rem;
+}
+
+/* Ensure medication table is scrollable on small screens */
+.med-table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow-x: auto;
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        position: static;
+        width: auto;
+        height: auto;
+        margin-bottom: 1rem;
+    }
+    .main-form-area {
+        margin-left: 0;
+    }
+    .add-med-group {
+        grid-template-columns: 1fr;
+    }
+}
 .sidebar h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;

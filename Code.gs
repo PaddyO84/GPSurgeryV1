@@ -137,7 +137,7 @@ function handleEdit(e) {
         ? "Action Required: Query Regarding Your Appointment Request"
         : "Action Required: Query Regarding Your Prescription Request";
       const requestDesc = isAppointment ? "appointment request" : "prescription request";
-      const body = `<p>Dear ${patientName},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+      const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
     } else if (status === STATUS_READY && !isAppointment) {
@@ -376,7 +376,7 @@ function sendEmailFromDialog(row) {
         return;
       }
       const subject = "Action Required: Query Regarding Your Prescription Request";
-      const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+      const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
       MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
     }
   } catch (e) {
