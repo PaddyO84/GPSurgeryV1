@@ -39,6 +39,10 @@ def load_replacements():
     combined = dict(default_replacements)
     combined.update(configured)
 
+    if not combined:
+        print("Error: No anonymization replacements found. Provide anonymize_local.json or ANONYMIZE_REPLACEMENTS_JSON.", file=sys.stderr)
+        sys.exit(1)
+
     # Order all source strings from most specific (longest) to least specific (shortest)
     sorted_items = sorted(combined.items(), key=lambda item: len(item[0]), reverse=True)
     return dict(sorted_items)
@@ -51,10 +55,13 @@ def process_file(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        new_content = content
-        for old, new in replacements.items():
-            new_content = new_content.replace(old, new)
-
+        # Ensure content is a string
+        if not isinstance(content, str):
+            raise TypeError(f"Expected file content to be a string, got {type(content)}")
+        # Build a regex pattern that matches any of the old strings, longest first to avoid partial matches
+        import re
+        pattern = re.compile('|'.join(map(re.escape, replacements.keys())))
+        new_content = pattern.sub(lambda m: replacements[m.group(0)], content)
         if new_content != content:
             temp_path = f"{filepath}.tmp"
             with open(temp_path, 'w', encoding='utf-8') as f:

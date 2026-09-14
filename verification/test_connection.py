@@ -2,6 +2,9 @@ from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
 
+def test_forms_wiring(page: Page, base_url: str):
+    verify_forms_wiring(page, base_url=base_url)
+
 def verify_forms_wiring(page: Page, base_url: str = None):
     # Get base_url or serve via provided base_url
     if base_url:

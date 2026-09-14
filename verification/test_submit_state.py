@@ -1,9 +1,9 @@
-from playwright.sync_api import sync_playwright
+import pytest
+from playwright.sync_api import Page, expect
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page(viewport={'width': 1280, 'height': 850})
-    page.goto('http://127.0.0.1:8000/order-prescription.html')
+def test_submit_state(page: Page, base_url: str):
+    page.set_viewport_size({'width': 1280, 'height': 850})
+    page.goto(f'{base_url}/order-prescription.html')
     page.wait_for_load_state('networkidle')
 
     welcome_btn = page.locator("#demo-welcome-modal button:has-text('I Understand')")
@@ -11,47 +11,46 @@ with sync_playwright() as p:
         welcome_btn.click()
         page.wait_for_timeout(300)
 
-    # Scroll down to bottom first as user does before clicking review & submit
-    page.locator('.submit-btn').scroll_into_view_if_needed()
-    page.wait_for_timeout(200)
+    # Fill form fields
+    page.fill("#patientName", "Jane Doe")
+    page.fill("#patientEmail", "jane@example.com")
+    page.fill("#patientPhone", "0871234567")
+    page.fill("#patientDOB", "1985-05-15")
+    page.fill("#patientAddress", "456 Main Street")
+    page.select_option("#chosenPharmacy", index=1)
 
-    print("Scroll before submit:", page.evaluate("window.scrollY"))
+    # Add a medication
+    page.fill("#medName", "Paracetamol")
+    page.fill("#medDosage", "500mg")
+    page.select_option("#medFreq", "As needed")
+    page.click("button.add-med-btn")
 
-    # Trigger submit simulation using updated logic
-    page.evaluate('''() => {
-        document.getElementById('prescriptionForm').style.display = 'none';
-        const appContainer = document.querySelector('.form-app-container');
-        if (appContainer) {
-            appContainer.classList.add('form-submitted');
-        }
-        ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.disabled = true;
-        });
-        const successDiv = document.getElementById('successMessage');
-        successDiv.innerHTML = `
-            <div class="success-animation">
-                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
-            </div>
-            <h2 class="success-title">Request Submitted</h2>
-            <p class="success-message">Your reference number is: <strong>CHC-20260914-1234</strong>. A confirmation has been sent via email. Please allow 48 hours for processing.</p>
-            <button class="btn" onclick="location.reload()">Submit Another Request</button>
-        `;
-        successDiv.style.display = 'block';
-        if (appContainer) {
-            appContainer.scrollIntoView({ behavior: 'instant', block: 'start' });
-        }
-    }''')
-    page.wait_for_timeout(300)
+    # Intercept submission request
+    script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    def handle_submit_route(route):
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"result": "success", "row": 2}'
+        )
+    page.route(script_web_app_url, handle_submit_route)
 
-    print("Scroll after submit (updated):", page.evaluate("window.scrollY"))
+    # Click Review & Submit
+    page.click(".submit-btn")
+    expect(page.locator("#summaryModal")).to_be_visible()
+
+    # Confirm & Submit in modal
+    page.click("#summaryModal .btn-confirm")
+    expect(page.locator("#successMessage")).to_be_visible()
+    expect(page.locator("#prescriptionForm")).not_to_be_visible()
+
     box = page.locator('.form-app-container').bounding_box()
-    print("form-app-container bounding box:", box)
-    sidebar_vis = page.locator('.sidebar').is_visible()
-    clear_enabled = page.locator('#btnClearForm').is_enabled()
-    save_disabled = page.locator('#btnSaveFile').is_disabled()
-    print(f"sidebar_vis: {sidebar_vis}, clear_enabled: {clear_enabled}, save_disabled: {save_disabled}")
+    assert box is not None
+    assert page.locator('.sidebar').is_visible()
+    assert page.locator('#btnClearForm').is_enabled()
+    assert page.locator('#btnSaveFile').is_disabled()
+    assert page.locator('#btnLoadFile').is_disabled()
+    assert page.locator('#btnPrintSummary').is_disabled()
 
     page.screenshot(path='verification/success_state_current.png')
-    browser.close()
-    print("Screenshot saved to verification/success_state_current.png")
+

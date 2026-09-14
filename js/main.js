@@ -126,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const panelId = `panel-${i}`;
         panel.setAttribute('id', panelId);
+        panel.inert = true;
         accordion.setAttribute('aria-controls', panelId);
         accordion.setAttribute('aria-expanded', 'false');
 
@@ -140,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 otherAcc.setAttribute('aria-expanded', 'false');
                 if (otherPanel) {
                     otherPanel.style.maxHeight = null;
+                    otherPanel.inert = true;
                 }
             }
 
@@ -147,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isCurrentlyActive) {
                 this.classList.add("active");
                 this.setAttribute('aria-expanded', 'true');
+                panel.inert = false;
                 panel.style.maxHeight = panel.scrollHeight + "px";
             }
         });

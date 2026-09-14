@@ -2,8 +2,6 @@ from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
 
-SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec"
-
 def verify_appointment_form(page: Page):
     repo_root = Path(__file__).resolve().parent.parent
     app_url = (repo_root / "appointments.html").as_uri()

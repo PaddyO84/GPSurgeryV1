@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         /* Specific enhancements for the Prescription App */
 
@@ -270,7 +270,7 @@
                         <div class="form-group">
                             <label for="medName">Medication Name</label>
                             <div class="med-combobox" id="medCombobox">
-                                <input type="text" id="medName" placeholder="Select or type..." autocomplete="off">
+                                <input type="text" id="medName" placeholder="Select or type..." autocomplete="off" role="combobox" aria-expanded="false" aria-controls="medComboboxOptions">
                                 <button type="button" class="med-combobox-toggle" id="medComboboxToggle"
                                     aria-label="Toggle medication suggestions" tabindex="-1">
                                     <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -387,6 +387,7 @@
 
             function renderOptions(filter = '') {
                 optionsList.innerHTML = '';
+                input.removeAttribute('aria-activedescendant');
                 const query = filter.toLowerCase().trim();
                 const matched = query ? items.filter(it => it.toLowerCase().includes(query)) : items;
 
@@ -396,9 +397,11 @@
                     emptyLi.textContent = 'No suggestions, please type your medication name';
                     optionsList.appendChild(emptyLi);
                 } else {
-                    matched.forEach(item => {
+                    matched.forEach((item, index) => {
                         const li = document.createElement('li');
                         li.className = 'med-combobox-option';
+                        li.id = `med-combobox-opt-${index}`;
+                        li.setAttribute('role', 'option');
                         li.textContent = item;
                         li.addEventListener('mousedown', (e) => {
                             e.preventDefault();
@@ -413,14 +416,25 @@
                 }
             }
 
+            function updateActiveDescendant(options) {
+                if (highlightedIndex >= 0 && options[highlightedIndex]) {
+                    input.setAttribute('aria-activedescendant', options[highlightedIndex].id);
+                } else {
+                    input.removeAttribute('aria-activedescendant');
+                }
+            }
+
             function openDropdown() {
                 renderOptions(input.value);
                 optionsList.classList.add('show');
+                input.setAttribute('aria-expanded', 'true');
                 highlightedIndex = -1;
             }
 
             function closeDropdown() {
                 optionsList.classList.remove('show');
+                input.setAttribute('aria-expanded', 'false');
+                input.removeAttribute('aria-activedescendant');
                 highlightedIndex = -1;
             }
 
@@ -455,12 +469,14 @@
                     if (options.length === 0) return;
                     highlightedIndex = (highlightedIndex + 1) % options.length;
                     options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    updateActiveDescendant(options);
                     options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
                 } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     if (options.length === 0) return;
                     highlightedIndex = (highlightedIndex - 1 + options.length) % options.length;
                     options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    updateActiveDescendant(options);
                     options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
                 } else if (e.key === 'Enter') {
                     if (optionsList.classList.contains('show') && highlightedIndex >= 0 && options[highlightedIndex]) {
@@ -868,18 +884,60 @@
                 alert('Could not open print window. Please allow popups for this website.');
                 return;
             }
-            w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
-</head><body>
-            <h1>Prescription Request</h1>
-            <p><strong>Name:</strong> ${patientDetails.name}</p>
-            <p><strong>DOB:</strong> ${patientDetails.dob}</p>
-            <p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p>
-            <h3>Medications</h3>
-            <table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>
-            ${medicationList.map(m => `<tr><td>${m.name}</td><td>${m.dosage}</td><td>${m.freq}</td></tr>`).join('')}
-            </tbody></table>
-</body></html>`);
-            w.document.close();
+
+            const doc = w.document;
+            doc.title = 'Prescription Summary';
+
+            const style = doc.createElement('style');
+            style.textContent = 'body{font-family:sans-serif;margin:2rem;} table{width:100%;border-collapse:collapse;margin-top:1rem;} th,td{border:1px solid #ccc;padding:8px;text-align:left;} th{background:#f0f4f8;}';
+            doc.head.appendChild(style);
+
+            const h1 = doc.createElement('h1');
+            h1.textContent = 'Prescription Request';
+            doc.body.appendChild(h1);
+
+            const addField = (label, val) => {
+                const p = doc.createElement('p');
+                const strong = doc.createElement('strong');
+                strong.textContent = `${label}: `;
+                p.appendChild(strong);
+                p.appendChild(doc.createTextNode(val || ''));
+                doc.body.appendChild(p);
+            };
+
+            addField('Name', patientDetails.name);
+            addField('DOB', patientDetails.dob);
+            addField('Pharmacy', patientDetails.pharmacy);
+
+            const h3 = doc.createElement('h3');
+            h3.textContent = 'Medications';
+            doc.body.appendChild(h3);
+
+            const table = doc.createElement('table');
+            const thead = doc.createElement('thead');
+            const headerRow = doc.createElement('tr');
+            ['Name', 'Dosage', 'Frequency'].forEach(headerText => {
+                const th = doc.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = doc.createElement('tbody');
+            medicationList.forEach(m => {
+                const tr = doc.createElement('tr');
+                [m.name, m.dosage, m.freq].forEach(cellText => {
+                    const td = doc.createElement('td');
+                    td.textContent = cellText;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            doc.body.appendChild(table);
+
+            doc.close();
             w.print();
         }
 

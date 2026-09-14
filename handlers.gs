@@ -15,15 +15,15 @@ const APPT_LAYOUT = {
 
 const SICK_NOTE_LAYOUT = {
   TIMESTAMP: 0,
-  STATUS: 1,
-  NAME: 2,
-  DOB: 3,
-  PHONE: 4,
-  EMAIL: 5,
-  ADDRESS: 6,
-  CERT_TYPE: 7,
-  PPS: 8,
-  CONDITION: 9,
+  NAME: 1,
+  DOB: 2,
+  PHONE: 3,
+  EMAIL: 4,
+  ADDRESS: 5,
+  CERT_TYPE: 6,
+  PPS: 7,
+  CONDITION: 8,
+  STATUS: 9,
   DATES: 10,
   RETURN_TO_WORK: 11,
   SIGNATURE: 12,
@@ -147,8 +147,11 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.PPS] = sanitizeCellValue(data.pps);
   rowData[SICK_NOTE_LAYOUT.CONDITION] = sanitizeCellValue(data.condition || "");
   rowData[SICK_NOTE_LAYOUT.DATES] = sanitizeCellValue(data.dates || "");
-  rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = sanitizeCellValue(data.returnToWork || "");
-  rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(data.signature || "Not Provided");
+  let signatureValue = data.signature || "Not Provided";
+  if (typeof signatureValue === 'string' && signatureValue.length > 50000) {
+    signatureValue = "[Signature Exceeds Limit]";
+  }
+  rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(signatureValue);
   rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "";
 
   sheet.appendRow(rowData);
