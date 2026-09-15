@@ -147,6 +147,7 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.PPS] = sanitizeCellValue(data.pps);
   rowData[SICK_NOTE_LAYOUT.CONDITION] = sanitizeCellValue(data.condition || "");
   rowData[SICK_NOTE_LAYOUT.DATES] = sanitizeCellValue(data.dates || "");
+  rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = sanitizeCellValue(data.returnToWork || "");
   let signatureValue = data.signature || "Not Provided";
   if (typeof signatureValue === 'string' && signatureValue.length > 50000) {
     signatureValue = "[Signature Exceeds Limit]";
@@ -210,7 +211,12 @@ function handlePrescriptionSubmission(data) {
     newRow[PHONE_COL - 1] = "'" + details.phone;
     newRow[6] = sanitizeCellValue(details.dob);
     newRow[MEDS_COL - 1] = sanitizeCellValue(medicationString);
-    newRow[COMM_PREF_COL - 1] = sanitizeCellValue(details.commPref || "Email");
+    const VALID_COMM_PREFS = ["Email", "WhatsApp"];
+    const rawCommPref = details.commPref || "Email";
+    if (!VALID_COMM_PREFS.includes(rawCommPref)) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': [`Invalid commPref value: "${rawCommPref}". Accepted values are "Email" or "WhatsApp".`] })).setMimeType(ContentService.MimeType.JSON);
+    }
+    newRow[COMM_PREF_COL - 1] = sanitizeCellValue(rawCommPref);
     newRow[STATUS_COL - 1] = "";
     newRow[NOTIFICATION_COL - 1] = "";
 

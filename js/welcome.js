@@ -110,12 +110,14 @@
             const lastElement = focusable[focusable.length - 1];
 
             if (e.shiftKey) {
-                if (document.activeElement === firstElement) {
+                if (document.activeElement === firstElement ||
+                    !modalOverlay.contains(document.activeElement)) {
                     lastElement.focus();
                     e.preventDefault();
                 }
             } else {
-                if (document.activeElement === lastElement) {
+                if (document.activeElement === lastElement ||
+                    !modalOverlay.contains(document.activeElement)) {
                     firstElement.focus();
                     e.preventDefault();
                 }

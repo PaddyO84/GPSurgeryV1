@@ -18,7 +18,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     print(f"Testing Prescription Form at: {prescription_url}")
 
     # 1. Test Prescription Form
-    page.goto(prescription_url)
+    page.goto(prescription_url, wait_until="networkidle")
 
     # Read configured script web app URL from the page
     script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
@@ -92,7 +92,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
 
     # 2. Test Sick Note Form
     print(f"Testing Sick Note Form at: {sick_note_url}")
-    page.goto(sick_note_url)
+    page.goto(sick_note_url, wait_until="networkidle")
 
     # Handle Welcome Modal if it appears
     if page.is_visible("#demo-welcome-modal"):

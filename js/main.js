@@ -115,8 +115,7 @@
     }
 })();
 
-document.addEventListener('DOMContentLoaded', () => {
-
+function initAccordions() {
     // Accordion Functionality - closes open accordions when one is opened
     const accordions = document.getElementsByClassName("accordion");
     for (let i = 0; i < accordions.length; i++) {
@@ -154,4 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAccordions);
+} else {
+    initAccordions();
+}

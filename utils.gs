@@ -126,6 +126,9 @@ function formatWhatsAppNumber(phone) {
   if (!/^\d+$/.test(formatted)) {
     return "";
   }
+  if (formatted.length < 7 || formatted.length > 15) {
+    return "";
+  }
   return formatted;
 }
 

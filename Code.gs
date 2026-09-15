@@ -564,14 +564,16 @@ function sendWhatsAppLinkToStaff(row, staffEmail) {
  */
 function ensureArchiveSheet(ss, sourceSheet) {
   let archiveSheet = ss.getSheetByName("Archive");
-  if (!archiveSheet) {
+  const wasCreated = !archiveSheet;
+  if (wasCreated) {
     archiveSheet = ss.insertSheet("Archive");
-    if (sourceSheet && sourceSheet.getLastColumn() > 0) {
-      sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
-    }
     Logger.log("Created 'Archive' sheet.");
   } else {
     Logger.log("'Archive' sheet already exists.");
+  }
+  // Copy headers whenever the archive is empty, whether newly created or pre-existing.
+  if (archiveSheet.getLastRow() === 0 && sourceSheet && sourceSheet.getLastColumn() > 0) {
+    sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).copyTo(archiveSheet.getRange(1, 1));
   }
   return archiveSheet;
 }
@@ -684,13 +686,34 @@ function archiveOldRequests() {
     }
 
     if (rowsToArchive.length > 0) {
-      // 1. Append all archived rows to archiveSheet first
-      const archiveLastRow = archiveSheet.getLastRow();
-      const archiveValues = rowsToArchive.map(r => r.rowData);
-      archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
-      SpreadsheetApp.flush();
+      // Build a set of stable request IDs already present in the archive to avoid duplicate writes.
+      // ID = ISO timestamp string + '|' + original sheet row index (both stored in the source row).
+      const existingArchiveIds = new Set();
+      const archiveLastRowBefore = archiveSheet.getLastRow();
+      if (archiveLastRowBefore > 1) {
+        // Read col 1 (timestamp) from archive data rows to build the existing-ID set.
+        const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, 1).getValues();
+        archiveData.forEach((r, idx) => {
+          const ts = r[0] instanceof Date ? r[0].toISOString() : String(r[0]);
+          existingArchiveIds.add(ts);
+        });
+      }
 
-      // 2. Identify contiguous batches of row indices in bottom-up order to safely delete only confirmed archived rows
+      // Filter out rows whose stable ID is already in the archive (idempotent retry safety).
+      const newRows = rowsToArchive.filter(r => {
+        const ts = r.rowData[0] instanceof Date ? r.rowData[0].toISOString() : String(r.rowData[0]);
+        return !existingArchiveIds.has(ts);
+      });
+
+      if (newRows.length > 0) {
+        // 1. Append only genuinely new rows to the archive.
+        const archiveLastRow = archiveSheet.getLastRow();
+        const archiveValues = newRows.map(r => r.rowData);
+        archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
+        SpreadsheetApp.flush();
+      }
+
+      // 2. Delete from source only rows that are now confirmed in the archive (new or pre-existing).
       const rowIndices = rowsToArchive.map(r => r.sheetRowIndex).sort((a, b) => b - a);
       const batches = [];
       let currentBatch = null;
@@ -713,7 +736,7 @@ function archiveOldRequests() {
         sourceSheet.deleteRows(batch.startRow, batch.numRows);
       }
       SpreadsheetApp.flush();
-      Logger.log(`Batch archived and deleted ${rowsToArchive.length} rows.`);
+      Logger.log(`Batch archived ${newRows.length} new rows, deleted ${rowsToArchive.length} source rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

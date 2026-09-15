@@ -43,6 +43,16 @@ def load_replacements():
         print("Error: No anonymization replacements found. Provide anonymize_local.json or ANONYMIZE_REPLACEMENTS_JSON.", file=sys.stderr)
         sys.exit(1)
 
+    # Validate every entry before use: keys must be non-empty strings, values must be strings.
+    invalid = [
+        (k, v) for k, v in combined.items()
+        if not isinstance(k, str) or not k or not isinstance(v, str)
+    ]
+    if invalid:
+        for k, v in invalid:
+            print(f"Error: Invalid replacement entry – key={k!r}, value={v!r}. Keys must be non-empty strings and values must be strings.", file=sys.stderr)
+        sys.exit(1)
+
     # Order all source strings from most specific (longest) to least specific (shortest)
     sorted_items = sorted(combined.items(), key=lambda item: len(item[0]), reverse=True)
     return dict(sorted_items)

@@ -10,7 +10,7 @@ def verify_address_submission(page, base_url: str = None):
         repo_root = Path(__file__).resolve().parent.parent
         appointments_url = (repo_root / "appointments.html").as_uri()
 
-    page.goto(appointments_url)
+    page.goto(appointments_url, wait_until="networkidle")
 
     # Handle Welcome Modal if present
     try:
