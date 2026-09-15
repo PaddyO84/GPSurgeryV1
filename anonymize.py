@@ -75,9 +75,14 @@ def process_file(filepath):
         new_content = pattern.sub(lambda m: replacements[m.group(0)], content)
         if new_content != content:
             target_dir = os.path.dirname(os.path.abspath(filepath))
+            orig_stat = os.stat(filepath)
             with tempfile.NamedTemporaryFile('w', dir=target_dir, delete=False, encoding='utf-8') as tf:
                 temp_path = tf.name
                 tf.write(new_content)
+            try:
+                os.chmod(temp_path, orig_stat.st_mode)
+            except OSError:
+                pass
             os.replace(temp_path, filepath)
             temp_path = None
             print(f"Updated: {filepath}")

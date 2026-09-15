@@ -527,8 +527,9 @@ header {
 
 @media (max-width: 768px) {
     .nav-container { border-radius: 0; backdrop-filter: none; }
-    .menu-toggle { display: block; }
-    .search-container { order: -1; margin-right: auto; }
+    .menu-toggle { display: block; flex-shrink: 0; }
+    .search-container { order: -1; margin-right: auto; min-width: 0; flex-shrink: 1; }
+    .search-container input[type="search"] { width: 100%; max-width: 160px; min-width: 90px; }
     #main-nav {
         display: block;
         position: fixed;

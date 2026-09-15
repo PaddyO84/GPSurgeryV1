@@ -46,6 +46,21 @@
         if (contactAddress && siteData.contact.address) {
             contactAddress.textContent = siteData.contact.address;
         }
+
+        const contactPhone = document.getElementById('contact-phone');
+        if (contactPhone && siteData.contact.phone) {
+            contactPhone.textContent = siteData.contact.phone;
+        }
+
+        const contactEmail = document.getElementById('contact-email');
+        if (contactEmail && siteData.contact.email) {
+            contactEmail.textContent = siteData.contact.email;
+        }
+
+        const contactNowdoc = document.getElementById('contact-nowdoc');
+        if (contactNowdoc && siteData.contact.nowDoc) {
+            contactNowdoc.textContent = siteData.contact.nowDoc;
+        }
     }
 
     function populateAll() {

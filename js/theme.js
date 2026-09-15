@@ -13,7 +13,14 @@
 })(typeof self !== 'undefined' ? self : this, function() {
     function getTheme(win, storage) {
         const currentWindow = win || (typeof window !== 'undefined' ? window : null);
-        const currentStorage = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+        let currentStorage = storage;
+        if (!currentStorage) {
+            try {
+                currentStorage = (typeof localStorage !== 'undefined') ? localStorage : null;
+            } catch(e) {
+                currentStorage = null;
+            }
+        }
 
         if (currentWindow && currentWindow.location && currentWindow.location.search) {
             const urlParams = new URLSearchParams(currentWindow.location.search);
@@ -49,7 +56,14 @@
 
     function setTheme(themeName, win, storage, doc) {
         const currentWindow = win || (typeof window !== 'undefined' ? window : null);
-        const currentStorage = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+        let currentStorage = storage;
+        if (!currentStorage) {
+            try {
+                currentStorage = (typeof localStorage !== 'undefined') ? localStorage : null;
+            } catch(e) {
+                currentStorage = null;
+            }
+        }
         const currentDoc = doc || (typeof document !== 'undefined' ? document : null);
 
         if (currentStorage) {

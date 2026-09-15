@@ -703,22 +703,22 @@ function archiveOldRequests() {
 
     if (rowsToArchive.length > 0) {
       // Build a set of stable request IDs already present in the archive to avoid duplicate writes.
-      // Composite ID = buildArchiveId(rowValues, originalRowIdentifier)
+      // Composite ID = buildArchiveId(rowValues) based on stable row content
       const existingArchiveIds = new Set();
       const archiveLastRowBefore = archiveSheet.getLastRow();
       if (archiveLastRowBefore > 1) {
         // Read timestamp and patient email/ID columns from archive data rows to build the existing-ID set.
         const numCols = Math.min(archiveSheet.getLastColumn(), 2);
         const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, numCols).getValues();
-        archiveData.forEach((r, idx) => {
-          const archiveId = buildArchiveId(r, idx + 2);
+        archiveData.forEach((r) => {
+          const archiveId = buildArchiveId(r);
           existingArchiveIds.add(archiveId);
         });
       }
 
       // Filter out rows whose stable composite ID is already in the archive (idempotent retry safety).
       const newRows = rowsToArchive.filter(r => {
-        const rowId = buildArchiveId(r.rowData, r.sheetRowIndex);
+        const rowId = buildArchiveId(r.rowData);
         return !existingArchiveIds.has(rowId);
       });
 

@@ -480,11 +480,15 @@
 
         function submitFinal() {
             const btn = document.querySelector('.btn-confirm');
+            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
+            if (!SCRIPT_WEB_APP_URL) {
+                console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
+                alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = "Processing...";
-
-            // Use URL from js/config.js
-            const SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL;
 
             const data = {
                 formType: 'sick-note', // Discriminator for Backend
