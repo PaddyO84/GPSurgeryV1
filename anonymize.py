@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import tempfile
 
 # Default replacements schema (loaded from untracked config or environment secret)
 default_replacements = {
@@ -50,7 +51,7 @@ def load_replacements():
     ]
     if invalid:
         for k, v in invalid:
-            print(f"Error: Invalid replacement entry – key={k!r}, value={v!r}. Keys must be non-empty strings and values must be strings.", file=sys.stderr)
+            print(f"Error: Invalid replacement entry with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(invalid)}). Keys must be non-empty strings and values must be strings.", file=sys.stderr)
         sys.exit(1)
 
     # Order all source strings from most specific (longest) to least specific (shortest)
@@ -73,9 +74,10 @@ def process_file(filepath):
         pattern = re.compile('|'.join(map(re.escape, replacements.keys())))
         new_content = pattern.sub(lambda m: replacements[m.group(0)], content)
         if new_content != content:
-            temp_path = f"{filepath}.tmp"
-            with open(temp_path, 'w', encoding='utf-8') as f:
-                f.write(new_content)
+            target_dir = os.path.dirname(os.path.abspath(filepath))
+            with tempfile.NamedTemporaryFile('w', dir=target_dir, delete=False, encoding='utf-8') as tf:
+                temp_path = tf.name
+                tf.write(new_content)
             os.replace(temp_path, filepath)
             temp_path = None
             print(f"Updated: {filepath}")

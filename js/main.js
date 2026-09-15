@@ -76,8 +76,8 @@
         dropdowns.forEach(dropdown => {
             dropdown.setAttribute('aria-expanded', 'false');
             dropdown.addEventListener('click', (e) => {
-                e.preventDefault();
                 if (window.innerWidth <= 768) {
+                    e.preventDefault();
                     const parent = dropdown.parentElement;
                     if (parent) {
                         const isOpen = parent.classList.toggle('open');

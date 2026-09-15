@@ -521,7 +521,8 @@ header {
     
     .hero-text { text-align: center; }
     .hero-actions { justify-content: center; }
-    .hero-logo { margin: 0 auto; order: -1; }
+    .hero-visual { order: -1; }
+    .hero-logo { margin: 0 auto; }
 }
 
 @media (max-width: 768px) {

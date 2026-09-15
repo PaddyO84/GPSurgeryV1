@@ -183,7 +183,7 @@ function onFormSubmit(e) {
     const commPref = e.values[COMM_PREF_COL - 1];
 
     // We can proceed with confirmation even if email is missing; the function handles it.
-    sendConfirmationNotification(patientName, patientEmail, commPref);
+    const notificationSuccess = sendConfirmationNotification(patientName, patientEmail, commPref);
 
     // --- Back-end Validation ---
     // Now, validate the data. If it fails, report to admin but don't stop processing.
@@ -212,9 +212,11 @@ function onFormSubmit(e) {
       sheet.getRange(row, MEDS_COL).setValue(medListSheet.join("\n"));
     }
 
-    // Use Utilities.formatDate for a robust, non-locale-dependent date string.
-    const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy");
-    sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${timestamp}`);
+    // Write the processed timestamp only when notification delivery succeeds
+    if (notificationSuccess) {
+      const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy");
+      sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${timestamp}`);
+    }
   } catch (err) {
     reportError('onFormSubmit', err, e.range ? e.range.getRow() : null);
   }

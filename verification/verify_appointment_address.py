@@ -31,8 +31,10 @@ def verify_address_submission(page, base_url: str = None):
     page.fill("#appNotes", "This is a test note.")
 
     # Intercept the request to verify payload
+    script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+
     def handle_route(route):
-        if "exec" in route.request.url and route.request.method == "POST":
+        if route.request.url == script_web_app_url and route.request.method == "POST":
             post_data = route.request.post_data
             try:
                 data = json.loads(post_data)

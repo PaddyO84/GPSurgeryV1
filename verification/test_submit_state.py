@@ -17,6 +17,7 @@ def test_submit_state(page: Page, base_url: str):
     page.fill("#patientPhone", "0871234567")
     page.fill("#patientDOB", "1985-05-15")
     page.fill("#patientAddress", "456 Main Street")
+    page.wait_for_function("document.getElementById('chosenPharmacy').options.length > 1", timeout=5000)
     page.select_option("#chosenPharmacy", index=1)
 
     # Add a medication

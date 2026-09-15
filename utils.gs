@@ -8,13 +8,15 @@ function reportError(functionName, error, row) {
   try {
     const subject = `Prescription Script Error: ${functionName}`;
     const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-    let body = `An error occurred in the function <strong>${functionName}</strong> at ${timestamp}.`;
-    if (row) {
-      body += `<br><br>The error was related to row <strong>${row}</strong>.`;
+    const safeFn = escapeHtml(functionName);
+    let body = `An error occurred in the function <strong>${safeFn}</strong> at ${timestamp}.`;
+    if (row !== null && row !== undefined) {
+      const safeRow = escapeHtml(String(row));
+      body += `<br><br>The error was related to row <strong>${safeRow}</strong>.`;
     }
-    const errName = (error && error.name) ? error.name : 'Error';
-    const errMessage = (error && error.message) ? error.message : (error ? String(error) : 'Unknown error');
-    const errStack = (error && error.stack) ? error.stack.replace(/\n/g, '<br>') : 'No stack trace available';
+    const errName = escapeHtml((error && error.name) ? error.name : 'Error');
+    const errMessage = escapeHtml((error && error.message) ? error.message : (error ? String(error) : 'Unknown error'));
+    const errStack = (error && error.stack) ? escapeHtml(error.stack).replace(/\n/g, '<br>') : 'No stack trace available';
     body += `<br><br><strong>Error Details:</strong><br>Name: ${errName}<br>Message: ${errMessage}<br>Stack Trace:<br>${errStack}`;
     MailApp.sendEmail(ADMIN_EMAIL, subject, "", { htmlBody: body });
   } catch (e) {
@@ -82,18 +84,28 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
   if (status !== readyStatus || !notificationDateStr || typeof notificationDateStr !== 'string') {
     return false;
   }
-  let datePart = null;
+  let dateStr = null;
   if (notificationDateStr.startsWith("Ready on ")) {
-    datePart = notificationDateStr.replace("Ready on ", "").split(' ')[0];
+    dateStr = notificationDateStr.replace("Ready on ", "").trim();
   }
 
-  if (datePart) {
-    const dateParts = datePart.split('/');
+  if (dateStr) {
+    const parts = dateStr.split(' ');
+    const dateParts = parts[0].split('/');
     if (dateParts.length === 3) {
       const day = parseInt(dateParts[0], 10);
       const month = parseInt(dateParts[1], 10);
       const year = parseInt(dateParts[2], 10);
-      const processedDate = new Date(year, month - 1, day);
+      let hours = 0, minutes = 0, seconds = 0;
+      if (parts.length > 1 && parts[1]) {
+        const timeParts = parts[1].split(':');
+        if (timeParts.length >= 2) {
+          hours = parseInt(timeParts[0], 10) || 0;
+          minutes = parseInt(timeParts[1], 10) || 0;
+          seconds = (timeParts.length >= 3 ? parseInt(timeParts[2], 10) : 0) || 0;
+        }
+      }
+      const processedDate = new Date(year, month - 1, day, hours, minutes, seconds);
       if (
         !isNaN(processedDate.getTime()) &&
         processedDate.getDate() === day &&

@@ -130,5 +130,13 @@ describe('Backend Utility Logic Tests', () => {
             // 31st of February would roll over into March in loose Date parsing
             expect(isRowArchivable('Sent to Pharmacy', 'Ready on 31/02/2025 10:00:00', cutOffDate)).to.be.false;
         });
+
+        it('should handle same-day boundary comparisons with HH:mm:ss correctly', () => {
+            const cutOffDate = new Date(2026, 5, 15, 12, 0, 0); // 15 June 2026 12:00:00
+            const beforeCutoff = isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2026 10:30:00', cutOffDate);
+            const afterCutoff = isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2026 14:30:00', cutOffDate);
+            expect(beforeCutoff).to.be.true;
+            expect(afterCutoff).to.be.false;
+        });
     });
 });

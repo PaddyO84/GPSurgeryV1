@@ -192,6 +192,13 @@
             const successMsg = document.getElementById('appSuccessMessage');
             const originalBtnHtml = btn.innerHTML;
 
+            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
+            if (!SCRIPT_WEB_APP_URL) {
+                console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
+                alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
+                return;
+            }
+
             btn.disabled = true;
             btn.innerHTML = "Sending...";
 
@@ -206,8 +213,6 @@
                 preferredTime: document.getElementById('appTime').value,
                 notes: document.getElementById('appNotes').value
             };
-
-            const SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL;
 
             fetch(SCRIPT_WEB_APP_URL, {
                 method: 'POST',
