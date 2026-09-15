@@ -99,6 +99,7 @@ describe('Backend Utility Logic Tests', () => {
             expect(formatWhatsAppNumber('+353 87 abc 4567')).to.equal('');
             expect(formatWhatsAppNumber('phone-number')).to.equal('');
             expect(formatWhatsAppNumber('+++')).to.equal('');
+            expect(formatWhatsAppNumber('9991234567')).to.equal('');
         });
 
         it('should return empty string for empty input', () => {

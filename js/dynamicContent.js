@@ -11,6 +11,11 @@
         if (headerAddress && siteData.contact.address) {
             headerAddress.textContent = siteData.contact.address;
         }
+
+        const headerNowdoc = document.getElementById('header-nowdoc');
+        if (headerNowdoc && siteData.contact.nowDoc) {
+            headerNowdoc.textContent = siteData.contact.nowDoc;
+        }
     }
 
     function populateFooter() {

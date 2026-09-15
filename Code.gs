@@ -579,6 +579,20 @@ function ensureArchiveSheet(ss, sourceSheet) {
 }
 
 /**
+ * Builds a composite archive identifier for a row using timestamp and original row identifier.
+ * @param {Array} rowData - Array of cell values for the row.
+ * @param {number|string} [sheetRowIndex] - Original 1-based sheet row index or fallback identifier.
+ * @returns {string} Composite archive key.
+ */
+function buildArchiveId(rowData, sheetRowIndex) {
+  const ts = (rowData && rowData[0] instanceof Date) ? rowData[0].toISOString() : String(rowData ? rowData[0] : '');
+  const rowId = (sheetRowIndex !== undefined && sheetRowIndex !== null && sheetRowIndex !== '')
+    ? String(sheetRowIndex)
+    : String(rowData && rowData[1] !== undefined ? rowData[1] : '');
+  return `${ts}|${rowId}`;
+}
+
+/**
  * Sets up the automated triggers and required sheets.
  * Creates the 'Archive' sheet if it doesn't exist, configures a weekly trigger
  * for archiving, and an onFormSubmit trigger for new requests.
@@ -687,22 +701,23 @@ function archiveOldRequests() {
 
     if (rowsToArchive.length > 0) {
       // Build a set of stable request IDs already present in the archive to avoid duplicate writes.
-      // ID = ISO timestamp string + '|' + original sheet row index (both stored in the source row).
+      // Composite ID = buildArchiveId(rowValues, originalRowIdentifier)
       const existingArchiveIds = new Set();
       const archiveLastRowBefore = archiveSheet.getLastRow();
       if (archiveLastRowBefore > 1) {
-        // Read col 1 (timestamp) from archive data rows to build the existing-ID set.
-        const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, 1).getValues();
+        // Read timestamp and patient email/ID columns from archive data rows to build the existing-ID set.
+        const numCols = Math.min(archiveSheet.getLastColumn(), 2);
+        const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, numCols).getValues();
         archiveData.forEach((r, idx) => {
-          const ts = r[0] instanceof Date ? r[0].toISOString() : String(r[0]);
-          existingArchiveIds.add(ts);
+          const archiveId = buildArchiveId(r, idx + 2);
+          existingArchiveIds.add(archiveId);
         });
       }
 
-      // Filter out rows whose stable ID is already in the archive (idempotent retry safety).
+      // Filter out rows whose stable composite ID is already in the archive (idempotent retry safety).
       const newRows = rowsToArchive.filter(r => {
-        const ts = r.rowData[0] instanceof Date ? r.rowData[0].toISOString() : String(r.rowData[0]);
-        return !existingArchiveIds.has(ts);
+        const rowId = buildArchiveId(r.rowData, r.sheetRowIndex);
+        return !existingArchiveIds.has(rowId);
       });
 
       if (newRows.length > 0) {

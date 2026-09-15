@@ -122,6 +122,7 @@ function formatWhatsAppNumber(phone) {
   else if (formatted.startsWith('00')) formatted = formatted.substring(2);
   else if (formatted.startsWith('+')) formatted = formatted.substring(1);
   else if (formatted.startsWith('0')) formatted = '353' + formatted.substring(1);
+  else return "";
 
   if (!/^\d+$/.test(formatted)) {
     return "";
