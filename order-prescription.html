@@ -91,6 +91,82 @@
             text-decoration: underline;
         }
 
+        @media (max-width: 640px) {
+            .med-table,
+            .med-table tbody {
+                display: block;
+                width: 100%;
+            }
+
+            .med-table thead {
+                display: none;
+            }
+
+            .med-table tr {
+                display: block;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: var(--radius-md);
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .med-table th:nth-child(1), .med-table td:nth-child(1),
+            .med-table th:nth-child(2), .med-table td:nth-child(2),
+            .med-table th:nth-child(3), .med-table td:nth-child(3),
+            .med-table th:nth-child(4), .med-table td:nth-child(4) {
+                width: 100% !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.55rem 0;
+                border-bottom: 1px solid #f1f5f9;
+                text-align: right;
+                font-size: 0.95rem;
+            }
+
+            .med-table td:last-child {
+                border-bottom: none;
+                justify-content: flex-end;
+                padding-top: 0.75rem;
+                gap: 0.5rem;
+            }
+
+            .med-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                text-align: left;
+                padding-right: 0.75rem;
+                flex-shrink: 0;
+            }
+
+            .med-table td:last-child::before {
+                margin-right: auto;
+            }
+
+            .edit-btn, .remove-btn {
+                padding: 0.35rem 0.75rem;
+                border-radius: var(--radius-sm);
+                font-size: 0.85rem;
+                display: inline-flex;
+                align-items: center;
+                text-decoration: none !important;
+            }
+
+            .edit-btn {
+                background: var(--primary-light);
+                color: var(--primary-dark);
+            }
+
+            .remove-btn {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+        }
+
         /* Success Submission Animation & Styling */
         .success-animation {
             margin: 1.5rem auto 1rem;
