@@ -33,8 +33,11 @@ def verify_address_submission(page, base_url: str = None):
     # Intercept the request to verify payload
     script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
 
+    address_verified = {"called": False, "matched": False}
+
     def handle_route(route):
         if route.request.url == script_web_app_url and route.request.method == "POST":
+            address_verified["called"] = True
             post_data = route.request.post_data
             try:
                 data = json.loads(post_data)
@@ -42,6 +45,7 @@ def verify_address_submission(page, base_url: str = None):
 
                 if "address" in data and data["address"] == "123 Test Street, Test Town":
                     print("SUCCESS: Address field correctly found in payload.")
+                    address_verified["matched"] = True
                     route.fulfill(status=200, body=json.dumps({"result": "success"}))
                 else:
                     print("FAILURE: Address field missing or incorrect in payload.")
@@ -60,6 +64,10 @@ def verify_address_submission(page, base_url: str = None):
 
     # Wait for success message
     expect(page.locator("#appSuccessMessage")).to_be_visible(timeout=5000)
+
+    # Assert address validation succeeded
+    assert address_verified["called"], "handle_route was never invoked for the submission request"
+    assert address_verified["matched"], "Address payload did not match expected value"
 
     # Take screenshot
     page.screenshot(path="verification/appointment_address_verified.png")

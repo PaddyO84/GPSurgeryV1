@@ -502,16 +502,10 @@ function sendReadyEmail(row) {
   if (!patientEmail) return false;
 
   try {
-    const template = HtmlService.createTemplateFromFile('email_ready');
-    template.senderName = SENDER_NAME;
-    template.patientName = patientName;
-    template.pharmacyName = pharmacy;
-    template.phoneNumber = YOUR_PHONE_NUMBER;
+    const message = buildPatientMessage(STATUS_READY, patientName, pharmacy);
+    if (!message) return false;
 
-    const subject = `Your Prescription has been sent to ${pharmacy}`;
-    const htmlBody = template.evaluate().getContent();
-
-    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: htmlBody, name: SENDER_NAME });
+    MailApp.sendEmail({ to: patientEmail, subject: message.subject, htmlBody: message.htmlBody, name: SENDER_NAME });
     return true;
   } catch (e) {
     reportError('sendReadyEmail', e, row);
@@ -723,18 +717,23 @@ function archiveOldRequests() {
       const archiveLastRowBefore = archiveSheet.getLastRow();
       const archiveLastCol = archiveSheet.getLastColumn();
 
+      let archiveTsColIdx = 0;
+      let archiveEmailColIdx = 1;
+
       if (archiveLastRowBefore > 1 && archiveLastCol > 0) {
         // Resolve timestamp and email column indexes by header name for resilience across schema changes.
         const headerValues = archiveSheet.getRange(1, 1, 1, archiveLastCol).getValues()[0];
-        let archiveTsColIdx = 0;
-        let archiveEmailColIdx = 1;
+        let foundTimestamp = false;
+        let foundEmail = false;
 
         for (let c = 0; c < headerValues.length; c++) {
           const h = String(headerValues[c]).trim().toLowerCase();
-          if (h.includes("timestamp") || h.includes("date")) {
+          if (!foundTimestamp && h === "timestamp") {
             archiveTsColIdx = c;
-          } else if (h.includes("email") || h.includes("patient email")) {
+            foundTimestamp = true;
+          } else if (!foundEmail && (h === "email" || h.includes("email"))) {
             archiveEmailColIdx = c;
+            foundEmail = true;
           }
         }
 
@@ -755,7 +754,9 @@ function archiveOldRequests() {
       const currentRunIds = new Set();
 
       for (let r of rowsToArchive) {
-        const rowId = buildArchiveId(r.rowData);
+        const sourceTsVal = r.rowData[archiveTsColIdx];
+        const sourceEmailVal = r.rowData[archiveEmailColIdx];
+        const rowId = buildArchiveId([sourceTsVal, sourceEmailVal]);
         if (existingArchiveIds.has(rowId)) {
           // Already confirmed present in the archive
           confirmedSourceRowIndices.push(r.sheetRowIndex);

@@ -2,6 +2,7 @@ import os
 from playwright.sync_api import Page, expect
 
 def test_appointments_accordion_styling(page: Page, base_url: str):
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
     page.goto(f"{base_url}/appointments.html")
     page.wait_for_load_state("networkidle")
 

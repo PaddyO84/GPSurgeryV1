@@ -3,6 +3,7 @@ from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page(viewport={'width': 1280, 'height': 850})
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
     page.goto('http://127.0.0.1:8000/order-prescription.html')
     page.wait_for_load_state('networkidle')
 

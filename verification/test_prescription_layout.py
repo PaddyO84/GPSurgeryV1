@@ -2,6 +2,9 @@ import pytest
 from playwright.sync_api import Page, expect
 
 def test_prescription_layout(page: Page, base_url: str):
+    # Deterministically dismiss welcome modal before navigation
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
+
     # Test Desktop 1280
     page.set_viewport_size({"width": 1280, "height": 800})
     page.goto(f"{base_url}/order-prescription.html")

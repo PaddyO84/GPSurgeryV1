@@ -2,10 +2,11 @@ from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
 
-def test_verify_appointment_form(page: Page):
-    repo_root = Path(__file__).resolve().parent.parent
-    app_url = (repo_root / "appointments.html").as_uri()
+def test_verify_appointment_form(page: Page, base_url: str):
+    # Deterministically dismiss welcome modal before navigation
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
 
+    app_url = f"{base_url}/appointments.html"
     print(f"Testing Appointment Form at: {app_url}")
 
     page.goto(app_url)
@@ -72,13 +73,26 @@ def test_verify_appointment_form(page: Page):
     print("Appointment verification successful.")
 
 if __name__ == "__main__":
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from functools import partial
+    import threading
+
+    repo_root = Path(__file__).resolve().parent.parent
+    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            test_verify_appointment_form(page)
+            test_verify_appointment_form(page, f"http://127.0.0.1:{port}")
         except Exception as e:
             print(f"Verification Failed: {e}")
             raise e
         finally:
             browser.close()
+            server.shutdown()
+            thread.join()
