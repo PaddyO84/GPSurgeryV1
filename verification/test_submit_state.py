@@ -28,6 +28,7 @@ def test_submit_state(page: Page, base_url: str):
 
     # Intercept submission request
     script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    assert script_web_app_url, "CONFIG.SCRIPT_WEB_APP_URL is not configured on the page"
     def handle_submit_route(route):
         route.fulfill(
             status=200,

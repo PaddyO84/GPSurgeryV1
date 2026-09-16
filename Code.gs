@@ -718,39 +718,75 @@ function archiveOldRequests() {
 
     if (rowsToArchive.length > 0) {
       // Build a set of stable request IDs already present in the archive to avoid duplicate writes.
-      // Composite ID = buildArchiveId(rowValues) based on stable row content
+      // Composite ID = buildArchiveId(rowValues) based on stable row content (timestamp + patient email/ID).
       const existingArchiveIds = new Set();
       const archiveLastRowBefore = archiveSheet.getLastRow();
-      if (archiveLastRowBefore > 1) {
-        // Read timestamp and patient email/ID columns from archive data rows to build the existing-ID set.
-        const numCols = Math.min(archiveSheet.getLastColumn(), 2);
-        const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, numCols).getValues();
+      const archiveLastCol = archiveSheet.getLastColumn();
+
+      if (archiveLastRowBefore > 1 && archiveLastCol > 0) {
+        // Resolve timestamp and email column indexes by header name for resilience across schema changes.
+        const headerValues = archiveSheet.getRange(1, 1, 1, archiveLastCol).getValues()[0];
+        let archiveTsColIdx = 0;
+        let archiveEmailColIdx = 1;
+
+        for (let c = 0; c < headerValues.length; c++) {
+          const h = String(headerValues[c]).trim().toLowerCase();
+          if (h.includes("timestamp") || h.includes("date")) {
+            archiveTsColIdx = c;
+          } else if (h.includes("email") || h.includes("patient email")) {
+            archiveEmailColIdx = c;
+          }
+        }
+
+        const maxColToFetch = Math.max(archiveTsColIdx, archiveEmailColIdx) + 1;
+        const archiveData = archiveSheet.getRange(2, 1, archiveLastRowBefore - 1, maxColToFetch).getValues();
         archiveData.forEach((r) => {
-          const archiveId = buildArchiveId(r);
+          const tsVal = r[archiveTsColIdx];
+          const emailVal = r[archiveEmailColIdx];
+          const archiveId = buildArchiveId([tsVal, emailVal]);
           existingArchiveIds.add(archiveId);
         });
       }
 
-      // Filter out rows whose stable composite ID is already in the archive (idempotent retry safety).
-      const newRows = rowsToArchive.filter(r => {
-        const rowId = buildArchiveId(r.rowData);
-        return !existingArchiveIds.has(rowId);
-      });
+      // Track confirmed archived items, including duplicates within the current run,
+      // so duplicate-key rows are not collapsed and unconfirmed rows are preserved in source.
+      const rowsToAppend = [];
+      const confirmedSourceRowIndices = [];
+      const currentRunIds = new Set();
 
-      if (newRows.length > 0) {
-        // 1. Append only genuinely new rows to the archive.
-        const archiveLastRow = archiveSheet.getLastRow();
-        const archiveValues = newRows.map(r => r.rowData);
-        archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
-        SpreadsheetApp.flush();
+      for (let r of rowsToArchive) {
+        const rowId = buildArchiveId(r.rowData);
+        if (existingArchiveIds.has(rowId)) {
+          // Already confirmed present in the archive
+          confirmedSourceRowIndices.push(r.sheetRowIndex);
+        } else if (!currentRunIds.has(rowId)) {
+          // Genuinely new row for this run
+          rowsToAppend.push(r);
+          currentRunIds.add(rowId);
+        } else {
+          // Duplicate within current batch; append distinct row to archive and track it
+          rowsToAppend.push(r);
+        }
       }
 
-      // 2. Delete from source only rows that are now confirmed in the archive (new or pre-existing).
-      const rowIndices = rowsToArchive.map(r => r.sheetRowIndex).sort((a, b) => b - a);
+      if (rowsToAppend.length > 0) {
+        const archiveLastRow = archiveSheet.getLastRow();
+        const archiveValues = rowsToAppend.map(r => r.rowData);
+        archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
+        SpreadsheetApp.flush();
+
+        // Mark appended rows as confirmed archived
+        for (let r of rowsToAppend) {
+          confirmedSourceRowIndices.push(r.sheetRowIndex);
+        }
+      }
+
+      // Delete from source ONLY rows that are confirmed in the archive (pre-existing or newly appended).
+      const rowIndicesToDelete = Array.from(new Set(confirmedSourceRowIndices)).sort((a, b) => b - a);
       const batches = [];
       let currentBatch = null;
 
-      for (let idx of rowIndices) {
+      for (let idx of rowIndicesToDelete) {
         if (!currentBatch) {
           currentBatch = { startRow: idx, numRows: 1 };
         } else if (idx === currentBatch.startRow - 1) {
@@ -768,7 +804,7 @@ function archiveOldRequests() {
         sourceSheet.deleteRows(batch.startRow, batch.numRows);
       }
       SpreadsheetApp.flush();
-      Logger.log(`Batch archived ${newRows.length} new rows, deleted ${rowsToArchive.length} source rows.`);
+      Logger.log(`Batch archived ${rowsToAppend.length} rows, deleted ${rowIndicesToDelete.length} confirmed source rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

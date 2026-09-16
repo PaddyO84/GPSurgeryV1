@@ -214,10 +214,14 @@
                 notes: document.getElementById('appNotes').value
             };
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             fetch(SCRIPT_WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
+                signal: controller.signal
             })
             .then(async response => {
                 if (response.type === 'opaque') {
@@ -239,9 +243,14 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again or call reception: ' + (error.message || ''));
+                const isTimeout = error.name === 'AbortError';
+                const message = isTimeout ? 'Request timed out. Please try again or call reception.' : ('An error occurred. Please try again or call reception: ' + (error.message || ''));
+                alert(message);
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
+            })
+            .finally(() => {
+                clearTimeout(timeoutId);
             });
         }
     </script>

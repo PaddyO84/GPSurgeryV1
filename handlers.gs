@@ -264,7 +264,7 @@ function handlePrescriptionSubmission(data) {
     lock.releaseLock();
   }
 
-  const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
+  const notificationSuccess = sendConfirmationNotification(details.name, details.email, normalizedCommPref);
   if (notificationSuccess) {
      sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
   } else {

@@ -132,7 +132,7 @@ function formatWhatsAppNumber(phone) {
   let formatted = cleaned;
   if (formatted.startsWith('+353')) formatted = formatted.substring(1);
   else if (formatted.startsWith('00353')) formatted = formatted.substring(2);
-  else if (formatted.startsWith('353')) formatted = formatted;
+  else if (formatted.startsWith('353')) { /* already starts with 353 */ }
   else if (formatted.startsWith('00')) formatted = formatted.substring(2);
   else if (formatted.startsWith('+')) formatted = formatted.substring(1);
   else if (formatted.startsWith('0')) formatted = '353' + formatted.substring(1);
