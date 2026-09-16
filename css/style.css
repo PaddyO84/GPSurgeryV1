@@ -238,7 +238,7 @@ header {
     color: var(--primary);
 }
 
-@media (min-width: 768.02px) {
+@media not all and (max-width: 768px) {
     .dropdown:hover .dropdown-content,
     .dropdown:focus-within .dropdown-content {
         display: flex;

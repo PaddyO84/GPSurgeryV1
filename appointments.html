@@ -217,6 +217,26 @@
                 notes: document.getElementById('appNotes').value
             };
 
+            const isLiveDeployment = Boolean(
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
+                window.IS_LIVE ||
+                (typeof localStorage !== 'undefined' && localStorage.getItem('LIVE_DEPLOYMENT') === 'true') ||
+                (typeof location !== 'undefined' && location.search && location.search.includes('live=true'))
+            );
+
+            // In demo mode, skip the network request entirely and simulate success
+            if (!isLiveDeployment) {
+                setTimeout(() => {
+                    form.reset();
+                    form.style.display = 'none';
+                    successMsg.style.display = 'block';
+                    successMsg.focus();
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }, 400);
+                return;
+            }
+
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 

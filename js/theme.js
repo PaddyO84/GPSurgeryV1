@@ -71,11 +71,11 @@
         }
         applyTheme(themeName, currentDoc);
 
-        if (currentWindow && currentWindow.location && currentWindow.history && currentWindow.history.pushState) {
+        if (currentWindow && currentWindow.location && currentWindow.history && currentWindow.history.replaceState) {
             try {
                 const url = new URL(currentWindow.location.href);
                 url.searchParams.set('theme', themeName);
-                currentWindow.history.pushState({}, '', url.toString());
+                currentWindow.history.replaceState({}, '', url.toString());
             } catch(e) {}
         }
     }

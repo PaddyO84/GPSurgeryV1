@@ -8,7 +8,7 @@ The "messaging service" referred to in the project history is identified as the 
 *   **Workflow**:
     1.  Patient selects "WhatsApp" as their preferred contact method.
     2.  When a staff member updates the status of a request (e.g., to "Sent to Pharmacy") in the Google Sheet:
-    3.  The `onEdit` trigger detects the change.
+    3.  The installed `handleEdit` trigger detects the change.
     4.  It generates a unique `wa.me` link with a pre-filled message (e.g., "Your prescription is ready...").
     5.  This link is emailed to the *Staff Member* (or displayed in a dialog if triggered via menu).
     6.  The staff member clicks the link on their device to open WhatsApp and send the message to the patient.

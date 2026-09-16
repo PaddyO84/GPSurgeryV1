@@ -136,36 +136,40 @@ function handleEdit(e) {
 
     for (let i = 0; i < numRows; i++) {
       const currentRow = startRow + i;
-      const status = statusValues[i][0] ? statusValues[i][0].toString().trim() : '';
-      const patientEmail = sheet.getRange(currentRow, emailCol).getValue();
-      const patientName = sheet.getRange(currentRow, nameCol).getValue();
+      try {
+        const status = statusValues[i][0] ? statusValues[i][0].toString().trim() : '';
+        const patientEmail = sheet.getRange(currentRow, emailCol).getValue();
+        const patientName = sheet.getRange(currentRow, nameCol).getValue();
 
-      if (status === STATUS_QUERY) {
-        if (!patientEmail) continue;
-        const subject = isAppointment
-          ? "Action Required: Query Regarding Your Appointment Request"
-          : "Action Required: Query Regarding Your Prescription Request";
-        const requestDesc = isAppointment ? "appointment request" : "prescription request";
-        const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-        MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+        if (status === STATUS_QUERY) {
+          if (!patientEmail) continue;
+          const subject = isAppointment
+            ? "Action Required: Query Regarding Your Appointment Request"
+            : "Action Required: Query Regarding Your Prescription Request";
+          const requestDesc = isAppointment ? "appointment request" : "prescription request";
+          const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+          MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
-      } else if (status === STATUS_READY && !isAppointment) {
-        const commPref = sheet.getRange(currentRow, COMM_PREF_COL).getValue().toLowerCase();
-        let deliverySuccess = false;
+        } else if (status === STATUS_READY && !isAppointment) {
+          const commPref = sheet.getRange(currentRow, COMM_PREF_COL).getValue().toLowerCase();
+          let deliverySuccess = false;
 
-        if (commPref === 'whatsapp') {
-          const userEmail = e.user ? e.user.getEmail() : '';
-          const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
-          deliverySuccess = sendWhatsAppLinkToStaff(currentRow, staffEmail);
-        } else {
-          deliverySuccess = sendReadyEmail(currentRow);
+          if (commPref === 'whatsapp') {
+            const userEmail = e.user ? e.user.getEmail() : '';
+            const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
+            deliverySuccess = sendWhatsAppLinkToStaff(currentRow, staffEmail);
+          } else {
+            deliverySuccess = sendReadyEmail(currentRow);
+          }
+
+          if (deliverySuccess) {
+            // Record ready timestamp in notification column only after successful notification delivery
+            const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+            sheet.getRange(currentRow, notificationCol).setValue(`Ready on ${timestamp}`);
+          }
         }
-
-        if (deliverySuccess) {
-          // Record ready timestamp in notification column only after successful notification delivery
-          const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-          sheet.getRange(currentRow, notificationCol).setValue(`Ready on ${timestamp}`);
-        }
+      } catch (rowErr) {
+        reportError('handleEdit:row', rowErr, currentRow);
       }
     }
   } catch (err) {
@@ -754,6 +758,26 @@ function archiveOldRequests() {
         });
       }
 
+      // Resolve source-specific timestamp and email column indexes independently from sourceSheet header row
+      const sourceLastCol = sourceSheet.getLastColumn();
+      let sourceTsColIdx = 0;
+      let sourceEmailColIdx = 1;
+      if (sourceLastCol > 0) {
+        const sourceHeaderValues = sourceSheet.getRange(1, 1, 1, sourceLastCol).getValues()[0];
+        let foundSourceTs = false;
+        let foundSourceEmail = false;
+        for (let c = 0; c < sourceHeaderValues.length; c++) {
+          const h = String(sourceHeaderValues[c]).trim().toLowerCase();
+          if (!foundSourceTs && h === "timestamp") {
+            sourceTsColIdx = c;
+            foundSourceTs = true;
+          } else if (!foundSourceEmail && (h === "email" || h.includes("email"))) {
+            sourceEmailColIdx = c;
+            foundSourceEmail = true;
+          }
+        }
+      }
+
       // Track confirmed archived items, including duplicates within the current run,
       // so duplicate-key rows are not collapsed and unconfirmed rows are preserved in source.
       const rowsToAppend = [];
@@ -761,8 +785,8 @@ function archiveOldRequests() {
       const currentRunIds = new Set();
 
       for (let r of rowsToArchive) {
-        const sourceTsVal = r.rowData[archiveTsColIdx];
-        const sourceEmailVal = r.rowData[archiveEmailColIdx];
+        const sourceTsVal = r.rowData[sourceTsColIdx];
+        const sourceEmailVal = r.rowData[sourceEmailColIdx];
         const rowId = buildArchiveId([sourceTsVal, sourceEmailVal]);
         if (existingArchiveIds.has(rowId)) {
           // Already confirmed present in the archive

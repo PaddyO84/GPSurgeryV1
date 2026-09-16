@@ -9,11 +9,19 @@ default_replacements = {
     # via untracked anonymize_local.json (see anonymize_config.example.json) or ANONYMIZE_REPLACEMENTS_JSON
 }
 
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def get_config_path():
+    env_path = os.environ.get("ANONYMIZE_CONFIG_FILE")
+    if env_path:
+        return os.path.normpath(os.path.abspath(env_path))
+    return os.path.normpath(os.path.join(REPO_ROOT, "anonymize_local.json"))
+
 def load_replacements():
     """Loads replacements from untracked local file or environment config, falling back to default replacements,
     ensuring custom configured entries are prioritized and all source strings are sorted from most specific to least specific."""
     configured = {}
-    custom_path = os.environ.get("ANONYMIZE_CONFIG_FILE", "anonymize_local.json")
+    custom_path = get_config_path()
     if os.path.exists(custom_path):
         try:
             with open(custom_path, "r", encoding="utf-8") as f:
@@ -105,11 +113,9 @@ def main():
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     skip_files = {'anonymize.py', 'anonymize_local.json', 'anonymize_config.example.json'}
 
-    custom_config = os.environ.get("ANONYMIZE_CONFIG_FILE", "anonymize_local.json")
-    resolved_custom_config = os.path.normpath(os.path.abspath(custom_config))
+    resolved_custom_config = get_config_path()
 
-    repo_root = os.path.dirname(os.path.abspath(__file__))
-    for root, dirs, files in os.walk(repo_root):
+    for root, dirs, files in os.walk(REPO_ROOT):
         dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
