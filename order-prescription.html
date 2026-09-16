@@ -565,16 +565,16 @@
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject()));
+            sessionStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject()));
         }
 
         function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('prescriptionFormData');
+            const savedData = sessionStorage.getItem('prescriptionFormData');
             if (savedData) {
                 try {
                     populateFormFromData(JSON.parse(savedData));
                 } catch (e) {
-                    localStorage.removeItem('prescriptionFormData');
+                    sessionStorage.removeItem('prescriptionFormData');
                 }
             }
         }
@@ -688,7 +688,7 @@
             if (confirm("Are you sure you want to clear the entire form?")) {
                 resetSubmittedState();
                 populateFormFromData({ patientDetails: {}, medicationList: [] });
-                localStorage.removeItem('prescriptionFormData');
+                sessionStorage.removeItem('prescriptionFormData');
                 showNotification("Form cleared.");
                 updateMedicationVisibility();
             }
@@ -830,7 +830,7 @@
                     <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
                     successDiv.style.display = 'block';
-                    localStorage.removeItem('prescriptionFormData');
+                    sessionStorage.removeItem('prescriptionFormData');
 
                     // Scroll viewport up to focus on the confirmation card
                     if (appContainer) {
@@ -894,9 +894,9 @@
             setTimeout(() => n.style.display = 'none', 3000);
         }
 
-        function saveToLocalStorage() { localStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject())); }
+        function saveToLocalStorage() { sessionStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject())); }
         function loadFromLocalStorage() {
-            const d = localStorage.getItem('prescriptionFormData');
+            const d = sessionStorage.getItem('prescriptionFormData');
             if (d) populateFormFromData(JSON.parse(d));
         }
 

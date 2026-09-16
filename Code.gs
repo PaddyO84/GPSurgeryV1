@@ -134,12 +134,19 @@ function handleEdit(e) {
     const startRow = range.getRow();
     const statusValues = range.getValues();
 
+    // Bulk-read email, name, and (for prescriptions) comm_pref for the entire edited range in one call each
+    const emailValues = sheet.getRange(startRow, emailCol, numRows, 1).getValues();
+    const nameValues = sheet.getRange(startRow, nameCol, numRows, 1).getValues();
+    const commPrefValues = (!isAppointment)
+      ? sheet.getRange(startRow, COMM_PREF_COL, numRows, 1).getValues()
+      : null;
+
     for (let i = 0; i < numRows; i++) {
       const currentRow = startRow + i;
       try {
         const status = statusValues[i][0] ? statusValues[i][0].toString().trim() : '';
-        const patientEmail = sheet.getRange(currentRow, emailCol).getValue();
-        const patientName = sheet.getRange(currentRow, nameCol).getValue();
+        const patientEmail = emailValues[i][0];
+        const patientName = nameValues[i][0];
 
         if (status === STATUS_QUERY) {
           if (!patientEmail) continue;
@@ -151,7 +158,7 @@ function handleEdit(e) {
           MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
         } else if (status === STATUS_READY && !isAppointment) {
-          const commPref = sheet.getRange(currentRow, COMM_PREF_COL).getValue().toLowerCase();
+          const commPref = commPrefValues[i][0] ? commPrefValues[i][0].toString().toLowerCase() : '';
           let deliverySuccess = false;
 
           if (commPref === 'whatsapp') {

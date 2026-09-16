@@ -1,9 +1,9 @@
 from playwright.sync_api import sync_playwright
 
 def debug_page():
-    import os
-    cwd = os.getcwd()
-    url = f"file://{cwd}/order-prescription.html"
+    from pathlib import Path
+    script_dir = Path(__file__).resolve().parent.parent
+    url = (script_dir / "order-prescription.html").as_uri()
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)

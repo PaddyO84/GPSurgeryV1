@@ -34,6 +34,8 @@ function testReportError() {
     // Restore the real MailApp
     if (realMailApp !== undefined) {
       MailApp = realMailApp;
+    } else {
+      delete MailApp;
     }
   }
 }
@@ -65,6 +67,8 @@ function testReportErrorFailurePath() {
   } finally {
     if (realMailApp !== undefined) {
       MailApp = realMailApp;
+    } else {
+      delete MailApp;
     }
   }
 }

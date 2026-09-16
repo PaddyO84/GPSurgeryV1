@@ -72,7 +72,6 @@ function handleAppointmentSubmission(data) {
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
   const timestamp = new Date();
   const rowData = [];
   rowData[APPT_LAYOUT.TIMESTAMP] = timestamp;
@@ -96,6 +95,7 @@ function handleAppointmentSubmission(data) {
 
   let rowIndex;
   try {
+    const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
     sheet.appendRow(rowData);
     rowIndex = sheet.getLastRow();
   } finally {
@@ -279,7 +279,6 @@ function handlePrescriptionSubmission(data) {
        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': errors })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
     const timestamp = new Date();
     const medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage || ''} (${m.freq || ''})`).join("\n");
 
@@ -304,6 +303,7 @@ function handlePrescriptionSubmission(data) {
 
   let row;
   try {
+    const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
     sheet.appendRow(newRow);
     row = sheet.getLastRow();
   } finally {
