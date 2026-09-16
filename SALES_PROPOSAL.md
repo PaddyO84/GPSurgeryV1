@@ -45,7 +45,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 | **Styling (CSS)** | 855 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
 | **Backend Logic** | 633 Lines | Google Apps Script handling routing, emails, and cleaning. |
 | **Performance Target** | < 1.0s | Target Initial Load Time for static assets under 4G/broadband conditions (subject to client network and CDN caching). |
-| **Uptime Target (Static Site / CDN)** | 99.9% | Static-site / CDN availability SLA for frontend portals (e.g., GitHub Pages / Netlify). |
+| **Uptime Target (Static Site / CDN)** | 99.9% | Static-site / CDN availability target for frontend portals (e.g., GitHub Pages / Netlify). |
 | **End-to-End Forms Availability Target** | 99.5% | End-to-end form processing availability accounting for Google Apps Script execution quotas, backend dependencies, and service maintenance. |
 
 ## 5. Architectural Drawings

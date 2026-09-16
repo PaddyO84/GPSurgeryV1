@@ -28,10 +28,14 @@ def inject_script(filepath, repo_root):
         if body_match:
             start, end = body_match.span()
             matched_tag = body_match.group(0)
-            new_content = content[:start] + f'<script src="{rel_script_path}"></script>\n' + matched_tag + content[end:]
+            original_stat = os.stat(filepath)
             with tempfile.NamedTemporaryFile('w', dir=file_dir, delete=False, encoding='utf-8') as f:
                 temp_path = f.name
                 f.write(new_content)
+            try:
+                os.chmod(temp_path, original_stat.st_mode)
+            except Exception:
+                pass
             os.replace(temp_path, filepath)
             temp_path = None
             print(f"Injected into {filepath}")

@@ -117,7 +117,6 @@ function handleSickNoteSubmission(data) {
   const SICK_SHEET_NAME = "Sick Notes";
   const headers = [];
   headers[SICK_NOTE_LAYOUT.TIMESTAMP] = "Timestamp";
-  headers[SICK_NOTE_LAYOUT.STATUS] = "Status";
   headers[SICK_NOTE_LAYOUT.NAME] = "Name";
   headers[SICK_NOTE_LAYOUT.DOB] = "DOB";
   headers[SICK_NOTE_LAYOUT.PHONE] = "Phone";
@@ -126,6 +125,7 @@ function handleSickNoteSubmission(data) {
   headers[SICK_NOTE_LAYOUT.CERT_TYPE] = "Cert Type";
   headers[SICK_NOTE_LAYOUT.PPS] = "PPS";
   headers[SICK_NOTE_LAYOUT.CONDITION] = "Condition";
+  headers[SICK_NOTE_LAYOUT.STATUS] = "Status";
   headers[SICK_NOTE_LAYOUT.DATES] = "Dates";
   headers[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = "Return to Work";
   headers[SICK_NOTE_LAYOUT.SIGNATURE] = "Signature";
@@ -145,6 +145,52 @@ function handleSickNoteSubmission(data) {
   }
 
   const sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
+
+  // Validate existing headers and migrate if order differs
+  const lastCol = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+  if (lastCol > 0) {
+    const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+    const isMatching = currentHeaders.length === headers.length &&
+      headers.every((h, idx) => h.toLowerCase() === (currentHeaders[idx] || '').toLowerCase());
+
+    if (!isMatching) {
+      // Check if all expected headers exist in currentHeaders
+      const headerIndexMap = {};
+      currentHeaders.forEach((h, idx) => {
+        headerIndexMap[h.toLowerCase()] = idx;
+      });
+
+      const allHeadersPresent = headers.every(h => headerIndexMap.hasOwnProperty(h.toLowerCase()));
+      if (allHeadersPresent && lastRow > 1) {
+        // Migrate existing rows to match new header order
+        const oldData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+        const migratedData = oldData.map(row => {
+          return headers.map(h => {
+            const oldIdx = headerIndexMap[h.toLowerCase()];
+            return oldIdx !== undefined ? row[oldIdx] : "";
+          });
+        });
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+        sheet.getRange(2, 1, migratedData.length, headers.length).setValues(migratedData);
+        if (lastCol > headers.length) {
+          sheet.deleteColumns(headers.length + 1, lastCol - headers.length);
+        }
+      } else if (allHeadersPresent && lastRow === 1) {
+        // Only rewrite headers
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+        if (lastCol > headers.length) {
+          sheet.deleteColumns(headers.length + 1, lastCol - headers.length);
+        }
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({
+          'result': 'error',
+          'error': 'Sick Notes sheet header mismatch and could not be safely migrated.'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  }
+
   const timestamp = new Date();
   const rowData = [];
   rowData[SICK_NOTE_LAYOUT.TIMESTAMP] = timestamp;

@@ -430,13 +430,8 @@
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
         const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
-        const pharmacyOptions = {
-            "Pharmacy A, Example Town": "Pharmacy A, Example Town",
-            "Pharmacy B, Example Town": "Pharmacy B, Example Town",
-            "Pharmacy C, Town North": "Pharmacy C, Town North",
-            "Pharmacy D, Town South": "Pharmacy D, Town South"
-        };
-        const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
+        const pharmacyOptions = siteData.pharmacyOptions;
+        const frequencyOptions = siteData.frequencyOptions;
 
         document.addEventListener('DOMContentLoaded', () => {
             initMedicationCombobox(commonMedications);
@@ -634,6 +629,21 @@
             }
         }
 
+        function saveToLocalStorage() {
+            localStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject()));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('prescriptionFormData');
+            if (savedData) {
+                try {
+                    populateFormFromData(JSON.parse(savedData));
+                } catch (e) {
+                    localStorage.removeItem('prescriptionFormData');
+                }
+            }
+        }
+
         function addMedication() {
             clearError('medication');
             const nameInput = document.getElementById('medName');
@@ -772,8 +782,10 @@
         function updateMedicationVisibility() {
             const table = document.getElementById('medicationTable');
             const message = document.getElementById('no-meds-message');
-            const hasMeds = document.getElementById('medicationList').rows.length > 0;
+            const list = document.getElementById('medicationList');
+            if (!table || !message || !list) return;
 
+            const hasMeds = list.rows.length > 0;
             table.style.display = hasMeds ? '' : 'none';
             message.style.display = hasMeds ? 'none' : 'block';
             message.classList.toggle('show', !hasMeds);

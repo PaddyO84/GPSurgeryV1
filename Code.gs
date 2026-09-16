@@ -130,35 +130,42 @@ function handleEdit(e) {
       return;
     }
 
-    const status = range.getValue().toString().trim();
-    const patientEmail = sheet.getRange(row, emailCol).getValue();
-    const patientName = sheet.getRange(row, nameCol).getValue();
+    const numRows = range.getNumRows();
+    const startRow = range.getRow();
+    const statusValues = range.getValues();
 
-    if (status === STATUS_QUERY) {
-      if (!patientEmail) return;
-      const subject = isAppointment
-        ? "Action Required: Query Regarding Your Appointment Request"
-        : "Action Required: Query Regarding Your Prescription Request";
-      const requestDesc = isAppointment ? "appointment request" : "prescription request";
-      const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-      MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+    for (let i = 0; i < numRows; i++) {
+      const currentRow = startRow + i;
+      const status = statusValues[i][0] ? statusValues[i][0].toString().trim() : '';
+      const patientEmail = sheet.getRange(currentRow, emailCol).getValue();
+      const patientName = sheet.getRange(currentRow, nameCol).getValue();
 
-    } else if (status === STATUS_READY && !isAppointment) {
-      const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
-      let deliverySuccess = false;
+      if (status === STATUS_QUERY) {
+        if (!patientEmail) continue;
+        const subject = isAppointment
+          ? "Action Required: Query Regarding Your Appointment Request"
+          : "Action Required: Query Regarding Your Prescription Request";
+        const requestDesc = isAppointment ? "appointment request" : "prescription request";
+        const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+        MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
 
-      if (commPref === 'whatsapp') {
-        const userEmail = e.user ? e.user.getEmail() : '';
-        const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
-        deliverySuccess = sendWhatsAppLinkToStaff(row, staffEmail);
-      } else {
-        deliverySuccess = sendReadyEmail(row);
-      }
+      } else if (status === STATUS_READY && !isAppointment) {
+        const commPref = sheet.getRange(currentRow, COMM_PREF_COL).getValue().toLowerCase();
+        let deliverySuccess = false;
 
-      if (deliverySuccess) {
-        // Record ready timestamp in notification column only after successful notification delivery
-        const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
-        sheet.getRange(row, notificationCol).setValue(`Ready on ${timestamp}`);
+        if (commPref === 'whatsapp') {
+          const userEmail = e.user ? e.user.getEmail() : '';
+          const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
+          deliverySuccess = sendWhatsAppLinkToStaff(currentRow, staffEmail);
+        } else {
+          deliverySuccess = sendReadyEmail(currentRow);
+        }
+
+        if (deliverySuccess) {
+          // Record ready timestamp in notification column only after successful notification delivery
+          const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+          sheet.getRange(currentRow, notificationCol).setValue(`Ready on ${timestamp}`);
+        }
       }
     }
   } catch (err) {

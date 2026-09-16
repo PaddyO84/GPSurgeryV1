@@ -10,5 +10,23 @@ const siteData = {
     },
     hours: {
         weekday: "9:00am - 12:30pm & 2:00pm - 4:30pm",
+    },
+    pharmacyOptions: {
+        "Pharmacy A, Example Town": "Pharmacy A, Example Town",
+        "Pharmacy B, Example Town": "Pharmacy B, Example Town",
+        "Pharmacy C, Town North": "Pharmacy C, Town North",
+        "Pharmacy D, Town South": "Pharmacy D, Town South"
+    },
+    frequencyOptions: {
+        "Once a day": "Once a day",
+        "Twice a day": "Twice a day",
+        "Three times a day": "Three times a day",
+        "Four times a day": "Four times a day",
+        "As needed": "As needed"
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.pharmacyOptions = siteData.pharmacyOptions;
+    window.frequencyOptions = siteData.frequencyOptions;
+}

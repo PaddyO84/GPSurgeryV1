@@ -32,6 +32,7 @@ def verify_address_submission(page, base_url: str = None):
 
     # Intercept the request to verify payload
     script_web_app_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    assert script_web_app_url, "CONFIG.SCRIPT_WEB_APP_URL is not configured or resolved on the page"
 
     address_verified = {"called": False, "matched": False}
 
