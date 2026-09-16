@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
 
-def verify_appointment_form(page: Page):
+def test_verify_appointment_form(page: Page):
     repo_root = Path(__file__).resolve().parent.parent
     app_url = (repo_root / "appointments.html").as_uri()
 
@@ -29,12 +29,13 @@ def verify_appointment_form(page: Page):
 
     page.fill("#appNotes", "Routine checkup")
 
+    # Precompute config_url before registering route handler
+    config_url = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
+
     # Route handler to mock Apps Script response
     def handle_route(route):
         request = route.request
         if request.method == "POST":
-            # Compare endpoint against CONFIG.SCRIPT_WEB_APP_URL evaluated in page
-            config_url = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
             if request.url == config_url:
                 route.fulfill(
                     status=200,
@@ -57,9 +58,8 @@ def verify_appointment_form(page: Page):
     post_data = request.post_data_json
     print("Payload:", post_data)
 
-    config_endpoint = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
     # Assertions
-    assert request.url == config_endpoint
+    assert request.url == config_url
     assert post_data["formType"] == "appointment"
     assert post_data["name"] == "Test Patient"
     assert post_data["type"] == "Routine GP Visit"
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            verify_appointment_form(page)
+            test_verify_appointment_form(page)
         except Exception as e:
             print(f"Verification Failed: {e}")
             raise e

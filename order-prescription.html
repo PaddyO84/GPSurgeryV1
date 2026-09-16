@@ -559,6 +559,8 @@
                         e.preventDefault();
                         input.value = options[highlightedIndex].textContent;
                         closeDropdown();
+                        clearError('medication');
+                        saveToLocalStorage();
                         document.getElementById('medDosage').focus();
                     }
                 } else if (e.key === 'Escape') {

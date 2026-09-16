@@ -88,10 +88,21 @@ function handleAppointmentSubmission(data) {
   rowData[APPT_LAYOUT.NOTIFICATION_SENT] = "";
   rowData[APPT_LAYOUT.PREFERRED_TIME] = sanitizeCellValue(data.preferredTime || "");
 
-  sheet.appendRow(rowData);
-  const rowIndex = sheet.getLastRow();
+  const lock = LockService.getScriptLock();
+  const hasLock = lock.tryLock(10000);
+  if (!hasLock) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
+  }
 
-  // Send confirmation notification after persistence
+  let rowIndex;
+  try {
+    sheet.appendRow(rowData);
+    rowIndex = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
+
+  // Send confirmation notification after persistence and lock release
   const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
   if (notificationSuccess) {
     sheet.getRange(rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
@@ -155,8 +166,19 @@ function handleSickNoteSubmission(data) {
   rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(signatureValue);
   rowData[SICK_NOTE_LAYOUT.NOTIFICATION_SENT] = "";
 
-  sheet.appendRow(rowData);
-  const rowIndex = sheet.getLastRow();
+  const lock = LockService.getScriptLock();
+  const hasLock = lock.tryLock(10000);
+  if (!hasLock) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  let rowIndex;
+  try {
+    sheet.appendRow(rowData);
+    rowIndex = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
 
   const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
   if (notificationSuccess) {
@@ -189,6 +211,19 @@ function handlePrescriptionSubmission(data) {
        });
     }
 
+    const VALID_COMM_PREFS = ["Email", "WhatsApp"];
+    const inputCommPref = typeof details.commPref === 'string' ? details.commPref.trim() : (details.commPref ? String(details.commPref).trim() : "Email");
+    let normalizedCommPref = null;
+    for (const validPref of VALID_COMM_PREFS) {
+       if (inputCommPref.toLowerCase() === validPref.toLowerCase()) {
+          normalizedCommPref = validPref;
+          break;
+       }
+    }
+    if (!normalizedCommPref) {
+       errors.push(`Invalid commPref value: "${inputCommPref}". Accepted values are "Email" or "WhatsApp".`);
+    }
+
     const validation = validatePatientData(details.email, details.phone);
     if (!validation.isValid) {
        errors.push(...validation.errors);
@@ -211,24 +246,30 @@ function handlePrescriptionSubmission(data) {
     newRow[PHONE_COL - 1] = "'" + details.phone;
     newRow[6] = sanitizeCellValue(details.dob);
     newRow[MEDS_COL - 1] = sanitizeCellValue(medicationString);
-    const VALID_COMM_PREFS = ["Email", "WhatsApp"];
-    const rawCommPref = details.commPref || "Email";
-    if (!VALID_COMM_PREFS.includes(rawCommPref)) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'errors': [`Invalid commPref value: "${rawCommPref}". Accepted values are "Email" or "WhatsApp".`] })).setMimeType(ContentService.MimeType.JSON);
-    }
-    newRow[COMM_PREF_COL - 1] = sanitizeCellValue(rawCommPref);
+    newRow[COMM_PREF_COL - 1] = sanitizeCellValue(normalizedCommPref);
     newRow[STATUS_COL - 1] = "";
     newRow[NOTIFICATION_COL - 1] = "";
 
+    const lock = LockService.getScriptLock();
+  const hasLock = lock.tryLock(10000);
+  if (!hasLock) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  let row;
+  try {
     sheet.appendRow(newRow);
-    const row = sheet.getLastRow();
+    row = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
 
-    const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
-    if (notificationSuccess) {
-       sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
-    } else {
-       reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
-    }
+  const notificationSuccess = sendConfirmationNotification(details.name, details.email, details.commPref);
+  if (notificationSuccess) {
+     sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+  } else {
+     reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
+  }
 
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row, 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row, 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
 }

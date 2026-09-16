@@ -63,6 +63,10 @@ replacements = load_replacements()
 def process_file(filepath):
     temp_path = None
     try:
+        if os.path.islink(filepath):
+            print(f"Skipping symlink: {filepath}", file=sys.stderr)
+            return True
+
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
@@ -79,10 +83,7 @@ def process_file(filepath):
             with tempfile.NamedTemporaryFile('w', dir=target_dir, delete=False, encoding='utf-8') as tf:
                 temp_path = tf.name
                 tf.write(new_content)
-            try:
-                os.chmod(temp_path, orig_stat.st_mode)
-            except OSError:
-                pass
+            os.chmod(temp_path, orig_stat.st_mode)
             os.replace(temp_path, filepath)
             temp_path = None
             print(f"Updated: {filepath}")
@@ -103,14 +104,22 @@ def main():
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     skip_files = {'anonymize.py', 'anonymize_local.json', 'anonymize_config.example.json'}
-    for root, dirs, files in os.walk('.'):
+
+    custom_config = os.environ.get("ANONYMIZE_CONFIG_FILE", "anonymize_local.json")
+    resolved_custom_config = os.path.normpath(os.path.abspath(custom_config))
+
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    for root, dirs, files in os.walk(repo_root):
         dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
             if file in skip_files:
                 continue
+            file_path = os.path.normpath(os.path.abspath(os.path.join(root, file)))
+            if file_path == resolved_custom_config:
+                continue
             if any(file.endswith(ext) for ext in extensions):
-                success = process_file(os.path.join(root, file))
+                success = process_file(file_path)
                 if not success:
                     failed = True
 

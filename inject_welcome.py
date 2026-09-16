@@ -2,9 +2,13 @@ import os
 import re
 import sys
 
-def inject_script(filepath):
+def inject_script(filepath, repo_root):
     temp_path = None
     try:
+        if os.path.islink(filepath):
+            print(f"Skipping symlink: {filepath}", file=sys.stderr)
+            return True
+
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
@@ -15,7 +19,8 @@ def inject_script(filepath):
 
         # Calculate relative path to js/welcome.js from filepath
         file_dir = os.path.dirname(filepath)
-        rel_script_path = os.path.relpath(os.path.join('.', 'js', 'welcome.js'), file_dir).replace('\\', '/')
+        welcome_js_path = os.path.join(repo_root, 'js', 'welcome.js')
+        rel_script_path = os.path.relpath(welcome_js_path, file_dir).replace('\\', '/')
 
         # Inject before </body> (case-insensitive)
         body_match = re.search(r'</body\s*>', content, re.IGNORECASE)
@@ -45,12 +50,13 @@ def inject_script(filepath):
 def main():
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
-    for root, dirs, files in os.walk('.'):
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    for root, dirs, files in os.walk(repo_root):
         dirs[:] = [d for d in dirs if d not in prune_dirs]
 
         for file in files:
             if file.endswith('.html') and not file.startswith('email_'):
-                success = inject_script(os.path.join(root, file))
+                success = inject_script(os.path.join(root, file), repo_root)
                 if not success:
                     failed = True
 

@@ -87,6 +87,8 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
   let dateStr = null;
   if (notificationDateStr.startsWith("Ready on ")) {
     dateStr = notificationDateStr.replace("Ready on ", "").trim();
+  } else if (notificationDateStr.startsWith("Processed on ")) {
+    dateStr = notificationDateStr.replace("Processed on ", "").trim();
   }
 
   if (dateStr) {
@@ -151,7 +153,7 @@ function formatWhatsAppNumber(phone) {
  * @returns {*} Sanitized cell value.
  */
 function sanitizeCellValue(val) {
-  if (typeof val === 'string' && /^[=+\-@\t\r]/.test(val)) {
+  if (typeof val === 'string' && /^\s*[=+\-@\t\r]/.test(val)) {
     return "'" + val;
   }
   return val;

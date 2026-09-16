@@ -1,6 +1,7 @@
 (function() {
     let initialized = false;
     let pages = [];
+    let searchUnavailable = false;
 
     function initSearch() {
         if (initialized) return;
@@ -15,6 +16,13 @@
             searchResults.innerHTML = '';
 
             if (query.length > 2) {
+                if (searchUnavailable) {
+                    const li = document.createElement('li');
+                    li.textContent = 'Search is unavailable.';
+                    searchResults.appendChild(li);
+                    return;
+                }
+
                 const results = pages.filter(page => {
                     return (page.title && page.title.toLowerCase().includes(query)) ||
                            (page.content && page.content.toLowerCase().includes(query));
@@ -39,14 +47,25 @@
 
         // Fetch page data for search index
         fetch('searchIndex.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 pages = data;
                 if (searchInput.value.trim().length > 0) {
                     handleSearch();
                 }
             })
-            .catch(err => console.error('Could not load search index:', err));
+            .catch(err => {
+                console.error('Could not load search index:', err);
+                searchUnavailable = true;
+                if (searchInput.value.trim().length > 2) {
+                    handleSearch();
+                }
+            });
 
         searchInput.addEventListener('input', handleSearch);
     }

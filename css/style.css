@@ -1170,7 +1170,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
 
 @media (max-width: 900px) {
     .form-app-container { grid-template-columns: 1fr; }
-    .sidebar { position: static; max-height: none; width: auto; flex-direction: row; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .sidebar { display: flex; position: static; max-height: none; width: auto; flex-direction: row; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .sidebar button { width: auto; }
     .main-form-area { padding: 2rem 1.5rem; }
     .add-med-group { grid-template-columns: 1fr; }

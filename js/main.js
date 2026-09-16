@@ -87,7 +87,7 @@
             });
         });
 
-        // Close mobile menu and clear body overflow lock if viewport resizes beyond 768px
+        // Close mobile menu, reset open dropdowns, and clear body overflow lock if viewport resizes beyond 768px
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 if (nav.classList.contains('show')) {
@@ -96,6 +96,13 @@
                     menuToggle.setAttribute('aria-expanded', 'false');
                     menuToggle.textContent = '☰';
                 }
+                dropdowns.forEach(dropdown => {
+                    const parent = dropdown.parentElement;
+                    if (parent) {
+                        parent.classList.remove('open');
+                    }
+                    dropdown.setAttribute('aria-expanded', 'false');
+                });
                 document.body.style.overflow = '';
             }
         });

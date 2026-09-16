@@ -23,6 +23,7 @@ describe('Backend Utility Logic Tests', () => {
             expect(sanitizeCellValue('@HYPERLINK("evil.com")')).to.equal("'@HYPERLINK(\"evil.com\")");
             expect(sanitizeCellValue('\tcmd')).to.equal("'\tcmd");
             expect(sanitizeCellValue('\rcmd')).to.equal("'\rcmd");
+            expect(sanitizeCellValue('  =SUM(A1:A10)')).to.equal("'  =SUM(A1:A10)");
         });
 
         it('should leave safe strings and non-string values unchanged', () => {
@@ -117,8 +118,8 @@ describe('Backend Utility Logic Tests', () => {
             const queryRowArchivable = isRowArchivable('Query - Please Contact Us', 'Ready on 15/06/2025 14:30:00', cutOffDate);
 
             expect(oldRowReady).to.be.true;
-            // Processed on only represents submission confirmation, not proof of ready notification
-            expect(oldRowProcessed).to.be.false;
+            // Both "Ready on " and "Processed on " prefixes are accepted for date extraction
+            expect(oldRowProcessed).to.be.true;
             expect(recentRowReady).to.be.false;
             expect(queryRowArchivable).to.be.false;
         });

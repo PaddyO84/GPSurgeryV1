@@ -18,6 +18,17 @@ const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
 
+function hasEmailQuota(minReserve = 5) {
+  if (typeof MailApp !== 'undefined' && MailApp.getRemainingDailyQuota) {
+    try {
+      return MailApp.getRemainingDailyQuota() >= minReserve;
+    } catch (e) {
+      return true;
+    }
+  }
+  return true;
+}
+
 // --- WEB APP HANDLERS ---
 
 /**
@@ -25,12 +36,6 @@ const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is 
  * Receives JSON data from the frontend form and appends it to the spreadsheet.
  */
 function doPost(e) {
-  const lock = LockService.getScriptLock();
-  const hasLock = lock.tryLock(10000);
-  if (!hasLock) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
-  }
-
   try {
     const data = JSON.parse(e.postData.contents);
 
@@ -45,8 +50,6 @@ function doPost(e) {
   } catch (err) {
     reportError('doPost', err, null);
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
   }
 }
 
@@ -224,6 +227,10 @@ function onFormSubmit(e) {
 
 function sendAppointmentConfirmation(name, email, type, time) {
   if (!email) return false;
+  if (!hasEmailQuota()) {
+    reportError('sendAppointmentConfirmation', new Error('Daily email quota reserve depleted. Suppressing confirmation email.'), null);
+    return false;
+  }
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;
@@ -248,6 +255,10 @@ function sendAppointmentConfirmation(name, email, type, time) {
 
 function sendSickNoteConfirmation(name, email) {
   if (!email) return false;
+  if (!hasEmailQuota()) {
+    reportError('sendSickNoteConfirmation', new Error('Daily email quota reserve depleted. Suppressing confirmation email.'), null);
+    return false;
+  }
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;
@@ -456,6 +467,10 @@ function generateWhatsAppLink(row) {
  */
 function sendConfirmationNotification(patientName, patientEmail, commPref) {
   if (!patientEmail) return false;
+  if (!hasEmailQuota()) {
+    reportError('sendConfirmationNotification', new Error('Daily email quota reserve depleted. Suppressing confirmation email.'), null);
+    return false;
+  }
   try {
     const template = HtmlService.createTemplateFromFile('email_confirmation');
     template.senderName = SENDER_NAME;

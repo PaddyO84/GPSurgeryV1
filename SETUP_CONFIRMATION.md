@@ -7,8 +7,8 @@ This document outlines the required configuration to ensure the Prescription Req
 The application has been upgraded to use a Google Apps Script Web App for more robust data handling, replacing the previous Google Form integration.
 
 ### Google Apps Script Web App
-*   **Deployment ID:** `AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL`
-*   **Web App URL:** `https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec`
+*   **Deployment ID:** `YOUR_DEPLOYMENT_ID` (Placeholder - replace with the ID generated when deploying as a Web App)
+*   **Web App URL:** `https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec` (Placeholder - replace with the full Web App URL provided upon deployment)
 *   **Access Setting:** The Web App must be deployed with access set to **"Anyone"** (or "Anyone with Google account" if strictly internal, but "Anyone" is needed for a public-facing patient form).
 *   **Execute As:** User accessing the web app (if "Anyone with Google account") OR **"Me" (owner)** (recommended for public forms so patients don't need to log in).
 
@@ -31,21 +31,20 @@ The script `Code.gs` writes data to the following sheet:
 
 ## 2. Google Apps Script Setup (`Code.gs`)
 
-### Manual Triggers
-While the primary data entry is now handled by the `doPost` Web App function, the following time-based trigger is still recommended:
+### Automated Triggers Setup
+Automated triggers can be set up automatically via the custom spreadsheet menu **Surgery Tools > Setup Automated Triggers** (which runs `setupAutomatedTriggers`). This configures three triggers:
 
-*   **Function:** `archiveOldRequests`
-*   **Event Source:** Time-driven
-*   **Event Type:** Week timer (Recommended: Every Monday, 1am to 2am)
-*   **Purpose:** Moves old, processed requests to an 'Archive' sheet.
+1. **`archiveOldRequests`** (Time-driven, Weekly timer, Mondays during the 1:00 AM hour): Automatically archives old processed requests.
+2. **`onFormSubmit`** (Spreadsheet form submit trigger): Processes incoming form responses submitted through connected Google Forms.
+3. **`handleEdit`** (Spreadsheet installable onEdit trigger): Monitors row status updates (e.g. marking rows as "Sent to Pharmacy" or "Query") and triggers email/WhatsApp notifications. The installable `handleEdit` trigger is required for status-change email notifications to work with full authorization.
 
-*Note: The `onFormSubmit` trigger is NO LONGER REQUIRED for new submissions, as the `doPost` function now handles the processing logic directly.*
-
-### Environment Variables (Hardcoded in Script)
-The following constants in `Code.gs` are deployment placeholders. Every value must be replaced with real deployment-specific values before deployment:
+### Environment Variables & Deployment Identifiers
+The following placeholders in `Code.gs` and frontend configuration must be replaced with real deployment-specific values before deployment:
 *   `SENDER_NAME`: Placeholder (e.g. `"Example Health Centre"` - replace with official surgery name)
 *   `YOUR_PHONE_NUMBER`: Placeholder (e.g. `"(01) 234 5679"` - replace with official surgery contact number)
 *   `ADMIN_EMAIL`: Placeholder (e.g. `"admin@example.com"` - replace with surgery administrator/reception email)
+*   `Deployment ID`: Placeholder (`YOUR_DEPLOYMENT_ID` - replace with actual Apps Script deployment ID)
+*   `Web App URL`: Placeholder (`https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec` - replace with actual deployed Web App URL in frontend configuration)
 
 ## 3. Frontend Configuration
 The file `prescription_form.html` has been updated to submit data to the Web App URL.
