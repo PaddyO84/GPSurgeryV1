@@ -197,7 +197,7 @@ if __name__ == "__main__":
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            verify_forms_wiring(page, base_url=base_url)
+            test_forms_wiring(page, base_url=base_url)
         except Exception as e:
             print(f"Verification Failed: {e}")
             page.screenshot(path="verification/failure.png")

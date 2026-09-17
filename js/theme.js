@@ -11,6 +11,8 @@
         themeModule.applyTheme(currentTheme);
     }
 })(typeof self !== 'undefined' ? self : this, function() {
+    const ALLOWED_THEMES = new Set(['default', 'blue', 'teal']);
+
     function getTheme(win, storage) {
         const currentWindow = win || (typeof window !== 'undefined' ? window : null);
         let currentStorage = storage;
@@ -26,6 +28,9 @@
             const urlParams = new URLSearchParams(currentWindow.location.search);
             if (urlParams.has('theme')) {
                 const theme = urlParams.get('theme');
+                if (!ALLOWED_THEMES.has(theme)) {
+                    return 'default';
+                }
                 if (currentStorage) {
                     try { currentStorage.setItem('siteTheme', theme); } catch(e) {}
                 }

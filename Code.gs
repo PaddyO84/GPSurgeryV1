@@ -54,7 +54,7 @@ function doPost(e) {
 
     // Rate limiting abuse protection: per submission source and global window
     const windowBucket = Math.floor(Date.now() / 300000); // 5-minute fixed window bucket
-    const clientIdentifier = (data.patientDetails && data.patientDetails.email) || data.email || 'anonymous_sender';
+    const clientIdentifier = String((data.patientDetails && data.patientDetails.email) || data.email || 'anonymous_sender');
     const cache = CacheService.getScriptCache();
     const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
     const globalRateLimitKey = 'rl_global_' + windowBucket;
@@ -183,6 +183,10 @@ function handleEdit(e) {
 
         if (status === STATUS_QUERY) {
           if (!patientEmail) continue;
+          if (!hasEmailQuota()) {
+            reportError('handleEdit:query', new Error('Daily email quota reserve depleted. Suppressing query notification email.'), currentRow);
+            continue;
+          }
           const subject = isAppointment
             ? "Action Required: Query Regarding Your Appointment Request"
             : "Action Required: Query Regarding Your Prescription Request";
@@ -850,6 +854,16 @@ function archiveOldRequests() {
       for (let r of rowsToArchive) {
         const sourceTsVal = r.rowData[sourceTsColIdx];
         const sourceEmailVal = r.rowData[sourceEmailColIdx];
+        const tsStr = (sourceTsVal instanceof Date) ? sourceTsVal.toISOString() : String(sourceTsVal !== undefined && sourceTsVal !== null ? sourceTsVal : '').trim();
+        const emailStr = String(sourceEmailVal !== undefined && sourceEmailVal !== null ? sourceEmailVal : '').trim();
+        const hasStableKey = tsStr !== '' && emailStr !== '';
+
+        if (!hasStableKey) {
+          // Rows without a stable key must be appended to the archive rather than marked confirmed or deduplicated
+          rowsToAppend.push(r);
+          continue;
+        }
+
         const rowId = buildArchiveId([sourceTsVal, sourceEmailVal]);
         if (existingArchiveIds.has(rowId)) {
           // Already confirmed present in the archive

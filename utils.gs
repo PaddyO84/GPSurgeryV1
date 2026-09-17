@@ -101,10 +101,17 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
       let hours = 0, minutes = 0, seconds = 0;
       if (parts.length > 1 && parts[1]) {
         const timeParts = parts[1].split(':');
-        if (timeParts.length >= 2) {
-          hours = parseInt(timeParts[0], 10) || 0;
-          minutes = parseInt(timeParts[1], 10) || 0;
-          seconds = (timeParts.length >= 3 ? parseInt(timeParts[2], 10) : 0) || 0;
+        if (timeParts.length < 2 || timeParts.length > 3) {
+          return false;
+        }
+        for (let tp of timeParts) {
+          if (!/^\d+$/.test(tp)) return false;
+        }
+        hours = parseInt(timeParts[0], 10);
+        minutes = parseInt(timeParts[1], 10);
+        seconds = timeParts.length === 3 ? parseInt(timeParts[2], 10) : 0;
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+          return false;
         }
       }
       const processedDate = new Date(year, month - 1, day, hours, minutes, seconds);

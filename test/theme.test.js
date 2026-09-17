@@ -21,13 +21,22 @@ describe('Theme Management Utility (theme.js)', () => {
     });
 
     describe('getTheme()', () => {
-        it('should read theme from URL search parameters and store in localStorage', () => {
+        it('should read valid theme from URL search parameters and store in localStorage', () => {
             const domWithParam = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-                url: 'https://example.com/?theme=dark'
+                url: 'https://example.com/?theme=blue'
             });
             const theme = getTheme(domWithParam.window, mockStorage);
-            expect(theme).to.equal('dark');
-            expect(mockStorage.getItem('siteTheme')).to.equal('dark');
+            expect(theme).to.equal('blue');
+            expect(mockStorage.getItem('siteTheme')).to.equal('blue');
+        });
+
+        it('should reject unsupported theme in URL parameter and return "default"', () => {
+            const domWithUnsupported = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
+                url: 'https://example.com/?theme=unsupported'
+            });
+            const theme = getTheme(domWithUnsupported.window, mockStorage);
+            expect(theme).to.equal('default');
+            expect(mockStorage.getItem('siteTheme')).to.be.null;
         });
 
         it('should fallback to localStorage when no URL param is present', () => {

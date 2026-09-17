@@ -371,8 +371,21 @@ header {
     html {
         scroll-behavior: auto;
     }
-    .hero-logo {
+    .hero-logo,
+    .checkmark {
         animation: none;
+    }
+    .checkmark__circle,
+    .checkmark__check {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+    .card:hover,
+    .btn-primary:hover,
+    .submit-btn:hover,
+    .add-med-btn:hover,
+    .sidebar button:hover {
+        transform: none;
     }
 }
 
@@ -564,6 +577,11 @@ header {
     .menu-toggle { display: block; flex-shrink: 0; }
     .search-container { order: -1; margin-right: auto; min-width: 0; flex-shrink: 1; }
     .search-container input[type="search"] { width: 100%; max-width: 150px; min-width: 80px; font-size: 0.8rem; padding: 0.35rem 0.7rem; }
+    #searchResults {
+        left: 0;
+        right: auto;
+        width: min(260px, calc(100vw - 2rem));
+    }
     #main-nav {
         display: block;
         position: fixed;

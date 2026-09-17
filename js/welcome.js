@@ -1,4 +1,12 @@
 (function() {
+    // Return immediately if live deployment is active
+    try {
+        const config = (typeof CONFIG !== 'undefined') ? CONFIG : (typeof window !== 'undefined' ? window.CONFIG : null);
+        if (config && config.LIVE_DEPLOYMENT) {
+            return;
+        }
+    } catch (e) {}
+
     // Check if the user has already seen the welcome message
     try {
         if (localStorage.getItem('demo_welcome_seen') === 'true') {

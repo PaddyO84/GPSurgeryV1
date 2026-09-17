@@ -57,7 +57,7 @@ function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
   }
 
   const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
-  const isMatching = currentHeaders.length === expectedHeaders.length &&
+  const isMatching = currentHeaders.length >= expectedHeaders.length &&
     expectedHeaders.every((h, idx) => h.toLowerCase() === (currentHeaders[idx] || '').toLowerCase());
 
   if (isMatching) {
@@ -91,6 +91,11 @@ function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
   // Preserve any unmatched existing columns to the right of expectedHeaders
   const extraHeaders = currentHeaders.filter(ch => ch && !expectedHeaders.some(eh => eh.toLowerCase() === ch.toLowerCase()));
   const finalHeaders = expectedHeaders.concat(extraHeaders);
+
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols < finalHeaders.length) {
+    sheet.insertColumnsAfter(maxCols, finalHeaders.length - maxCols);
+  }
 
   if (lastRow > 1) {
     const oldData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
@@ -252,7 +257,8 @@ function handleSickNoteSubmission(data) {
     rowData[SICK_NOTE_LAYOUT.DATES] = sanitizeCellValue(data.dates || "");
     rowData[SICK_NOTE_LAYOUT.RETURN_TO_WORK] = sanitizeCellValue(data.returnToWork || "");
     let signatureValue = data.signature || "Not Provided";
-    if (typeof signatureValue === 'string' && signatureValue.length > 50000) {
+    const signatureExceedsLimit = typeof signatureValue === 'string' && signatureValue.length > 50000;
+    if (signatureExceedsLimit) {
       signatureValue = "[Signature Exceeds Limit]";
     }
     rowData[SICK_NOTE_LAYOUT.SIGNATURE] = sanitizeCellValue(signatureValue);
@@ -260,6 +266,9 @@ function handleSickNoteSubmission(data) {
 
     sheet.appendRow(rowData);
     rowIndex = sheet.getLastRow();
+    if (signatureExceedsLimit) {
+      reportError('handleSickNoteSubmission:signature', new Error(`Signature exceeds limit: ${data.signature.length} characters`), rowIndex);
+    }
   } finally {
     lock.releaseLock();
   }

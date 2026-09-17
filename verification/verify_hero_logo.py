@@ -40,8 +40,9 @@ def verify_hero_logo(page: Page, index_url: str):
     assert box["width"] > 0 and box["height"] > 0, "Desktop logo should have non-zero dimensions"
     assert box["width"] <= 450, f"Desktop logo width {box['width']} exceeds max-width 450px"
 
+    screenshot_dir = Path(__file__).resolve().parent
     # Take screenshot
-    page.screenshot(path="verification/hero_logo_desktop.png")
+    page.screenshot(path=str(screenshot_dir / "hero_logo_desktop.png"))
 
     # Test Mobile View
     page.set_viewport_size({"width": 375, "height": 667})
@@ -61,7 +62,7 @@ def verify_hero_logo(page: Page, index_url: str):
     assert box_mobile["x"] >= 0, f"Mobile logo left offset {box_mobile['x']} is negative"
     assert box_mobile["x"] + box_mobile["width"] <= 375, f"Mobile logo right edge {box_mobile['x'] + box_mobile['width']} exceeds viewport width 375px"
 
-    page.screenshot(path="verification/hero_logo_mobile.png")
+    page.screenshot(path=str(screenshot_dir / "hero_logo_mobile.png"))
     print("Verification complete.")
 
 if __name__ == "__main__":

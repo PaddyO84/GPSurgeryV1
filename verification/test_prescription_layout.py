@@ -29,6 +29,7 @@ def test_prescription_layout(page: Page, base_url: str):
     page.wait_for_timeout(200)
     box_form1024 = page.locator(".main-form-area").bounding_box()
     box_med1024 = page.locator(".add-med-group").bounding_box()
+    assert box_form1024 is not None and box_med1024 is not None
     assert box_med1024["x"] + box_med1024["width"] <= box_form1024["x"] + box_form1024["width"] + 1, "Overflow on 1024px!"
     page.screenshot(path="verification/prescription_1024.png")
 
@@ -38,5 +39,6 @@ def test_prescription_layout(page: Page, base_url: str):
     page.wait_for_timeout(200)
     box_form390 = page.locator(".main-form-area").bounding_box()
     box_med390 = page.locator(".add-med-group").bounding_box()
+    assert box_form390 is not None and box_med390 is not None
     assert box_med390["x"] + box_med390["width"] <= box_form390["x"] + box_form390["width"] + 1, "Overflow on 390px!"
     page.screenshot(path="verification/prescription_390.png")

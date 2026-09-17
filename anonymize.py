@@ -52,14 +52,14 @@ def load_replacements():
         print("Error: No anonymization replacements found. Provide anonymize_local.json or ANONYMIZE_REPLACEMENTS_JSON.", file=sys.stderr)
         sys.exit(1)
 
-    # Validate every entry before use: keys must be non-empty strings, values must be strings.
+    # Validate every entry before use: keys must be non-empty strings, values must be strings, and keys must not equal replacement values.
     invalid = [
         (k, v) for k, v in combined.items()
-        if not isinstance(k, str) or not k or not isinstance(v, str)
+        if not isinstance(k, str) or not k or not isinstance(v, str) or k == v
     ]
     if invalid:
-        for k, v in invalid:
-            print(f"Error: Invalid replacement entry with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(invalid)}). Keys must be non-empty strings and values must be strings.", file=sys.stderr)
+        for idx, (k, v) in enumerate(invalid, start=1):
+            print(f"Error: Invalid replacement entry #{idx} with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(invalid)}). Keys must be non-empty strings, values must be strings, and source keys must not equal replacement values.", file=sys.stderr)
         sys.exit(1)
 
     # Order all source strings from most specific (longest) to least specific (shortest)
@@ -113,8 +113,9 @@ def process_file(filepath, replacements):
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Anonymize repository files.")
-    parser.add_argument("--allow-unmatched", action="store_true", default=bool(os.environ.get("ANONYMIZE_ALLOW_UNMATCHED")), help="Do not fail if some replacements are unmatched across files.")
+    parser = argparse.ArgumentParser(description="Anonymize sensitive information across project files.")
+    env_allow_unmatched = os.environ.get("ANONYMIZE_ALLOW_UNMATCHED", "").strip().lower() in {"1", "true", "yes"}
+    parser.add_argument("--allow-unmatched", action="store_true", default=env_allow_unmatched, help="Do not fail if some replacements are unmatched across files.")
     args = parser.parse_args()
 
     replacements = load_replacements()

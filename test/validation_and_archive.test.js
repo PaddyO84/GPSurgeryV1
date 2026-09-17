@@ -130,6 +130,14 @@ describe('Backend Utility Logic Tests', () => {
             expect(isRowArchivable('Sent to Pharmacy', 'Invalid date format', cutOffDate)).to.be.false;
             // 31st of February would roll over into March in loose Date parsing
             expect(isRowArchivable('Sent to Pharmacy', 'Ready on 31/02/2025 10:00:00', cutOffDate)).to.be.false;
+            // Non-numeric or incomplete time components
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 10:ab:00', cutOffDate)).to.be.false;
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 10', cutOffDate)).to.be.false;
+            // Out-of-range hours, minutes, or seconds
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 24:00:00', cutOffDate)).to.be.false;
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 12:60:00', cutOffDate)).to.be.false;
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 12:30:60', cutOffDate)).to.be.false;
+            expect(isRowArchivable('Sent to Pharmacy', 'Ready on 15/06/2025 -1:30:00', cutOffDate)).to.be.false;
         });
 
         it('should handle same-day boundary comparisons with HH:mm:ss correctly', () => {

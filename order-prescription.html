@@ -903,7 +903,8 @@
                 })
                 .catch(error => {
                     console.error("Submission Error:", error);
-                    alert("An error occurred. Please try again.");
+                    const failureReason = (error && error.message) ? error.message : "An error occurred. Please try again.";
+                    alert(failureReason);
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm & Submit";
                 })

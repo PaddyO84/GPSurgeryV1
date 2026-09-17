@@ -50,16 +50,25 @@
         const contactPhone = document.getElementById('contact-phone');
         if (contactPhone && siteData.contact.phone) {
             contactPhone.textContent = siteData.contact.phone;
+            if (siteData.contact.phoneLink) {
+                contactPhone.href = siteData.contact.phoneLink;
+            }
         }
 
         const contactEmail = document.getElementById('contact-email');
         if (contactEmail && siteData.contact.email) {
             contactEmail.textContent = siteData.contact.email;
+            if (siteData.contact.emailLink) {
+                contactEmail.href = siteData.contact.emailLink;
+            }
         }
 
         const contactNowdoc = document.getElementById('contact-nowdoc');
         if (contactNowdoc && siteData.contact.nowDoc) {
             contactNowdoc.textContent = siteData.contact.nowDoc;
+            if (siteData.contact.nowDocLink) {
+                contactNowdoc.href = siteData.contact.nowDocLink;
+            }
         }
     }
 
