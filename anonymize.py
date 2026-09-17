@@ -148,8 +148,9 @@ def main():
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            for m in pattern.finditer(content):
-                matched_sources.add(m.group(0))
+            for source in replacements.keys():
+                if source in content:
+                    matched_sources.add(source)
         except Exception as e:
             print(f"Error inspecting {file_path}: {e}", file=sys.stderr)
             failed = True

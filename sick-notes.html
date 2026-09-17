@@ -477,15 +477,43 @@
 
         function submitFinal() {
             const btn = document.querySelector('.btn-confirm');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            const isLiveDeployment = Boolean(
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
+                window.IS_LIVE
+            );
+
+            if (!isLiveDeployment) {
+                setTimeout(() => {
+                    document.getElementById('summaryModal').style.display = 'none';
+                    document.getElementById('sickNoteFormContainer').style.display = 'none';
+
+                    const ref = 'SN-' + Math.floor(Math.random() * 100000);
+                    const successDiv = document.getElementById('successMessage');
+                    successDiv.innerHTML = `
+                        <h2 style="color: var(--primary);">Demo Submission (Simulated)</h2>
+                        <p>Reference: <strong>${ref}</strong></p>
+                        <p>This is a demonstration website. <strong>No real sickness certification was requested or sent.</strong> To request a sick note, please call reception directly on <a href="tel:012345679"><strong>(01) 234 5679</strong></a>.</p>
+                        <br>
+                        <button class="submit-btn" onclick="location.reload()">Submit Another</button>
+                    `;
+                    successDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = "Confirm & Submit";
+                }, 400);
+                return;
+            }
+
             const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
             if (!SCRIPT_WEB_APP_URL) {
                 console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
                 alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
+                btn.disabled = false;
+                btn.textContent = "Confirm & Submit";
                 return;
             }
-
-            btn.disabled = true;
-            btn.textContent = "Processing...";
 
             const data = {
                 formType: 'sick-note', // Discriminator for Backend

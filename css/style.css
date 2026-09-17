@@ -1209,8 +1209,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
     stroke-width: 2.5;
     stroke: #10b981;
     stroke-miterlimit: 10;
-    box-shadow: inset 0px 0px 0px #10b981;
-    animation: fillCheck 0.4s ease-in-out 0.4s forwards, scaleCheck 0.3s ease-in-out 0.9s both;
+    animation: scaleCheck 0.3s ease-in-out 0.9s both;
 }
 
 .checkmark__circle {
@@ -1237,10 +1236,6 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
 
 @keyframes strokeCheck {
     100% { stroke-dashoffset: 0; }
-}
-
-@keyframes fillCheck {
-    100% { box-shadow: inset 0px 0px 0px #10b981; }
 }
 
 @keyframes scaleCheck {

@@ -3,8 +3,16 @@ from pathlib import Path
 import os
 
 def test_verify_appointment_form(page: Page, base_url: str):
-    # Deterministically dismiss welcome modal before navigation
-    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true'); window.IS_LIVE = true;")
+    # Deterministically dismiss welcome modal before navigation and configure mock endpoint for live submission test
+    page.add_init_script("""
+        localStorage.setItem('demo_welcome_seen', 'true');
+        window.IS_LIVE = true;
+        if (typeof CONFIG !== 'undefined') {
+            CONFIG.SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL || 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec';
+        } else {
+            window.CONFIG = { SCRIPT_WEB_APP_URL: 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec' };
+        }
+    """)
 
     app_url = f"{base_url}/appointments.html"
     print(f"Testing Appointment Form at: {app_url}")

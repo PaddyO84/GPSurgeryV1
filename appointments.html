@@ -209,7 +209,7 @@
             };
 
             const isLiveDeployment = Boolean(
-                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE || CONFIG.SCRIPT_WEB_APP_URL)) ||
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
                 window.IS_LIVE
             );
 

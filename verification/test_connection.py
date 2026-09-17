@@ -3,6 +3,16 @@ from pathlib import Path
 import os
 
 def test_forms_wiring(page: Page, base_url: str):
+    # Configure mock endpoint for wiring tests
+    page.add_init_script("""
+        localStorage.setItem('demo_welcome_seen', 'true');
+        window.IS_LIVE = true;
+        if (typeof CONFIG !== 'undefined') {
+            CONFIG.SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL || 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec';
+        } else {
+            window.CONFIG = { SCRIPT_WEB_APP_URL: 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec' };
+        }
+    """)
     verify_forms_wiring(page, base_url=base_url)
 
 def verify_forms_wiring(page: Page, base_url: str = None):

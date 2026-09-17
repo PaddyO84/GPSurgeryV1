@@ -10,7 +10,7 @@ def inject_script(filepath, repo_root):
             print(f"Skipping symlink: {filepath}", file=sys.stderr)
             return True
 
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8', newline='') as f:
             content = f.read()
 
         # Check if already injected (relative: js/welcome.js, ./js/welcome.js, ../js/welcome.js;
@@ -31,7 +31,7 @@ def inject_script(filepath, repo_root):
             matched_tag = body_match.group(0)
             new_content = content[:start] + f'<script src="{rel_script_path}"></script>\n' + matched_tag + content[end:]
             original_stat = os.stat(filepath)
-            with tempfile.NamedTemporaryFile('w', dir=file_dir, delete=False, encoding='utf-8') as f:
+            with tempfile.NamedTemporaryFile('w', dir=file_dir, delete=False, encoding='utf-8', newline='') as f:
                 temp_path = f.name
                 f.write(new_content)
             try:

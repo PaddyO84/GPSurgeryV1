@@ -26,6 +26,7 @@
     modalOverlay.style.alignItems = 'center';
     modalOverlay.style.zIndex = '9999';
     modalOverlay.style.padding = '20px';
+    modalOverlay.style.overflowY = 'auto';
 
     // Create the modal content
     const modalContent = document.createElement('div');
@@ -33,6 +34,8 @@
     modalContent.style.padding = '30px';
     modalContent.style.borderRadius = '8px';
     modalContent.style.maxWidth = '500px';
+    modalContent.style.maxHeight = 'calc(100vh - 40px)';
+    modalContent.style.overflowY = 'auto';
     modalContent.style.textAlign = 'center';
     modalContent.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
     modalContent.style.fontFamily = '"Segoe UI", system-ui, sans-serif';

@@ -369,7 +369,7 @@
             initMedicationCombobox(commonMedications);
             populateSelect('chosenPharmacy', pharmacyOptions);
             populateSelect('medFreq', frequencyOptions);
-            loadFromLocalStorage();
+            loadFromSessionStorage();
             updateMedicationVisibility();
 
             // Auto-save on input
@@ -377,7 +377,7 @@
             inputs.forEach(input => {
                 input.addEventListener('input', () => {
                     clearError(input.id);
-                    saveToLocalStorage();
+                    saveToSessionStorage();
                 });
             });
         });
@@ -411,7 +411,7 @@
                             input.value = item;
                             closeDropdown();
                             clearError('medication');
-                            saveToLocalStorage();
+                            saveToSessionStorage();
                             document.getElementById('medDosage').focus();
                         });
                         optionsList.appendChild(li);
@@ -487,7 +487,7 @@
                         input.value = options[highlightedIndex].textContent;
                         closeDropdown();
                         clearError('medication');
-                        saveToLocalStorage();
+                        saveToSessionStorage();
                         document.getElementById('medDosage').focus();
                     }
                 } else if (e.key === 'Escape') {
@@ -561,11 +561,11 @@
             }
         }
 
-        function saveToLocalStorage() {
+        function saveToSessionStorage() {
             sessionStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject()));
         }
 
-        function loadFromLocalStorage() {
+        function loadFromSessionStorage() {
             const savedData = sessionStorage.getItem('prescriptionFormData');
             if (savedData) {
                 try {
@@ -591,7 +591,7 @@
             createMedicationRow(name, dosage, freq);
             nameInput.value = "";
             dosageInput.value = "";
-            saveToLocalStorage();
+            saveToSessionStorage();
             nameInput.focus();
         }
 
@@ -668,7 +668,7 @@
 
             // Remove row
             row.remove();
-            saveToLocalStorage();
+            saveToSessionStorage();
 
             // Focus and notify
             document.getElementById('medName').focus();
@@ -677,7 +677,7 @@
 
         function removeMedication(button) {
             button.closest('tr').remove();
-            saveToLocalStorage();
+            saveToSessionStorage();
             updateMedicationVisibility();
         }
 
@@ -793,7 +793,7 @@
             };
 
             const isLiveDeployment = Boolean(
-                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE || CONFIG.SCRIPT_WEB_APP_URL)) ||
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
                 window.IS_LIVE
             );
 
@@ -1046,7 +1046,7 @@
             r.onload = (evt) => {
                 try {
                     populateFormFromData(JSON.parse(evt.target.result));
-                    saveToLocalStorage();
+                    saveToSessionStorage();
                     showNotification("Loaded successfully.");
                 } catch (err) {
                     console.error(err);
