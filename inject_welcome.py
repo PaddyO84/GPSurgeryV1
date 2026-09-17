@@ -14,8 +14,8 @@ def inject_script(filepath, repo_root):
             content = f.read()
 
         # Check if already injected (relative: js/welcome.js, ./js/welcome.js, ../js/welcome.js;
-        # or root-relative: /js/welcome.js)
-        if re.search(r'src\s*=\s*["\'](?:(?:\.\./)*(?:\./)?|/)?js/welcome\.js["\']', content, re.IGNORECASE):
+        # or root-relative: /js/welcome.js; with optional query string or fragment in a script tag)
+        if re.search(r'<script\b[^>]*?\bsrc\s*=\s*["\'](?:(?:\.\./)*(?:\./)?|/)?js/welcome\.js(?:[?#][^"\']*)?["\']', content, re.IGNORECASE):
             print(f"Skipping {filepath}: already injected")
             return True
 

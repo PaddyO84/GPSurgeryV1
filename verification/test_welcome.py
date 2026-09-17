@@ -5,15 +5,10 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.sync_api import sync_playwright, Page, expect
 
-def get_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('127.0.0.1', 0))
-        return s.getsockname()[1]
-
 def start_local_server(directory):
-    port = get_free_port()
     handler = partial(SimpleHTTPRequestHandler, directory=directory)
-    server = ThreadingHTTPServer(('127.0.0.1', port), handler)
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server, port

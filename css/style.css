@@ -18,6 +18,11 @@
     --text-main: hsl(210, 30%, 15%);
     --text-muted: hsl(210, 10%, 45%);
     
+    /* Legacy Color Aliases for backward compatibility */
+    --primary-color: var(--primary);
+    --secondary-color: var(--accent);
+    --gray-200: #e2e8f0;
+    
     /* Spacing & Borders */
     --radius-sm: 8px;
     --radius-md: 16px;
@@ -240,7 +245,8 @@ header {
 
 @media not all and (max-width: 768px) {
     .dropdown:hover .dropdown-content,
-    .dropdown:focus-within .dropdown-content {
+    .dropdown:focus-within .dropdown-content,
+    .dropdown.open .dropdown-content {
         display: flex;
     }
 }
@@ -344,11 +350,14 @@ header {
 .hero-actions {
     display: flex;
     gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .hero-logo {
     width: 100%;
     max-width: 450px;
+    height: auto;
+    display: block;
     filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1));
     animation: float 6s ease-in-out infinite;
 }
@@ -522,8 +531,8 @@ header {
     
     .hero-text { text-align: center; }
     .hero-actions { justify-content: center; }
-    .hero-visual { order: -1; }
-    .hero-logo { margin: 0 auto; }
+    .hero-visual { order: -1; min-width: 0; max-width: 100%; }
+    .hero-logo { margin: 0 auto; max-width: 100%; }
 }
 
 @media (max-width: 768px) {
@@ -1228,6 +1237,10 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
 
 @keyframes strokeCheck {
     100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fillCheck {
+    100% { box-shadow: inset 0px 0px 0px #10b981; }
 }
 
 @keyframes scaleCheck {

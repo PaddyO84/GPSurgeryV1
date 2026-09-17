@@ -44,6 +44,71 @@ const PRESCRIPTION_HEADERS = [
   "Notification Sent"
 ];
 
+/**
+ * Validates and aligns existing sheet headers with expected headers, migrating row data if needed.
+ * Returns { success: true } or { success: false, error: string }.
+ */
+function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
+  const lastCol = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+  if (lastCol === 0) {
+    sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+    return { success: true };
+  }
+
+  const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const isMatching = currentHeaders.length === expectedHeaders.length &&
+    expectedHeaders.every((h, idx) => h.toLowerCase() === (currentHeaders[idx] || '').toLowerCase());
+
+  if (isMatching) {
+    return { success: true };
+  }
+
+  const normalizedCurrentHeaders = currentHeaders.map(h => h.toLowerCase());
+  const headerIndexMap = {};
+  let hasAmbiguousHeaders = false;
+
+  normalizedCurrentHeaders.forEach((nh, idx) => {
+    if (!nh || headerIndexMap.hasOwnProperty(nh)) {
+      hasAmbiguousHeaders = true;
+    } else {
+      headerIndexMap[nh] = idx;
+    }
+  });
+
+  const hasTimestamp = headerIndexMap.hasOwnProperty("timestamp");
+  const hasNameOrEmail = headerIndexMap.hasOwnProperty("name") || headerIndexMap.hasOwnProperty("email");
+  const recognizedHeaders = Object.keys(headerIndexMap).filter(nh => expectedHeaders.some(eh => eh.toLowerCase() === nh));
+  const canMigrate = !hasAmbiguousHeaders && hasTimestamp && hasNameOrEmail && (recognizedHeaders.length >= Math.min(currentHeaders.length, expectedHeaders.length - 2));
+
+  if (!canMigrate) {
+    return {
+      success: false,
+      error: `${sheetName} sheet header mismatch and could not be safely migrated.`
+    };
+  }
+
+  // Preserve any unmatched existing columns to the right of expectedHeaders
+  const extraHeaders = currentHeaders.filter(ch => ch && !expectedHeaders.some(eh => eh.toLowerCase() === ch.toLowerCase()));
+  const finalHeaders = expectedHeaders.concat(extraHeaders);
+
+  if (lastRow > 1) {
+    const oldData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    const migratedData = oldData.map(row => {
+      return finalHeaders.map(h => {
+        const oldIdx = headerIndexMap[h.toLowerCase()];
+        return oldIdx !== undefined ? row[oldIdx] : "";
+      });
+    });
+    sheet.getRange(1, 1, 1, finalHeaders.length).setValues([finalHeaders]);
+    sheet.getRange(2, 1, migratedData.length, finalHeaders.length).setValues(migratedData);
+  } else {
+    sheet.getRange(1, 1, 1, finalHeaders.length).setValues([finalHeaders]);
+  }
+
+  return { success: true };
+}
+
 function handleAppointmentSubmission(data) {
   const APPT_SHEET_NAME = "Appointments";
   const headers = [];
@@ -97,6 +162,10 @@ function handleAppointmentSubmission(data) {
   let sheet;
   try {
     sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
+    const alignment = ensureSheetHeadersAligned(sheet, headers, APPT_SHEET_NAME);
+    if (!alignment.success) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': alignment.error })).setMimeType(ContentService.MimeType.JSON);
+    }
     sheet.appendRow(rowData);
     rowIndex = sheet.getLastRow();
   } finally {
@@ -104,11 +173,16 @@ function handleAppointmentSubmission(data) {
   }
 
   // Send confirmation notification after persistence and lock release
-  const notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
-  if (notificationSuccess) {
-    sheet.getRange(rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
-  } else {
-    reportError('handleAppointmentSubmission:notification', new Error('Failed to deliver appointment confirmation email'), rowIndex);
+  let notificationSuccess = false;
+  try {
+    notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
+    if (notificationSuccess) {
+      sheet.getRange(rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+    } else {
+      reportError('handleAppointmentSubmission:notification', new Error('Failed to deliver appointment confirmation email'), rowIndex);
+    }
+  } catch (err) {
+    Logger.log(`Error during appointment notification bookkeeping: ${err.message || err}`);
   }
 
   return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'appointment', 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
@@ -156,49 +230,12 @@ function handleSickNoteSubmission(data) {
   const timestamp = new Date();
 
   try {
-    // Validate existing headers and migrate if order differs
-    const lastCol = sheet.getLastColumn();
-    const lastRow = sheet.getLastRow();
-    if (lastCol > 0) {
-      const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
-      const isMatching = currentHeaders.length === headers.length &&
-        headers.every((h, idx) => h.toLowerCase() === (currentHeaders[idx] || '').toLowerCase());
-
-      if (!isMatching) {
-        // Check if all expected headers exist in currentHeaders
-        const headerIndexMap = {};
-        currentHeaders.forEach((h, idx) => {
-          headerIndexMap[h.toLowerCase()] = idx;
-        });
-
-        const allHeadersPresent = headers.every(h => headerIndexMap.hasOwnProperty(h.toLowerCase()));
-        if (allHeadersPresent && lastRow > 1) {
-          // Migrate existing rows to match new header order
-          const oldData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
-          const migratedData = oldData.map(row => {
-            return headers.map(h => {
-              const oldIdx = headerIndexMap[h.toLowerCase()];
-              return oldIdx !== undefined ? row[oldIdx] : "";
-            });
-          });
-          sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-          sheet.getRange(2, 1, migratedData.length, headers.length).setValues(migratedData);
-          if (lastCol > headers.length) {
-            sheet.deleteColumns(headers.length + 1, lastCol - headers.length);
-          }
-        } else if (allHeadersPresent && lastRow === 1) {
-          // Only rewrite headers
-          sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-          if (lastCol > headers.length) {
-            sheet.deleteColumns(headers.length + 1, lastCol - headers.length);
-          }
-        } else {
-          return ContentService.createTextOutput(JSON.stringify({
-            'result': 'error',
-            'error': 'Sick Notes sheet header mismatch and could not be safely migrated.'
-          })).setMimeType(ContentService.MimeType.JSON);
-        }
-      }
+    const alignment = ensureSheetHeadersAligned(sheet, headers, SICK_SHEET_NAME);
+    if (!alignment.success) {
+      return ContentService.createTextOutput(JSON.stringify({
+        'result': 'error',
+        'error': alignment.error
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     const rowData = [];
@@ -227,11 +264,16 @@ function handleSickNoteSubmission(data) {
     lock.releaseLock();
   }
 
-  const notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
-  if (notificationSuccess) {
-    sheet.getRange(rowIndex, SICK_NOTE_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
-  } else {
-    reportError('handleSickNoteSubmission:notification', new Error('Failed to deliver sick note confirmation email'), rowIndex);
+  let notificationSuccess = false;
+  try {
+    notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
+    if (notificationSuccess) {
+      sheet.getRange(rowIndex, SICK_NOTE_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+    } else {
+      reportError('handleSickNoteSubmission:notification', new Error('Failed to deliver sick note confirmation email'), rowIndex);
+    }
+  } catch (err) {
+    Logger.log(`Error during sick note notification bookkeeping: ${err.message || err}`);
   }
 
   return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'type': 'sick-note', 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);
@@ -306,17 +348,26 @@ function handlePrescriptionSubmission(data) {
   let sheet;
   try {
     sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
+    const alignment = ensureSheetHeadersAligned(sheet, PRESCRIPTION_HEADERS, SHEET_NAME);
+    if (!alignment.success) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': alignment.error })).setMimeType(ContentService.MimeType.JSON);
+    }
     sheet.appendRow(newRow);
     row = sheet.getLastRow();
   } finally {
     lock.releaseLock();
   }
 
-  const notificationSuccess = sendConfirmationNotification(details.name, details.email, normalizedCommPref);
-  if (notificationSuccess) {
-     sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
-  } else {
-     reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
+  let notificationSuccess = false;
+  try {
+    notificationSuccess = sendConfirmationNotification(details.name, details.email, normalizedCommPref);
+    if (notificationSuccess) {
+      sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+    } else {
+      reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
+    }
+  } catch (err) {
+    Logger.log(`Error during prescription notification bookkeeping: ${err.message || err}`);
   }
 
   return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row, 'notificationSent': notificationSuccess })).setMimeType(ContentService.MimeType.JSON);

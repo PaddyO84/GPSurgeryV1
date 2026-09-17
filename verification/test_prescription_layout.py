@@ -32,11 +32,11 @@ def test_prescription_layout(page: Page, base_url: str):
     assert box_med1024["x"] + box_med1024["width"] <= box_form1024["x"] + box_form1024["width"] + 1, "Overflow on 1024px!"
     page.screenshot(path="verification/prescription_1024.png")
 
-    # Test Mobile 800
-    page.set_viewport_size({"width": 800, "height": 900})
+    # Test Mobile 390
+    page.set_viewport_size({"width": 390, "height": 844})
     page.locator(".add-med-group").scroll_into_view_if_needed()
     page.wait_for_timeout(200)
-    box_form800 = page.locator(".main-form-area").bounding_box()
-    box_med800 = page.locator(".add-med-group").bounding_box()
-    assert box_med800["x"] + box_med800["width"] <= box_form800["x"] + box_form800["width"] + 1, "Overflow on 800px!"
-    page.screenshot(path="verification/prescription_800.png")
+    box_form390 = page.locator(".main-form-area").bounding_box()
+    box_med390 = page.locator(".add-med-group").bounding_box()
+    assert box_med390["x"] + box_med390["width"] <= box_form390["x"] + box_form390["width"] + 1, "Overflow on 390px!"
+    page.screenshot(path="verification/prescription_390.png")

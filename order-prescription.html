@@ -709,6 +709,11 @@
                 const btn = document.getElementById(id);
                 if (btn) btn.disabled = false;
             });
+            const confirmBtn = document.querySelector('.btn-confirm');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "Confirm & Submit";
+            }
         }
 
         function updateMedicationVisibility() {
@@ -775,13 +780,6 @@
 
         function submitToGoogleForm() {
             const confirmBtn = document.querySelector('.btn-confirm');
-            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
-            if (!SCRIPT_WEB_APP_URL) {
-                console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
-                alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
-                return;
-            }
-
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
 
@@ -794,12 +792,68 @@
                 medicationList
             };
 
+            const isLiveDeployment = Boolean(
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE || CONFIG.SCRIPT_WEB_APP_URL)) ||
+                window.IS_LIVE
+            );
+
+            // In demo mode, skip the network request entirely and simulate success
+            if (!isLiveDeployment) {
+                setTimeout(() => {
+                    document.getElementById('summaryModal').style.display = 'none';
+                    document.getElementById('prescriptionForm').style.display = 'none';
+
+                    const appContainer = document.querySelector('.form-app-container');
+                    if (appContainer) {
+                        appContainer.classList.add('form-submitted');
+                    }
+                    ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
+                        const btn = document.getElementById(id);
+                        if (btn) btn.disabled = true;
+                    });
+
+                    const successDiv = document.getElementById('successMessage');
+                    successDiv.innerHTML = `
+                    <div class="success-animation">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+                    </div>
+                    <h2 class="success-title">Demo Submission (Simulated)</h2>
+                    <p class="success-message">This is a demonstration website. <strong>No real prescription was ordered or sent.</strong> To order a repeat prescription, please contact the surgery or call reception directly on <a href="tel:012345679"><strong>(01) 234 5679</strong></a>.</p>
+                    <button class="btn" onclick="location.reload()">Submit Another Request</button>
+                `;
+                    successDiv.style.display = 'block';
+                    sessionStorage.removeItem('prescriptionFormData');
+
+                    if (appContainer) {
+                        appContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = "Confirm & Submit";
+                }, 400);
+                return;
+            }
+
+            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
+            if (!SCRIPT_WEB_APP_URL) {
+                console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
+                alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "Confirm & Submit";
+                return;
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             fetch(SCRIPT_WEB_APP_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             })
                 .then(async response => {
                     if (response.type === 'opaque') {
@@ -809,8 +863,9 @@
                         throw new Error(`Server returned HTTP ${response.status}`);
                     }
                     const result = await response.json();
-                    if (result && result.result !== 'success') {
-                        throw new Error(result.error || 'Submission was not accepted.');
+                    if (!result || typeof result !== 'object' || result.result !== 'success') {
+                        const errorMsg = (result && result.errors) ? result.errors.join(' ') : ((result && result.error) || 'Submission was not accepted.');
+                        throw new Error(errorMsg);
                     }
                     document.getElementById('summaryModal').style.display = 'none';
                     const ref = generateReferenceNumber();
@@ -851,6 +906,9 @@
                     alert("An error occurred. Please try again.");
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm & Submit";
+                })
+                .finally(() => {
+                    clearTimeout(timeoutId);
                 });
         }
 
@@ -904,7 +962,7 @@
         function generateReferenceNumber() {
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
-            return `CHC-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+            return `EHC-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
         }
 
         function printSummary() {
@@ -959,7 +1017,7 @@
                 const tr = doc.createElement('tr');
                 [m.name, m.dosage, m.freq].forEach(cellText => {
                     const td = doc.createElement('td');
-                    td.textContent = cellText;
+                    td.textContent = cellText || '';
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);

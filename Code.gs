@@ -47,6 +47,25 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Unauthorized' })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Abuse controls: honeypot check
+    if (data.website || data.honeypot || data.hp) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Spam detected' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Rate limiting abuse protection: per submission source and global window
+    const windowBucket = Math.floor(Date.now() / 300000); // 5-minute fixed window bucket
+    const clientIdentifier = (data.patientDetails && data.patientDetails.email) || data.email || 'anonymous_sender';
+    const cache = CacheService.getScriptCache();
+    const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
+    const globalRateLimitKey = 'rl_global_' + windowBucket;
+    const recentCount = Number(cache.get(rateLimitKey) || '0');
+    const globalCount = Number(cache.get(globalRateLimitKey) || '0');
+    if (recentCount >= 10 || globalCount >= 100) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+    }
+    cache.put(rateLimitKey, String(recentCount + 1), 600); // 10-minute cache expiration covers current and adjacent bucket
+    cache.put(globalRateLimitKey, String(globalCount + 1), 600);
+
     switch (data.formType) {
       case 'sick-note':
         return handleSickNoteSubmission(data);
@@ -142,11 +161,17 @@ function handleEdit(e) {
     const startRow = range.getRow();
     const statusValues = range.getValues();
 
-    // Bulk-read email, name, and (for prescriptions) comm_pref for the entire edited range in one call each
+    // Bulk-read email, name, and (for prescriptions) comm_pref, pharmacy, and phone for the entire edited range in one call each
     const emailValues = sheet.getRange(startRow, emailCol, numRows, 1).getValues();
     const nameValues = sheet.getRange(startRow, nameCol, numRows, 1).getValues();
     const commPrefValues = (!isAppointment)
       ? sheet.getRange(startRow, COMM_PREF_COL, numRows, 1).getValues()
+      : null;
+    const pharmacyValues = (!isAppointment)
+      ? sheet.getRange(startRow, PHARMACY_COL, numRows, 1).getValues()
+      : null;
+    const phoneValues = (!isAppointment)
+      ? sheet.getRange(startRow, PHONE_COL, numRows, 1).getValues()
       : null;
 
     for (let i = 0; i < numRows; i++) {
@@ -167,14 +192,16 @@ function handleEdit(e) {
 
         } else if (status === STATUS_READY && !isAppointment) {
           const commPref = commPrefValues[i][0] ? commPrefValues[i][0].toString().toLowerCase() : '';
+          const pharmacy = pharmacyValues ? pharmacyValues[i][0] : '';
+          const patientPhone = phoneValues ? phoneValues[i][0] : '';
           let deliverySuccess = false;
 
           if (commPref === 'whatsapp') {
             const userEmail = e.user ? e.user.getEmail() : '';
             const staffEmail = userEmail && userEmail.trim() ? userEmail.trim() : ADMIN_EMAIL;
-            deliverySuccess = sendWhatsAppLinkToStaff(currentRow, staffEmail);
+            deliverySuccess = sendWhatsAppLinkToStaff(currentRow, staffEmail, patientName, patientPhone, pharmacy);
           } else {
-            deliverySuccess = sendReadyEmail(currentRow);
+            deliverySuccess = sendReadyEmail(currentRow, patientName, patientEmail, pharmacy);
           }
 
           if (deliverySuccess) {
@@ -519,11 +546,13 @@ function sendConfirmationNotification(patientName, patientEmail, commPref) {
 /**
  * Sends the "prescription ready" email directly to the patient.
  */
-function sendReadyEmail(row) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  const patientName = sheet.getRange(row, NAME_COL).getValue();
-  const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
-  const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
+function sendReadyEmail(row, patientName, patientEmail, pharmacy) {
+  if (patientName === undefined || patientEmail === undefined || pharmacy === undefined) {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    patientName = sheet.getRange(row, NAME_COL).getValue();
+    patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
+    pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
+  }
 
   if (!patientEmail) return false;
 
@@ -542,11 +571,13 @@ function sendReadyEmail(row) {
 /**
  * Generates a WhatsApp "click to send" link and emails it to the staff member who triggered the onEdit event.
  */
-function sendWhatsAppLinkToStaff(row, staffEmail) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  const patientName = sheet.getRange(row, NAME_COL).getValue();
-  const patientPhone = sheet.getRange(row, PHONE_COL).getValue();
-  const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
+function sendWhatsAppLinkToStaff(row, staffEmail, patientName, patientPhone, pharmacy) {
+  if (patientName === undefined || patientPhone === undefined || pharmacy === undefined) {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    patientName = sheet.getRange(row, NAME_COL).getValue();
+    patientPhone = sheet.getRange(row, PHONE_COL).getValue();
+    pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
+  }
 
   if (!patientPhone) {
     const message = `Could not generate WhatsApp link for ${patientName} (row ${row}) because their phone number is missing. Please update the sheet and send the notification manually via the 'Surgery Tools' menu.`;
@@ -641,6 +672,20 @@ function setupAutomatedTriggers() {
   // 1. Create Archive Sheet
   const archiveSheet = ensureArchiveSheet(ss, sourceSheet);
 
+  // Guard against duplicate triggers created by multiple users
+  const scriptProps = PropertiesService.getScriptProperties();
+  const currentOwner = (Session.getEffectiveUser() && Session.getEffectiveUser().getEmail()) || 'system';
+  const recordedOwner = scriptProps.getProperty("SETUP_TRIGGERS_OWNER");
+  if (recordedOwner && recordedOwner !== currentOwner) {
+    const alertMsg = `Automated triggers have already been configured by ${recordedOwner}. To prevent duplicate executions, only the recorded installer should manage triggers.`;
+    try {
+      SpreadsheetApp.getUi().alert("Trigger Setup Notice", alertMsg, SpreadsheetApp.getUi().ButtonSet.OK);
+    } catch (e) {
+      Logger.log(alertMsg);
+    }
+    return;
+  }
+
   const existingTriggers = ScriptApp.getProjectTriggers();
   let messages = [];
 
@@ -686,6 +731,9 @@ function setupAutomatedTriggers() {
   } else {
     messages.push("ℹ️ Spreadsheet handleEdit trigger already exists.");
   }
+
+  // Record installer identity to enforce single-owner policy
+  scriptProps.setProperty("SETUP_TRIGGERS_OWNER", currentOwner);
 
   // Display summary
   try {

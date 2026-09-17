@@ -1,16 +1,24 @@
 from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
+import threading
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-def verify_hero_logo(page: Page):
-    repo_root = Path(__file__).resolve().parent.parent
-    index_url = (repo_root / "index.html").as_uri()
+def start_local_server(directory):
+    handler = partial(SimpleHTTPRequestHandler, directory=str(directory))
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, port
 
+def verify_hero_logo(page: Page, index_url: str):
     print(f"Verifying Hero Logo at: {index_url}")
 
     # Set viewport to Desktop size
     page.set_viewport_size({"width": 1280, "height": 800})
-    page.goto(index_url)
+    page.goto(index_url, wait_until="networkidle")
 
     # Close welcome modal if it appears (it should, as we cleared storage implicitly or strictly)
     if page.is_visible("#demo-welcome-modal"):
@@ -57,13 +65,17 @@ def verify_hero_logo(page: Page):
     print("Verification complete.")
 
 if __name__ == "__main__":
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        try:
-            verify_hero_logo(page)
-        except Exception as e:
-            print(f"Verification Failed: {e}")
-            raise e
-        finally:
-            browser.close()
+    repo_root = Path(__file__).resolve().parent.parent
+    server, port = start_local_server(repo_root)
+    index_url = f"http://127.0.0.1:{port}/index.html"
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                verify_hero_logo(page, index_url)
+            finally:
+                browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()

@@ -66,9 +66,9 @@ def load_replacements():
     sorted_items = sorted(combined.items(), key=lambda item: len(item[0]), reverse=True)
     return dict(sorted_items)
 
-replacements = load_replacements()
+matched_sources = set()
 
-def process_file(filepath):
+def process_file(filepath, replacements):
     temp_path = None
     try:
         if os.path.islink(filepath):
@@ -84,7 +84,11 @@ def process_file(filepath):
         # Build a regex pattern that matches any of the old strings, longest first to avoid partial matches
         import re
         pattern = re.compile('|'.join(map(re.escape, replacements.keys())))
-        new_content = pattern.sub(lambda m: replacements[m.group(0)], content)
+        def replace_fn(m):
+            matched = m.group(0)
+            matched_sources.add(matched)
+            return replacements[matched]
+        new_content = pattern.sub(replace_fn, content)
         if new_content != content:
             target_dir = os.path.dirname(os.path.abspath(filepath))
             orig_stat = os.stat(filepath)
@@ -108,6 +112,13 @@ def process_file(filepath):
         return False
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Anonymize repository files.")
+    parser.add_argument("--allow-unmatched", action="store_true", default=bool(os.environ.get("ANONYMIZE_ALLOW_UNMATCHED")), help="Do not fail if some replacements are unmatched across files.")
+    args = parser.parse_args()
+
+    replacements = load_replacements()
+
     extensions = ['.html', '.gs', '.md', '.json', '.js', '.css', '.py']
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
@@ -115,6 +126,7 @@ def main():
 
     resolved_custom_config = get_config_path()
 
+    eligible_files = []
     for root, dirs, files in os.walk(REPO_ROOT):
         dirs[:] = [d for d in dirs if d not in prune_dirs]
 
@@ -125,9 +137,37 @@ def main():
             if file_path == resolved_custom_config:
                 continue
             if any(file.endswith(ext) for ext in extensions):
-                success = process_file(file_path)
-                if not success:
-                    failed = True
+                eligible_files.append(file_path)
+
+    # First pass: check for matches across all eligible files without writing changes
+    import re
+    pattern = re.compile('|'.join(map(re.escape, replacements.keys())))
+    for file_path in eligible_files:
+        if os.path.islink(file_path):
+            continue
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            for m in pattern.finditer(content):
+                matched_sources.add(m.group(0))
+        except Exception as e:
+            print(f"Error inspecting {file_path}: {e}", file=sys.stderr)
+            failed = True
+
+    unmatched = set(replacements.keys()) - matched_sources
+    if unmatched:
+        print(f"Error: {len(unmatched)} configured replacement(s) were not matched across any files.", file=sys.stderr)
+        if not args.allow_unmatched:
+            failed = True
+
+    if failed:
+        sys.exit(1)
+
+    # Second pass: write replacements now that validation has passed
+    for file_path in eligible_files:
+        success = process_file(file_path, replacements)
+        if not success:
+            failed = True
 
     if failed:
         sys.exit(1)

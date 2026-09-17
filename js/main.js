@@ -71,18 +71,33 @@
             }
         });
 
-        // Mobile Dropdown Functionality
+        // Dropdown Functionality
         const dropdowns = document.querySelectorAll('nav .dropdown > a');
         dropdowns.forEach(dropdown => {
             dropdown.setAttribute('aria-expanded', 'false');
-            dropdown.addEventListener('click', (e) => {
-                if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    const parent = dropdown.parentElement;
-                    if (parent) {
-                        const isOpen = parent.classList.toggle('open');
-                        dropdown.setAttribute('aria-expanded', isOpen);
-                    }
+            const toggleDropdown = (e) => {
+                e.preventDefault();
+                const parent = dropdown.parentElement;
+                if (parent) {
+                    const isOpen = parent.classList.toggle('open');
+                    dropdown.setAttribute('aria-expanded', String(isOpen));
+                }
+            };
+            dropdown.addEventListener('click', toggleDropdown);
+            dropdown.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    toggleDropdown(e);
+                }
+            });
+        });
+
+        // Close open dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            dropdowns.forEach(dropdown => {
+                const parent = dropdown.parentElement;
+                if (parent && !parent.contains(e.target)) {
+                    parent.classList.remove('open');
+                    dropdown.setAttribute('aria-expanded', 'false');
                 }
             });
         });

@@ -1,7 +1,7 @@
 const siteData = {
     contact: {
-        phone: "(01) 234 5670",
-        phoneLink: "tel:012345670",
+        phone: "(01) 234 5679",
+        phoneLink: "tel:012345679",
         email: "reception@examplehealthcentre.ie",
         emailLink: "mailto:reception@examplehealthcentre.ie",
         address: "123 Main Street, Example Town, Co. Donegal",

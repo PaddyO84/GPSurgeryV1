@@ -31,7 +31,8 @@ def test_verify_appointment_form(page: Page, base_url: str):
     page.fill("#appNotes", "Routine checkup")
 
     # Precompute config_url before registering route handler
-    config_url = page.evaluate("CONFIG.SCRIPT_WEB_APP_URL")
+    config_url = page.evaluate("() => typeof CONFIG !== 'undefined' ? CONFIG.SCRIPT_WEB_APP_URL : (window.CONFIG ? window.CONFIG.SCRIPT_WEB_APP_URL : null)")
+    assert config_url, "CONFIG.SCRIPT_WEB_APP_URL must be defined"
 
     # Route handler to mock Apps Script response
     def handle_route(route):

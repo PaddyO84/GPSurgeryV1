@@ -209,7 +209,7 @@
             };
 
             const isLiveDeployment = Boolean(
-                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
+                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE || CONFIG.SCRIPT_WEB_APP_URL)) ||
                 window.IS_LIVE
             );
 
@@ -218,6 +218,10 @@
                 setTimeout(() => {
                     form.reset();
                     form.style.display = 'none';
+                    const successTitle = successMsg.querySelector('.success-title');
+                    const successText = successMsg.querySelector('.success-message');
+                    if (successTitle) successTitle.textContent = "Demo Submission (Simulated)";
+                    if (successText) successText.innerHTML = "This is a demonstration website. <strong>No real appointment was scheduled or sent.</strong> To book an appointment, please call reception directly on <a href=\"tel:012345679\"><strong>(01) 234 5679</strong></a>.";
                     successMsg.style.display = 'block';
                     successMsg.focus();
                     btn.disabled = false;
@@ -255,6 +259,10 @@
                 if (result && result.result === 'success') {
                     form.reset();
                     form.style.display = 'none';
+                    const successTitle = successMsg.querySelector('.success-title');
+                    const successText = successMsg.querySelector('.success-message');
+                    if (successTitle) successTitle.textContent = "Request Sent";
+                    if (successText) successText.textContent = "Thank you. We have received your appointment request and will contact you shortly to confirm the exact time and date.";
                     successMsg.style.display = 'block';
                     successMsg.focus();
                 } else {

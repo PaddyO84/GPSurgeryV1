@@ -38,13 +38,17 @@ Automated triggers can be set up automatically via the custom spreadsheet menu *
 2. **`onFormSubmit`** (Spreadsheet form submit trigger): Processes incoming form responses submitted through connected Google Forms.
 3. **`handleEdit`** (Spreadsheet installable onEdit trigger): Monitors row status updates (e.g. marking rows as "Sent to Pharmacy" or "Query") and triggers email/WhatsApp notifications. The installable `handleEdit` trigger is required for status-change email notifications to work with full authorization.
 
+> **Single-Owner Rule:** Automated triggers must be installed by a single designated administrator or service account. Running `setupAutomatedTriggers` records the installer's identity in Script Properties (`SETUP_TRIGGERS_OWNER`) to prevent duplicate triggers from multiple users.
+
 ### Environment Variables & Deployment Identifiers
 The following placeholders in `Code.gs` and frontend configuration must be replaced with real deployment-specific values before deployment:
 *   `SENDER_NAME`: Placeholder (e.g. `"Example Health Centre"` - replace with official surgery name)
 *   `YOUR_PHONE_NUMBER`: Placeholder (e.g. `"(01) 234 5679"` - replace with official surgery contact number)
 *   `ADMIN_EMAIL`: Placeholder (e.g. `"admin@example.com"` - replace with surgery administrator/reception email)
+*   `Script ID`: Placeholder (`YOUR_SCRIPT_ID` in `.clasp.json`). Operators can find and copy this in the Apps Script editor under **Project Settings (gear icon) > IDs > Script ID**.
 *   `Deployment ID`: Placeholder (`YOUR_DEPLOYMENT_ID` - replace with actual Apps Script deployment ID)
 *   `Web App URL`: Placeholder (`https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec` - replace with actual deployed Web App URL in frontend configuration)
+*   `SUBMISSION_TOKEN`: Deployment identifier (`CONFIG.SUBMISSION_TOKEN` in `js/config.js` matching `SUBMISSION_TOKEN` in Script Properties) used to associate submissions with their designated deployment. This token is non-secret and exposed to client browsers; it must not be used for caller authorization. For caller authentication or access restriction, use server-side abuse controls (rate limiting/honeypot) or an identity-based authentication flow where required.
 
 ## 3. Frontend Configuration
 The file `prescription_form.html` has been updated to submit data to the Web App URL.
