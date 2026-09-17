@@ -792,6 +792,7 @@
             // Added formType for Backend Discrimination
             const payload = {
                 formType: 'prescription',
+                submissionToken: (typeof CONFIG !== 'undefined' && CONFIG.SUBMISSION_TOKEN) ? CONFIG.SUBMISSION_TOKEN : '',
                 patientDetails,
                 medicationList
             };
@@ -892,12 +893,6 @@
             n.textContent = msg;
             n.style.display = 'block';
             setTimeout(() => n.style.display = 'none', 3000);
-        }
-
-        function saveToLocalStorage() { sessionStorage.setItem('prescriptionFormData', JSON.stringify(getFormDataAsObject())); }
-        function loadFromLocalStorage() {
-            const d = sessionStorage.getItem('prescriptionFormData');
-            if (d) populateFormFromData(JSON.parse(d));
         }
 
         function generateReferenceNumber() {

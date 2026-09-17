@@ -200,6 +200,7 @@
 
             const data = {
                 formType: 'appointment',
+                submissionToken: (typeof CONFIG !== 'undefined' && CONFIG.SUBMISSION_TOKEN) ? CONFIG.SUBMISSION_TOKEN : '',
                 name: document.getElementById('appName').value,
                 dob: document.getElementById('appDob').value,
                 phone: document.getElementById('appPhone').value,

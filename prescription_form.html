@@ -459,6 +459,7 @@
 
         const { patientDetails, medicationList } = getFormDataAsObject();
         const payload = {
+            submissionToken: (typeof CONFIG !== 'undefined' && CONFIG.SUBMISSION_TOKEN) ? CONFIG.SUBMISSION_TOKEN : '',
             patientDetails: patientDetails,
             medicationList: medicationList
         };

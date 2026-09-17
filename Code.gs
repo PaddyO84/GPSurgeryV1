@@ -39,6 +39,16 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
 
+    // --- Submission token check ---
+    // Set SUBMISSION_TOKEN in Project Settings > Script Properties.
+    // The frontend must include { submissionToken: "<value>" } in every POST body.
+    const expectedToken = PropertiesService.getScriptProperties().getProperty('SUBMISSION_TOKEN');
+    if (expectedToken) {
+      if (!data.submissionToken || data.submissionToken !== expectedToken) {
+        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Unauthorized' })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     switch (data.formType) {
       case 'sick-note':
         return handleSickNoteSubmission(data);

@@ -13,8 +13,9 @@ def inject_script(filepath, repo_root):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Check if already injected (handling single/double quotes and relative paths, e.g. js/welcome.js, ./js/welcome.js, ../js/welcome.js)
-        if re.search(r'src=["\'](?:\.\./)*?(?:\./)?js/welcome\.js["\']', content):
+        # Check if already injected (relative: js/welcome.js, ./js/welcome.js, ../js/welcome.js;
+        # or root-relative: /js/welcome.js)
+        if re.search(r'src=["\'](?:(?:\.\./)*(?:\./)?|/)?js/welcome\.js["\']', content):
             print(f"Skipping {filepath}: already injected")
             return True
 
@@ -36,7 +37,7 @@ def inject_script(filepath, repo_root):
             try:
                 os.chmod(temp_path, original_stat.st_mode)
             except Exception:
-                pass
+                raise
             os.replace(temp_path, filepath)
             temp_path = None
             print(f"Injected into {filepath}")

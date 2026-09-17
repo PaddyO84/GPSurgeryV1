@@ -94,8 +94,9 @@ function handleAppointmentSubmission(data) {
   }
 
   let rowIndex;
+  let sheet;
   try {
-    const sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
+    sheet = getOrCreateSheet(APPT_SHEET_NAME, headers);
     sheet.appendRow(rowData);
     rowIndex = sheet.getLastRow();
   } finally {
@@ -302,8 +303,9 @@ function handlePrescriptionSubmission(data) {
   }
 
   let row;
+  let sheet;
   try {
-    const sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
+    sheet = getOrCreateSheet(SHEET_NAME, PRESCRIPTION_HEADERS);
     sheet.appendRow(newRow);
     row = sheet.getLastRow();
   } finally {
