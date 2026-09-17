@@ -19,4 +19,4 @@ The "messaging service" referred to in the project history is identified as the 
 
 ## Recommendations
 *   **Maintain Current Architecture**: Do not attempt to implement a WebSocket-based chat server, as it would require a separate active server (Node.js/Python) which violates the "zero maintenance / static hosting" requirement.
-*   **Extend to Appointments**: The current logic in `Code.gs` primarily targets the "Form responses 1" (Prescriptions) sheet. It should be extended to support the new "Appointments" sheet so staff can easily WhatsApp patients about their appointment slots.
+*   **Extend to Appointments**: Appointment submission routing and the Appointments sheet are already supported. The remaining work is limited to the status-triggered WhatsApp notification path for appointment records.

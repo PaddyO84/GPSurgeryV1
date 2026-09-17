@@ -4,7 +4,7 @@ import os
 
 def test_verify_appointment_form(page: Page, base_url: str):
     # Deterministically dismiss welcome modal before navigation
-    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true'); window.IS_LIVE = true;")
 
     app_url = f"{base_url}/appointments.html"
     print(f"Testing Appointment Form at: {app_url}")

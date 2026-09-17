@@ -72,6 +72,7 @@ graph TD
         SickLogic[Sick Note Logic]
         ApptLogic[Appointment Logic]
         Trigger[Time-Driven Archive]
+        EditTrigger[Installed Edit Trigger]
     end
 
     subgraph Database_Google_Sheets

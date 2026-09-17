@@ -8,9 +8,6 @@
         content="Order repeat prescriptions online from Example Health Centre. Secure and convenient.">
     <title>Order Repeat Prescription - Example Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         /* Specific enhancements for the Prescription App */
 
@@ -222,8 +219,8 @@
                 <p class="form-subtitle">Please allow <strong>48 hours</strong> for your prescription to be processed
                     and sent to your pharmacy.</p>
 
-                <div class="alert-card" style="border-left-color: var(--error-color); margin-bottom: 2rem;">
-                    <h3 style="color: var(--error-color);">Do Not Order Antibiotics</h3>
+                <div class="alert-card" style="border-left-color: var(--danger, #dc3545); margin-bottom: 2rem;">
+                    <h3 style="color: var(--danger, #dc3545);">Do Not Order Antibiotics</h3>
                     <p>Antibiotics cannot be ordered via this form. If you require urgent treatment for an infection,
                         please contact reception directly.</p>
                 </div>
@@ -799,13 +796,22 @@
 
             fetch(SCRIPT_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'text/plain'
                 },
                 body: JSON.stringify(payload)
             })
-                .then(() => {
+                .then(async response => {
+                    if (response.type === 'opaque') {
+                        throw new Error('Opaque response received; cannot verify submission.');
+                    }
+                    if (!response.ok) {
+                        throw new Error(`Server returned HTTP ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result && result.result !== 'success') {
+                        throw new Error(result.error || 'Submission was not accepted.');
+                    }
                     document.getElementById('summaryModal').style.display = 'none';
                     const ref = generateReferenceNumber();
                     document.getElementById('prescriptionForm').style.display = 'none';

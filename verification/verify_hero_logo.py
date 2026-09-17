@@ -21,6 +21,7 @@ def verify_hero_logo(page: Page):
     expect(logo).to_be_visible()
 
     # Validate the image has fully loaded (naturalWidth > 0 means the resource was fetched).
+    page.wait_for_function("el => el.complete && el.naturalWidth > 0", arg=logo.element_handle())
     natural_width = logo.evaluate("el => el.naturalWidth")
     assert natural_width and natural_width > 0, "Hero logo image has not finished loading (naturalWidth is 0)"
 

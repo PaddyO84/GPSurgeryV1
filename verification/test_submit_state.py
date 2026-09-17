@@ -3,7 +3,7 @@ from playwright.sync_api import Page, expect
 
 def test_submit_state(page: Page, base_url: str):
     # Deterministically dismiss welcome modal before navigation
-    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true');")
+    page.add_init_script("localStorage.setItem('demo_welcome_seen', 'true'); window.IS_LIVE = true;")
 
     page.set_viewport_size({'width': 1280, 'height': 850})
     page.goto(f'{base_url}/order-prescription.html')

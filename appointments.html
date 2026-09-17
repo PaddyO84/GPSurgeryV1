@@ -6,9 +6,6 @@
     <meta name="description" content="Book an appointment at Example Health Centre. Learn about appointment types, home visits, and emergency information.">
     <title>Appointments - Example Health Centre</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
     <script src="js/config.js"></script>
 </head>
@@ -213,9 +210,7 @@
 
             const isLiveDeployment = Boolean(
                 (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
-                window.IS_LIVE ||
-                (typeof localStorage !== 'undefined' && localStorage.getItem('LIVE_DEPLOYMENT') === 'true') ||
-                (typeof location !== 'undefined' && location.search && location.search.includes('live=true'))
+                window.IS_LIVE
             );
 
             // In demo mode, skip the network request entirely and simulate success

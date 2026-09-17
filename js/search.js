@@ -12,7 +12,7 @@
         initialized = true;
 
         function handleSearch() {
-            const query = searchInput.value.toLowerCase();
+            const query = searchInput.value.trim().toLowerCase();
             searchResults.innerHTML = '';
 
             if (query.length > 2) {
