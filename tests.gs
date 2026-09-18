@@ -72,3 +72,42 @@ function testReportErrorFailurePath() {
     }
   }
 }
+
+function testDoPostErrorPath() {
+  const originalReportError = typeof reportError !== 'undefined' ? reportError : undefined;
+  let reportErrorCalled = false;
+  let reportedFn = null;
+  let reportedErr = null;
+
+  reportError = function(fnName, err, row) {
+    reportErrorCalled = true;
+    reportedFn = fnName;
+    reportedErr = err;
+  };
+
+  try {
+    console.log("Running testDoPostErrorPath...");
+    // Pass malformed JSON payload to trigger doPost catch block
+    const mockEvent = {
+      postData: {
+        contents: "invalid-json-{"
+      }
+    };
+    const response = doPost(mockEvent);
+    const content = JSON.parse(response.getContent());
+
+    if (!reportErrorCalled || reportedFn !== 'doPost') {
+      throw new Error(`Expected reportError to be called for 'doPost', got called: ${reportErrorCalled}, fn: ${reportedFn}`);
+    }
+    if (!content || content.result !== 'error') {
+      throw new Error(`Expected error JSON response from doPost, got: ${JSON.stringify(content)}`);
+    }
+    console.log("testDoPostErrorPath completed successfully.");
+  } finally {
+    if (originalReportError !== undefined) {
+      reportError = originalReportError;
+    } else {
+      delete reportError;
+    }
+  }
+}

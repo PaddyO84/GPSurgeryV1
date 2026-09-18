@@ -18,6 +18,10 @@ const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
 
+function getMainPrescriptionSheet() {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+}
+
 function hasEmailQuota(minReserve = 5) {
   if (typeof MailApp !== 'undefined' && MailApp.getRemainingDailyQuota) {
     try {
@@ -341,7 +345,7 @@ function sendSickNoteConfirmation(name, email) {
  */
 function sendDynamicNotification() {
   const ui = SpreadsheetApp.getUi();
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sheet = getMainPrescriptionSheet();
   const range = sheet.getActiveRange();
   const row = range.getRow();
 
@@ -397,7 +401,7 @@ function buildPatientMessage(status, patientName, pharmacy) {
  */
 function showEmailDialog(row) {
   const ui = SpreadsheetApp.getUi();
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sheet = getMainPrescriptionSheet();
   const rowValues = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
 
   const patientName = rowValues[NAME_COL - 1];
@@ -441,7 +445,7 @@ function showEmailDialog(row) {
  * Sends the email when the "Send Email" button in the dialog is clicked.
  */
 function sendEmailFromDialog(row) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const sheet = getMainPrescriptionSheet();
   const ui = SpreadsheetApp.getUi();
   try {
     const rowValues = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -552,7 +556,7 @@ function sendConfirmationNotification(patientName, patientEmail, commPref) {
  */
 function sendReadyEmail(row, patientName, patientEmail, pharmacy) {
   if (patientName === undefined || patientEmail === undefined || pharmacy === undefined) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    const sheet = getMainPrescriptionSheet();
     patientName = sheet.getRange(row, NAME_COL).getValue();
     patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
     pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
@@ -577,7 +581,7 @@ function sendReadyEmail(row, patientName, patientEmail, pharmacy) {
  */
 function sendWhatsAppLinkToStaff(row, staffEmail, patientName, patientPhone, pharmacy) {
   if (patientName === undefined || patientPhone === undefined || pharmacy === undefined) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    const sheet = getMainPrescriptionSheet();
     patientName = sheet.getRange(row, NAME_COL).getValue();
     patientPhone = sheet.getRange(row, PHONE_COL).getValue();
     pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
