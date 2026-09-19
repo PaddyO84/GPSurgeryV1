@@ -40,7 +40,8 @@
 
         if (currentStorage) {
             try {
-                return currentStorage.getItem('siteTheme') || 'default';
+                const storedTheme = currentStorage.getItem('siteTheme');
+                return ALLOWED_THEMES.has(storedTheme) ? storedTheme : 'default';
             } catch(e) {
                 return 'default';
             }
@@ -60,6 +61,7 @@
     }
 
     function setTheme(themeName, win, storage, doc) {
+        const normalizedTheme = ALLOWED_THEMES.has(themeName) ? themeName : 'default';
         const currentWindow = win || (typeof window !== 'undefined' ? window : null);
         let currentStorage = storage;
         if (!currentStorage) {
@@ -72,14 +74,14 @@
         const currentDoc = doc || (typeof document !== 'undefined' ? document : null);
 
         if (currentStorage) {
-            try { currentStorage.setItem('siteTheme', themeName); } catch(e) {}
+            try { currentStorage.setItem('siteTheme', normalizedTheme); } catch(e) {}
         }
-        applyTheme(themeName, currentDoc);
+        applyTheme(normalizedTheme, currentDoc);
 
         if (currentWindow && currentWindow.location && currentWindow.history && currentWindow.history.replaceState) {
             try {
                 const url = new URL(currentWindow.location.href);
-                url.searchParams.set('theme', themeName);
+                url.searchParams.set('theme', normalizedTheme);
                 currentWindow.history.replaceState({}, '', url.toString());
             } catch(e) {}
         }

@@ -10,6 +10,16 @@ def verify_address_submission(page, base_url: str = None):
         repo_root = Path(__file__).resolve().parent.parent
         appointments_url = (repo_root / "appointments.html").as_uri()
 
+    page.add_init_script("""
+        localStorage.setItem('demo_welcome_seen', 'true');
+        window.IS_LIVE = true;
+        if (typeof CONFIG !== 'undefined') {
+            CONFIG.SCRIPT_WEB_APP_URL = CONFIG.SCRIPT_WEB_APP_URL || 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec';
+        } else {
+            window.CONFIG = { SCRIPT_WEB_APP_URL: 'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec' };
+        }
+    """)
+
     page.goto(appointments_url, wait_until="networkidle")
 
     # Handle Welcome Modal if present
@@ -71,19 +81,17 @@ def verify_address_submission(page, base_url: str = None):
     assert address_verified["matched"], "Address payload did not match expected value"
 
     # Take screenshot
-    page.screenshot(path="verification/appointment_address_verified.png")
+    screenshot_path = Path(__file__).resolve().parent / "appointment_address_verified.png"
+    page.screenshot(path=str(screenshot_path))
 
 if __name__ == "__main__":
-    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-    from functools import partial
-    import threading
+    try:
+        from verification.server_helper import start_local_server
+    except ImportError:
+        from server_helper import start_local_server
 
     repo_root = Path(__file__).resolve().parent.parent
-    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
-    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
-    port = server.server_address[1]
-    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
-    server_thread.start()
+    server, port = start_local_server(str(repo_root))
     base_url = f"http://127.0.0.1:{port}"
 
     with sync_playwright() as p:
@@ -97,4 +105,3 @@ if __name__ == "__main__":
         finally:
             browser.close()
             server.shutdown()
-            server_thread.join()

@@ -405,6 +405,7 @@
                         li.className = 'med-combobox-option';
                         li.id = `med-combobox-opt-${index}`;
                         li.setAttribute('role', 'option');
+                        li.setAttribute('aria-selected', 'false');
                         li.textContent = item;
                         li.addEventListener('mousedown', (e) => {
                             e.preventDefault();
@@ -471,14 +472,22 @@
                     e.preventDefault();
                     if (options.length === 0) return;
                     highlightedIndex = (highlightedIndex + 1) % options.length;
-                    options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    options.forEach((opt, idx) => {
+                        const isHighlighted = idx === highlightedIndex;
+                        opt.classList.toggle('highlighted', isHighlighted);
+                        opt.setAttribute('aria-selected', isHighlighted ? 'true' : 'false');
+                    });
                     updateActiveDescendant(options);
                     options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
                 } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     if (options.length === 0) return;
                     highlightedIndex = (highlightedIndex - 1 + options.length) % options.length;
-                    options.forEach((opt, idx) => opt.classList.toggle('highlighted', idx === highlightedIndex));
+                    options.forEach((opt, idx) => {
+                        const isHighlighted = idx === highlightedIndex;
+                        opt.classList.toggle('highlighted', isHighlighted);
+                        opt.setAttribute('aria-selected', isHighlighted ? 'true' : 'false');
+                    });
                     updateActiveDescendant(options);
                     options[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
                 } else if (e.key === 'Enter') {
@@ -778,6 +787,31 @@
             document.getElementById('summaryModal').style.display = 'flex';
         }
 
+        function showSubmittedState(messageHtml) {
+            document.getElementById('summaryModal').style.display = 'none';
+            document.getElementById('prescriptionForm').style.display = 'none';
+
+            const appContainer = document.querySelector('.form-app-container');
+            if (appContainer) {
+                appContainer.classList.add('form-submitted');
+            }
+            ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = true;
+            });
+
+            const successDiv = document.getElementById('successMessage');
+            successDiv.innerHTML = messageHtml;
+            successDiv.style.display = 'block';
+            sessionStorage.removeItem('prescriptionFormData');
+
+            if (appContainer) {
+                appContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
         function submitToGoogleForm() {
             const confirmBtn = document.querySelector('.btn-confirm');
             confirmBtn.disabled = true;
@@ -792,28 +826,14 @@
                 medicationList
             };
 
-            const isLiveDeployment = Boolean(
-                (typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) ||
-                window.IS_LIVE
-            );
+            const isLiveDeployment = (typeof CONFIG !== 'undefined' && typeof CONFIG.isLive === 'function')
+                ? CONFIG.isLive()
+                : false;
 
             // In demo mode, skip the network request entirely and simulate success
             if (!isLiveDeployment) {
                 setTimeout(() => {
-                    document.getElementById('summaryModal').style.display = 'none';
-                    document.getElementById('prescriptionForm').style.display = 'none';
-
-                    const appContainer = document.querySelector('.form-app-container');
-                    if (appContainer) {
-                        appContainer.classList.add('form-submitted');
-                    }
-                    ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.disabled = true;
-                    });
-
-                    const successDiv = document.getElementById('successMessage');
-                    successDiv.innerHTML = `
+                    const demoMessageHtml = `
                     <div class="success-animation">
                         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
                     </div>
@@ -821,24 +841,17 @@
                     <p class="success-message">This is a demonstration website. <strong>No real prescription was ordered or sent.</strong> To order a repeat prescription, please contact the surgery or call reception directly on <a href="tel:012345679"><strong>(01) 234 5679</strong></a>.</p>
                     <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
-                    successDiv.style.display = 'block';
-                    sessionStorage.removeItem('prescriptionFormData');
-
-                    if (appContainer) {
-                        appContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    showSubmittedState(demoMessageHtml);
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm & Submit";
                 }, 400);
                 return;
             }
 
-            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
+            const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && typeof CONFIG.getSubmissionUrl === 'function')
+                ? CONFIG.getSubmissionUrl()
+                : '';
             if (!SCRIPT_WEB_APP_URL) {
-                console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
-                alert('An error occurred. Please try again or call reception: Submission URL is not configured.');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Confirm & Submit";
                 return;
@@ -867,23 +880,9 @@
                         const errorMsg = (result && result.errors) ? result.errors.join(' ') : ((result && result.error) || 'Submission was not accepted.');
                         throw new Error(errorMsg);
                     }
-                    document.getElementById('summaryModal').style.display = 'none';
                     const ref = generateReferenceNumber();
-                    document.getElementById('prescriptionForm').style.display = 'none';
-
-                    // Keep sidebar, style frame for submitted state, disable other actions
-                    const appContainer = document.querySelector('.form-app-container');
-                    if (appContainer) {
-                        appContainer.classList.add('form-submitted');
-                    }
-                    ['btnLoadFile', 'btnSaveFile', 'btnPrintSummary'].forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.disabled = true;
-                    });
-
-                    const successDiv = document.getElementById('successMessage');
                     const commMethod = (patientDetails.commPref && patientDetails.commPref.toLowerCase() === 'whatsapp') ? 'WhatsApp' : 'email';
-                    successDiv.innerHTML = `
+                    const liveMessageHtml = `
                     <div class="success-animation">
                         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
                     </div>
@@ -891,19 +890,14 @@
                     <p class="success-message">Your reference number is: <strong>${ref}</strong>. A confirmation has been sent via ${commMethod}. Please allow 48 hours for processing.</p>
                     <button class="btn" onclick="location.reload()">Submit Another Request</button>
                 `;
-                    successDiv.style.display = 'block';
-                    sessionStorage.removeItem('prescriptionFormData');
-
-                    // Scroll viewport up to focus on the confirmation card
-                    if (appContainer) {
-                        appContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    showSubmittedState(liveMessageHtml);
                 })
                 .catch(error => {
                     console.error("Submission Error:", error);
-                    const failureReason = (error && error.message) ? error.message : "An error occurred. Please try again.";
+                    const isTimeout = error && error.name === 'AbortError';
+                    const failureReason = isTimeout
+                        ? "Request timed out. Please try again or call reception."
+                        : ((error && error.message) ? error.message : "An error occurred. Please try again or call reception.");
                     alert(failureReason);
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm & Submit";
@@ -1034,10 +1028,12 @@
             const data = getFormDataAsObject();
             if (!data.patientDetails.name) { alert("Please enter a name first."); return; }
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = url;
             a.download = `prescription_${data.patientDetails.name.replace(/\s+/g, '_')}.json`;
             a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function loadRequestFromFile(e) {

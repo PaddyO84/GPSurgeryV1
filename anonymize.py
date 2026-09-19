@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import tempfile
+import shutil
 
 # Default replacements schema (loaded from untracked config or environment secret)
 default_replacements = {
@@ -52,14 +53,23 @@ def load_replacements():
         print("Error: No anonymization replacements found. Provide anonymize_local.json or ANONYMIZE_REPLACEMENTS_JSON.", file=sys.stderr)
         sys.exit(1)
 
-    # Validate every entry before use: keys must be non-empty strings, values must be strings, and keys must not equal replacement values.
-    invalid = [
+    # Validate every entry before use: keys must be non-empty strings, values must be strings, keys must not equal replacement values, and replacement values must not contain any source key.
+    type_invalid = [
         (k, v) for k, v in combined.items()
-        if not isinstance(k, str) or not k or not isinstance(v, str) or k == v
+        if not isinstance(k, str) or not k or not isinstance(v, str)
     ]
-    if invalid:
-        for idx, (k, v) in enumerate(invalid, start=1):
-            print(f"Error: Invalid replacement entry #{idx} with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(invalid)}). Keys must be non-empty strings, values must be strings, and source keys must not equal replacement values.", file=sys.stderr)
+    if type_invalid:
+        for idx, (k, v) in enumerate(type_invalid, start=1):
+            print(f"Error: Invalid replacement entry #{idx} with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(type_invalid)}). Keys must be non-empty strings, values must be strings, source keys must not equal replacement values, and replacement values must not contain any configured source keys.", file=sys.stderr)
+        sys.exit(1)
+
+    value_invalid = [
+        (k, v) for k, v in combined.items()
+        if k == v or any(source_key in v for source_key in combined.keys())
+    ]
+    if value_invalid:
+        for idx, (k, v) in enumerate(value_invalid, start=1):
+            print(f"Error: Invalid replacement entry #{idx} with key_type={type(k).__name__}, value_type={type(v).__name__} (total invalid entries: {len(value_invalid)}). Keys must be non-empty strings, values must be strings, source keys must not equal replacement values, and replacement values must not contain any configured source keys.", file=sys.stderr)
         sys.exit(1)
 
     # Order all source strings from most specific (longest) to least specific (shortest)
@@ -67,49 +77,6 @@ def load_replacements():
     return dict(sorted_items)
 
 matched_sources = set()
-
-def process_file(filepath, replacements):
-    temp_path = None
-    try:
-        if os.path.islink(filepath):
-            print(f"Skipping symlink: {filepath}", file=sys.stderr)
-            return True
-
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Ensure content is a string
-        if not isinstance(content, str):
-            raise TypeError(f"Expected file content to be a string, got {type(content)}")
-        # Build a regex pattern that matches any of the old strings, longest first to avoid partial matches
-        import re
-        pattern = re.compile('|'.join(map(re.escape, replacements.keys())))
-        def replace_fn(m):
-            matched = m.group(0)
-            matched_sources.add(matched)
-            return replacements[matched]
-        new_content = pattern.sub(replace_fn, content)
-        if new_content != content:
-            target_dir = os.path.dirname(os.path.abspath(filepath))
-            orig_stat = os.stat(filepath)
-            with tempfile.NamedTemporaryFile('w', dir=target_dir, delete=False, encoding='utf-8') as tf:
-                temp_path = tf.name
-                tf.write(new_content)
-            os.chmod(temp_path, orig_stat.st_mode)
-            os.replace(temp_path, filepath)
-            temp_path = None
-            print(f"Updated: {filepath}")
-        else:
-            print(f"No changes: {filepath}")
-        return True
-    except Exception as e:
-        if temp_path and os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-            except OSError:
-                pass
-        print(f"Error processing {filepath}: {e}")
-        return False
 
 def main():
     import argparse
@@ -120,7 +87,7 @@ def main():
 
     replacements = load_replacements()
 
-    extensions = ['.html', '.gs', '.md', '.json', '.js', '.css', '.py']
+    extensions = ['.html', '.gs', '.md', '.json', '.js', '.css', '.py', '.yml', '.yaml', '.xml', '.iml', '.txt', '.csv']
     failed = False
     prune_dirs = {'.git', 'node_modules', '.venv', 'venv', 'env', '.env', 'coverage', 'dist', 'build'}
     skip_files = {'anonymize.py', 'anonymize_local.json', 'anonymize_config.example.json'}
@@ -149,9 +116,8 @@ def main():
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            for source in replacements.keys():
-                if source in content:
-                    matched_sources.add(source)
+            for m in pattern.finditer(content):
+                matched_sources.add(m.group(0))
         except Exception as e:
             print(f"Error inspecting {file_path}: {e}", file=sys.stderr)
             failed = True
@@ -165,14 +131,115 @@ def main():
     if failed:
         sys.exit(1)
 
-    # Second pass: write replacements now that validation has passed
+    # Second pass: stage replacements in temporary files before modifying any repository files
+    staged_replacements = []
     for file_path in eligible_files:
-        success = process_file(file_path, replacements)
-        if not success:
+        current_tf_name = None
+        try:
+            if os.path.islink(file_path):
+                continue
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            def replace_fn(m):
+                matched = m.group(0)
+                return replacements[matched]
+            new_content = pattern.sub(replace_fn, content)
+            if new_content != content:
+                target_dir = os.path.dirname(os.path.abspath(file_path))
+                orig_stat = os.stat(file_path)
+                tf = tempfile.NamedTemporaryFile('w', dir=target_dir, delete=False, encoding='utf-8')
+                current_tf_name = tf.name
+                tf.write(new_content)
+                tf.close()
+                staged_replacements.append((current_tf_name, file_path, orig_stat.st_mode))
+                current_tf_name = None
+        except Exception as e:
+            print(f"Error preparing {file_path}: {e}", file=sys.stderr)
+            if current_tf_name and os.path.exists(current_tf_name):
+                try: os.remove(current_tf_name)
+                except OSError: pass
             failed = True
 
     if failed:
+        for temp_p, _, _ in staged_replacements:
+            if os.path.exists(temp_p):
+                try: os.remove(temp_p)
+                except OSError: pass
         sys.exit(1)
+
+    # Commit staged replacements now that all files have succeeded
+    committed_backups = []
+    failed_idx = None
+
+    try:
+        for i, (temp_p, dest_p, mode) in enumerate(staged_replacements):
+            backup_p = None
+            replace_succeeded = False
+            try:
+                if os.path.exists(dest_p):
+                    dest_dir = os.path.dirname(dest_p) or "."
+                    bf = tempfile.NamedTemporaryFile(prefix=".anonymize_backup_", dir=dest_dir, delete=False)
+                    bf.close()
+                    backup_p = bf.name
+                    shutil.copyfile(dest_p, backup_p)
+                    try:
+                        os.chmod(backup_p, 0o600)
+                    except OSError:
+                        pass
+
+                os.chmod(temp_p, mode)
+                os.replace(temp_p, dest_p)
+                replace_succeeded = True
+                committed_backups.append((dest_p, backup_p, mode))
+            except Exception as e:
+                print(f"Error committing {dest_p}: {e}", file=sys.stderr)
+                failed = True
+                failed_idx = i
+                if not replace_succeeded and backup_p and os.path.exists(backup_p):
+                    try:
+                        os.remove(backup_p)
+                    except OSError as err:
+                        print(f"Error removing unused backup file {backup_p}: {err}", file=sys.stderr)
+                break
+
+            try:
+                print(f"Updated: {dest_p}")
+            except Exception as e:
+                print(f"Notice: failed to print update message for {dest_p}: {e}", file=sys.stderr)
+    finally:
+        pass
+
+    if failed:
+        # Rollback all committed destinations
+        for dest_p, backup_p, orig_mode in reversed(committed_backups):
+            try:
+                if backup_p and os.path.exists(backup_p):
+                    os.replace(backup_p, dest_p)
+                    os.chmod(dest_p, orig_mode)
+                elif not backup_p and os.path.exists(dest_p):
+                    os.remove(dest_p)
+            except Exception as e:
+                print(f"Error rolling back {dest_p}: {e}", file=sys.stderr)
+
+        # Remove temporary files for failed and unprocessed entries
+        start_cleanup = failed_idx if failed_idx is not None else 0
+        for temp_p, _, _ in staged_replacements[start_cleanup:]:
+            if os.path.exists(temp_p):
+                try: os.remove(temp_p)
+                except OSError: pass
+        sys.exit(1)
+    else:
+        # Commit succeeded, clean up backup files
+        cleanup_failed = False
+        for _, backup_p, _ in committed_backups:
+            if backup_p and os.path.exists(backup_p):
+                try:
+                    os.remove(backup_p)
+                except OSError as err:
+                    print(f"Error removing backup file {backup_p}: {err}", file=sys.stderr)
+                    cleanup_failed = True
+        if cleanup_failed:
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

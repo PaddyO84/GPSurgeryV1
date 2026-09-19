@@ -12,12 +12,11 @@ jobs:
     env:
       ENABLE_DOMPURIFY: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed1d3fdee561 # v4.1.0
         with:
           node-version: 24
           cache: 'npm'
       - run: npm ci
-      - run: npm test
-      - run: npx nyc --check-coverage --lines 80 --functions 80 mocha "test/**/*.test.js"
+      - run: npm run coverage

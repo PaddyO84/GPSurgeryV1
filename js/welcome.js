@@ -2,7 +2,10 @@
     // Return immediately if live deployment is active
     try {
         const config = (typeof CONFIG !== 'undefined') ? CONFIG : (typeof window !== 'undefined' ? window.CONFIG : null);
-        if (config && config.LIVE_DEPLOYMENT) {
+        const isLive = (config && typeof config.isLive === 'function')
+            ? config.isLive()
+            : Boolean(config && config.LIVE_DEPLOYMENT);
+        if (isLive) {
             return;
         }
     } catch (e) {}
@@ -78,8 +81,20 @@
     closeBtn.style.marginTop = '20px';
     closeBtn.style.fontWeight = 'bold';
 
+    const originalInertStates = [];
+
     function closeModal() {
         document.removeEventListener('keydown', handleKeyDown);
+        // Restore background elements' inert state
+        originalInertStates.forEach(({ element, wasInert }) => {
+            if (wasInert) {
+                element.setAttribute('inert', '');
+            } else {
+                element.removeAttribute('inert');
+            }
+        });
+        originalInertStates.length = 0;
+
         modalOverlay.style.display = 'none';
         modalOverlay.remove();
         if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
@@ -143,6 +158,17 @@
     modalContent.appendChild(message);
     modalContent.appendChild(closeBtn);
     modalOverlay.appendChild(modalContent);
+
+    // Set background body children inert while modal is open
+    Array.from(document.body.children).forEach(child => {
+        if (child !== modalOverlay) {
+            originalInertStates.push({
+                element: child,
+                wasInert: child.hasAttribute('inert')
+            });
+            child.setAttribute('inert', '');
+        }
+    });
 
     // Add to DOM
     document.body.appendChild(modalOverlay);

@@ -1,17 +1,5 @@
 import os
-import socket
-import threading
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.sync_api import sync_playwright, Page, expect
-
-def start_local_server(directory):
-    handler = partial(SimpleHTTPRequestHandler, directory=directory)
-    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
-    port = server.server_address[1]
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, port
 
 def test_welcome_modal(page: Page, base_url: str):
     index_url = f"{base_url}/index.html"
@@ -40,16 +28,22 @@ def test_welcome_modal(page: Page, base_url: str):
 
     # 3. Reload: Modal should NOT appear
     page.reload()
+    page.wait_for_load_state("networkidle")
     expect(modal).not_to_be_visible()
     print("Modal did not appear on reload.")
 
     # 4. Visit another page: Modal should NOT appear (shared local storage across same origin)
     page.goto(contact_url)
+    page.wait_for_load_state("networkidle")
     expect(modal).not_to_be_visible()
     print("Modal did not appear on second page.")
 
 if __name__ == "__main__":
     from pathlib import Path
+    try:
+        from verification.server_helper import start_local_server
+    except ImportError:
+        from server_helper import start_local_server
     repo_root = Path(__file__).resolve().parent.parent
     server, port = start_local_server(str(repo_root))
     base_url = f"http://127.0.0.1:{port}"

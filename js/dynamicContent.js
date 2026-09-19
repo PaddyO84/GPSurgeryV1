@@ -72,9 +72,29 @@
         }
     }
 
+    function populateHours() {
+        if (typeof siteData === 'undefined' || !siteData.hours) return;
+
+        const weekdayEl = document.getElementById('hours-weekday');
+        if (weekdayEl) {
+            weekdayEl.textContent = siteData.hours.morning || siteData.hours.weekday || '9:00am - 12:30pm';
+        }
+
+        const afternoonEl = document.getElementById('hours-afternoon');
+        if (afternoonEl && siteData.hours.afternoon) {
+            afternoonEl.textContent = siteData.hours.afternoon;
+        }
+
+        const weekendEl = document.getElementById('hours-weekend');
+        if (weekendEl && siteData.hours.weekend) {
+            weekendEl.textContent = siteData.hours.weekend;
+        }
+    }
+
     function populateAll() {
         populateHeader();
         populateFooter();
+        populateHours();
     }
 
     document.addEventListener('componentLoaded', (e) => {

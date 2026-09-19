@@ -40,9 +40,15 @@ describe('Theme Management Utility (theme.js)', () => {
         });
 
         it('should fallback to localStorage when no URL param is present', () => {
+            mockStorage.setItem('siteTheme', 'blue');
+            const theme = getTheme(mockWindow, mockStorage);
+            expect(theme).to.equal('blue');
+        });
+
+        it('should return "default" when stored theme is invalid or disallowed', () => {
             mockStorage.setItem('siteTheme', 'high-contrast');
             const theme = getTheme(mockWindow, mockStorage);
-            expect(theme).to.equal('high-contrast');
+            expect(theme).to.equal('default');
         });
 
         it('should return "default" when neither URL param nor localStorage is set', () => {
@@ -80,11 +86,25 @@ describe('Theme Management Utility (theme.js)', () => {
     });
 
     describe('setTheme()', () => {
-        it('should set localStorage, update DOM attribute, and update URL parameter', () => {
-            setTheme('accessible', mockWindow, mockStorage, dom.window.document);
-            expect(mockStorage.getItem('siteTheme')).to.equal('accessible');
-            expect(dom.window.document.documentElement.getAttribute('data-theme')).to.equal('accessible');
-            expect(mockWindow.location.href).to.include('theme=accessible');
+        it('should set localStorage, update DOM attribute, and update URL parameter for valid theme', () => {
+            setTheme('blue', mockWindow, mockStorage, dom.window.document);
+            expect(mockStorage.getItem('siteTheme')).to.equal('blue');
+            expect(dom.window.document.documentElement.getAttribute('data-theme')).to.equal('blue');
+            expect(mockWindow.location.href).to.include('theme=blue');
+        });
+
+        it('should normalize unsupported theme to "default" in setTheme', () => {
+            setTheme('unsupported', mockWindow, mockStorage, dom.window.document);
+            expect(mockStorage.getItem('siteTheme')).to.equal('default');
+            expect(dom.window.document.documentElement.hasAttribute('data-theme')).to.be.false;
+            expect(mockWindow.location.href).to.include('theme=default');
+        });
+
+        it('should handle storage failure or default storage fallback', () => {
+            const theme = getTheme(mockWindow);
+            expect(theme).to.equal('default');
+            setTheme('teal', mockWindow, null, dom.window.document);
+            expect(dom.window.document.documentElement.getAttribute('data-theme')).to.equal('teal');
         });
     });
 });

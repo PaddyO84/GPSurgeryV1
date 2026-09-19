@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright, Page, expect
+from playwright.sync_api import sync_playwright, Page, expect, Error
 from pathlib import Path
 import os
 
@@ -50,7 +50,7 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     # If the options are not there, try to proceed anyway to see if it works or fails
     try:
         page.select_option("#chosenPharmacy", index=1) # Select first option
-    except:
+    except Error:
         print("Initial select failed, trying to wait for options...")
         page.wait_for_function("document.getElementById('chosenPharmacy').options.length > 1", timeout=5000)
         page.select_option("#chosenPharmacy", index=1)
@@ -181,16 +181,13 @@ def verify_forms_wiring(page: Page, base_url: str = None):
     print("Sick Note verification successful.")
 
 if __name__ == "__main__":
-    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-    from functools import partial
-    import threading
+    try:
+        from verification.server_helper import start_local_server
+    except ImportError:
+        from server_helper import start_local_server
 
     repo_root = Path(__file__).resolve().parent.parent
-    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
-    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
-    port = server.server_address[1]
-    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
-    server_thread.start()
+    server, port = start_local_server(str(repo_root))
     base_url = f"http://127.0.0.1:{port}"
 
     with sync_playwright() as p:
@@ -205,4 +202,3 @@ if __name__ == "__main__":
         finally:
             browser.close()
             server.shutdown()
-            server_thread.join()

@@ -1,6 +1,5 @@
 import pytest
 from playwright.sync_api import sync_playwright
-import socket
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from functools import partial
@@ -25,16 +24,10 @@ def page(browser):
 
 # --- Server fixture for providing base_url ---
 import pathlib
-
-def get_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('127.0.0.1', 0))
-        return s.getsockname()[1]
-
 import os
 
 @pytest.fixture(scope="session")
-def base_url(tmp_path_factory):
+def base_url():
     # Serve files from the project root (where index.html resides)
     repo_root = pathlib.Path(__file__).resolve().parent
     handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))

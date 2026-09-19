@@ -44,11 +44,10 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
 
     // --- Submission token check ---
-    // Set SUBMISSION_TOKEN in Project Settings > Script Properties.
-    // The frontend must include { submissionToken: "<value>" } in every POST body.
+    // Public non-secret token for spam deterrence; does not authenticate callers.
     const expectedToken = PropertiesService.getScriptProperties().getProperty('SUBMISSION_TOKEN');
     if (!expectedToken || !data.submissionToken || data.submissionToken !== expectedToken) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Unauthorized' })).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Rejected submission' })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Abuse controls: honeypot check
@@ -62,13 +61,31 @@ function doPost(e) {
     const cache = CacheService.getScriptCache();
     const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
     const globalRateLimitKey = 'rl_global_' + windowBucket;
-    const recentCount = Number(cache.get(rateLimitKey) || '0');
-    const globalCount = Number(cache.get(globalRateLimitKey) || '0');
-    if (recentCount >= 10 || globalCount >= 100) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+    const rateLock = LockService.getScriptLock();
+    try {
+      rateLock.waitLock(5000);
+      const recentCount = Number(cache.get(rateLimitKey) || '0');
+      const globalCount = Number(cache.get(globalRateLimitKey) || '0');
+      const MAX_RECENT_REQUESTS = 10;
+      const MAX_GLOBAL_REQUESTS = 150;
+      if (globalCount >= MAX_GLOBAL_REQUESTS) {
+        const globalAlertedKey = 'rl_alerted_' + windowBucket;
+        if (!cache.get(globalAlertedKey)) {
+          cache.put(globalAlertedKey, '1', 600);
+          reportError('doPost:rateLimit', new Error(`Global submission rate limit reached: ${globalCount} requests in 5-minute bucket`), null);
+        }
+        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+      }
+      if (recentCount >= MAX_RECENT_REQUESTS) {
+        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+      }
+      cache.put(rateLimitKey, String(recentCount + 1), 600); // 10-minute cache expiration covers current and adjacent bucket
+      cache.put(globalRateLimitKey, String(globalCount + 1), 600);
+    } finally {
+      try {
+        rateLock.releaseLock();
+      } catch (e) {}
     }
-    cache.put(rateLimitKey, String(recentCount + 1), 600); // 10-minute cache expiration covers current and adjacent bucket
-    cache.put(globalRateLimitKey, String(globalCount + 1), 600);
 
     switch (data.formType) {
       case 'sick-note':
@@ -165,9 +182,10 @@ function handleEdit(e) {
     const startRow = range.getRow();
     const statusValues = range.getValues();
 
-    // Bulk-read email, name, and (for prescriptions) comm_pref, pharmacy, and phone for the entire edited range in one call each
+    // Bulk-read email, name, notification status, and (for prescriptions) comm_pref, pharmacy, and phone for the entire edited range in one call each
     const emailValues = sheet.getRange(startRow, emailCol, numRows, 1).getValues();
     const nameValues = sheet.getRange(startRow, nameCol, numRows, 1).getValues();
+    const notificationValues = sheet.getRange(startRow, notificationCol, numRows, 1).getValues();
     const commPrefValues = (!isAppointment)
       ? sheet.getRange(startRow, COMM_PREF_COL, numRows, 1).getValues()
       : null;
@@ -184,9 +202,11 @@ function handleEdit(e) {
         const status = statusValues[i][0] ? statusValues[i][0].toString().trim() : '';
         const patientEmail = emailValues[i][0];
         const patientName = nameValues[i][0];
+        const existingNotification = notificationValues[i][0] ? notificationValues[i][0].toString().trim() : '';
 
         if (status === STATUS_QUERY) {
           if (!patientEmail) continue;
+          if (existingNotification.startsWith("Query on ")) continue;
           if (!hasEmailQuota()) {
             reportError('handleEdit:query', new Error('Daily email quota reserve depleted. Suppressing query notification email.'), currentRow);
             continue;
@@ -197,8 +217,11 @@ function handleEdit(e) {
           const requestDesc = isAppointment ? "appointment request" : "prescription request";
           const body = `<p>Dear ${escapeHtml(patientName)},</p><p>Regarding your ${requestDesc}, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
           MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+          const timestamp = Utilities.formatDate(new Date(), "Europe/Dublin", "dd/MM/yyyy HH:mm:ss");
+          sheet.getRange(currentRow, notificationCol).setValue(`Query on ${timestamp}`);
 
         } else if (status === STATUS_READY && !isAppointment) {
+          if (existingNotification.startsWith("Ready on ")) continue;
           const commPref = commPrefValues[i][0] ? commPrefValues[i][0].toString().toLowerCase() : '';
           const pharmacy = pharmacyValues ? pharmacyValues[i][0] : '';
           const patientPhone = phoneValues ? phoneValues[i][0] : '';
@@ -563,6 +586,10 @@ function sendReadyEmail(row, patientName, patientEmail, pharmacy) {
   }
 
   if (!patientEmail) return false;
+  if (!hasEmailQuota()) {
+    reportError('sendReadyEmail', new Error('Daily email quota reserve depleted. Suppressing ready email.'), row);
+    return false;
+  }
 
   try {
     const message = buildPatientMessage(STATUS_READY, patientName, pharmacy);
@@ -849,11 +876,10 @@ function archiveOldRequests() {
         }
       }
 
-      // Track confirmed archived items, including duplicates within the current run,
-      // so duplicate-key rows are not collapsed and unconfirmed rows are preserved in source.
+      // Track confirmed archived items, including duplicate keys within the same run,
+      // which are intentionally appended to the archive and not collapsed.
       const rowsToAppend = [];
       const confirmedSourceRowIndices = [];
-      const currentRunIds = new Set();
 
       for (let r of rowsToArchive) {
         const sourceTsVal = r.rowData[sourceTsColIdx];
@@ -872,20 +898,58 @@ function archiveOldRequests() {
         if (existingArchiveIds.has(rowId)) {
           // Already confirmed present in the archive
           confirmedSourceRowIndices.push(r.sheetRowIndex);
-        } else if (!currentRunIds.has(rowId)) {
-          // Genuinely new row for this run
-          rowsToAppend.push(r);
-          currentRunIds.add(rowId);
         } else {
-          // Duplicate within current batch; append distinct row to archive and track it
+          // Non-archived row (including duplicate keys within the same run); append to archive
           rowsToAppend.push(r);
         }
       }
 
       if (rowsToAppend.length > 0) {
+        // Normalize and compare archiveSheet and sourceSheet headers
+        let currentArchiveHeaders = [];
+        if (archiveSheet.getLastColumn() > 0) {
+          currentArchiveHeaders = archiveSheet.getRange(1, 1, 1, archiveSheet.getLastColumn()).getValues()[0].map(h => String(h || '').trim());
+        }
+
+        let currentSourceHeaders = [];
+        if (sourceSheet.getLastColumn() > 0) {
+          currentSourceHeaders = sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).getValues()[0].map(h => String(h || '').trim());
+        }
+
+        // Add any source headers missing from the Archive before writing so no field is dropped
+        const missingHeaders = currentSourceHeaders.filter(sh => sh && !currentArchiveHeaders.some(ah => ah.toLowerCase() === sh.toLowerCase()));
+        if (missingHeaders.length > 0) {
+          const totalRequiredCols = currentArchiveHeaders.length + missingHeaders.length;
+          const currentMaxCols = archiveSheet.getMaxColumns();
+          if (currentMaxCols < totalRequiredCols) {
+            archiveSheet.insertColumnsAfter(currentMaxCols, totalRequiredCols - currentMaxCols);
+          }
+          const startCol = currentArchiveHeaders.length + 1;
+          archiveSheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+          currentArchiveHeaders = currentArchiveHeaders.concat(missingHeaders);
+        }
+
+        // Build header index map for source sheet
+        const sourceHeaderMap = {};
+        currentSourceHeaders.forEach((sh, idx) => {
+          if (sh) sourceHeaderMap[sh.toLowerCase()] = idx;
+        });
+
+        // Map each source row into the existing Archive header order rather than writing r.rowData positionally
+        const archiveValues = rowsToAppend.map(r => {
+          return currentArchiveHeaders.map(ah => {
+            const srcIdx = sourceHeaderMap[ah.toLowerCase()];
+            return (srcIdx !== undefined && r.rowData[srcIdx] !== undefined) ? r.rowData[srcIdx] : "";
+          });
+        });
+
         const archiveLastRow = archiveSheet.getLastRow();
-        const archiveValues = rowsToAppend.map(r => r.rowData);
-        archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, archiveValues[0].length).setValues(archiveValues);
+        const totalRequiredRows = archiveLastRow + archiveValues.length;
+        const currentMaxRows = archiveSheet.getMaxRows();
+        if (currentMaxRows < totalRequiredRows) {
+          archiveSheet.insertRowsAfter(currentMaxRows, totalRequiredRows - currentMaxRows);
+        }
+        archiveSheet.getRange(archiveLastRow + 1, 1, archiveValues.length, currentArchiveHeaders.length).setValues(archiveValues);
         SpreadsheetApp.flush();
 
         // Mark appended rows as confirmed archived

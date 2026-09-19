@@ -10,6 +10,9 @@ const siteData = {
     },
     hours: {
         weekday: "9:00am - 12:30pm & 2:00pm - 4:30pm",
+        morning: "9:00am - 12:30pm",
+        afternoon: "2:00pm - 4:30pm",
+        weekend: "Consult NowDoc"
     },
     pharmacyOptions: {
         "Pharmacy A, Example Town": "Pharmacy A, Example Town",
@@ -27,6 +30,7 @@ const siteData = {
 };
 
 if (typeof window !== 'undefined') {
+    window.siteData = siteData;
     window.pharmacyOptions = siteData.pharmacyOptions;
     window.frequencyOptions = siteData.frequencyOptions;
 }

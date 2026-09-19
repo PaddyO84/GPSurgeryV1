@@ -20,11 +20,7 @@ def test_verify_appointment_form(page: Page, base_url: str):
     page.goto(app_url)
 
     # Close welcome modal if present
-    try:
-        # Force remove the modal from DOM to be sure
-        page.evaluate("document.getElementById('demo-welcome-modal')?.remove()")
-    except:
-        pass
+    page.evaluate("document.getElementById('demo-welcome-modal')?.remove()")
 
     # Fill form
     page.fill("#appName", "Test Patient")
@@ -82,16 +78,13 @@ def test_verify_appointment_form(page: Page, base_url: str):
     print("Appointment verification successful.")
 
 if __name__ == "__main__":
-    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-    from functools import partial
-    import threading
+    try:
+        from verification.server_helper import start_local_server
+    except ImportError:
+        from server_helper import start_local_server
 
     repo_root = Path(__file__).resolve().parent.parent
-    handler = partial(SimpleHTTPRequestHandler, directory=str(repo_root))
-    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
-    port = server.server_address[1]
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+    server, port = start_local_server(str(repo_root))
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -104,4 +97,3 @@ if __name__ == "__main__":
         finally:
             browser.close()
             server.shutdown()
-            thread.join()

@@ -29,6 +29,14 @@
                     firstFocusable.focus();
                 }
             } else {
+                const navDropdowns = nav.querySelectorAll('.dropdown > a');
+                navDropdowns.forEach(dropdown => {
+                    const parent = dropdown.parentElement;
+                    if (parent) {
+                        parent.classList.remove('open');
+                    }
+                    dropdown.setAttribute('aria-expanded', 'false');
+                });
                 menuToggle.focus();
             }
         }
@@ -175,6 +183,16 @@ function initAccordions() {
             }
         });
     }
+
+    window.addEventListener('resize', function() {
+        for (let i = 0; i < accordions.length; i++) {
+            const accordion = accordions[i];
+            const panel = accordion.nextElementSibling;
+            if (accordion.classList.contains("active") && panel) {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        }
+    });
 }
 
 if (document.readyState === 'loading') {

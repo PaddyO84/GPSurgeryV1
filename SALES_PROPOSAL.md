@@ -32,8 +32,8 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 
 ### 🛡️ Compliance & Security
 *   **Zero Tolerance & Confidentiality:** Dedicated pages clearly outlining practice policies.
-*   **Data Protection & Privacy:** No patient data is stored on the static web hosting server; submissions transmit over HTTPS to a publicly accessible web-app submission endpoint, where persistence and record management occur within access-controlled Google Workspace/Drive storage. Patient notification pathways encompass direct patient email confirmations and staff‑initiated wa.me URL‑based notification channel (third‑party) for alerts.
-*   **Input Sanitization & Validation:** Frontend inputs are validated for required fields, phone numbers, and email formatting prior to submission, while backend handlers enforce comprehensive payload validation, cell sanitization to prevent formula injection, and context-specific HTML entity encoding for outgoing email notifications. *Note: Submissions use standard CORS requests with frontend JSON-result verification; request mode provides no authentication, while authorization and sanitization are strictly enforced by backend handlers.*
+*   **Data Protection & Privacy:** Form payloads transmit directly over HTTPS to the publicly accessible web-app submission endpoint, bypassing static web hosting, where persistence and record management occur within access-controlled Google Workspace/Drive storage. Hosting or CDN access logs and analytics may process online identifiers such as IP addresses, which are included in the overall data-processing assessment. Patient notification pathways encompass direct patient email confirmations and staff‑initiated wa.me URL‑based notification channel (third‑party) for alerts.
+*   **Input Sanitization & Validation:** Anonymous submissions are permitted without caller authentication. Frontend inputs are validated for required fields, phone numbers, and email formatting prior to submission, while backend handlers enforce comprehensive payload validation, cell sanitization to prevent formula injection, rate limiting, honeypot spam detection, and context-specific HTML entity encoding for outgoing email notifications. *Note: Submissions use standard CORS requests with frontend JSON-result verification; request mode provides no authentication, while validation and sanitization are enforced by backend handlers.*
 *   **Security & Compliance Review Required:** Prior to production deployment, a formal security and compliance assessment must be conducted covering data retention schedules, access control and role-based permissions, patient data deletion procedures, audit logging, and incident response controls for data stored in Google Sheets or transmitted via automated emails.
 
 ## 4. Technical Specifications & Statistics
@@ -42,7 +42,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 | :--- | :--- | :--- |
 | **Total Pages** | 14 | Including specific portals for Appointments, Prescriptions, and Policies. |
 | **Frontend Code** | ~3,500 Lines | Semantic HTML5 for accessibility and SEO. |
-| **Styling (CSS)** | 855 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
+| **Styling (CSS)** | ~1,275 Lines | Custom "Example Town Deep Green" theme with fluid responsiveness. |
 | **Backend Logic** | 633 Lines | Google Apps Script handling routing, emails, and cleaning. |
 | **Performance Target** | < 1.0s | Target Initial Load Time for static assets under 4G/broadband conditions (subject to client network and CDN caching). |
 | **Uptime Target (Static Site / CDN)** | 99.9% | Static-site / CDN availability target for frontend portals (e.g., GitHub Pages / Netlify). |
@@ -50,7 +50,7 @@ A 14-page bespoke website featuring interactive patient portals for prescription
 
 ## 5. Architectural Drawings
 
-The system utilizes a **Serverless Headless Architecture**. The frontend is decoupled from the backend, communicating via secure HTTP POST requests.
+The system utilizes a **Serverless Headless Architecture**. The frontend is decoupled from the backend, communicating via HTTPS POST requests.
 
 ```mermaid
 graph TD
@@ -111,7 +111,8 @@ graph TD
     SickLogic --> Email
     ApptLogic --> Email
 
-    Sheet1 -- "Status: Ready (WhatsApp Pref)" --> StaffEmail
+    Sheet1 -- "OnEdit" --> EditTrigger
+    EditTrigger -- "Status: Ready (WhatsApp Pref)" --> StaffEmail
     StaffEmail --> Staff
     Staff -- "Click wa.me link" --> WA
     WA --> User

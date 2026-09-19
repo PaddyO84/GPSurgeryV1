@@ -1,17 +1,6 @@
 from playwright.sync_api import sync_playwright, Page, expect
 from pathlib import Path
 import os
-import threading
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-
-def start_local_server(directory):
-    handler = partial(SimpleHTTPRequestHandler, directory=str(directory))
-    server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
-    port = server.server_address[1]
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, port
 
 def verify_hero_logo(page: Page, index_url: str):
     print(f"Verifying Hero Logo at: {index_url}")
@@ -66,6 +55,10 @@ def verify_hero_logo(page: Page, index_url: str):
     print("Verification complete.")
 
 if __name__ == "__main__":
+    try:
+        from verification.server_helper import start_local_server
+    except ImportError:
+        from server_helper import start_local_server
     repo_root = Path(__file__).resolve().parent.parent
     server, port = start_local_server(repo_root)
     index_url = f"http://127.0.0.1:{port}/index.html"

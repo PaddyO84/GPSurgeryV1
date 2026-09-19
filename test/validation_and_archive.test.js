@@ -96,7 +96,7 @@ describe('Backend Utility Logic Tests', () => {
             expect(formatWhatsAppNumber('+1 555 123 4567')).to.equal('15551234567');
         });
 
-        it('should return empty string for inputs containing non-digit characters in normalized result', () => {
+        it('should return empty string for inputs containing non-digit characters in normalized result or unsupported number prefixes', () => {
             expect(formatWhatsAppNumber('+353 87 abc 4567')).to.equal('');
             expect(formatWhatsAppNumber('phone-number')).to.equal('');
             expect(formatWhatsAppNumber('+++')).to.equal('');

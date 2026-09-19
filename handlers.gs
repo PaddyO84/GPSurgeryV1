@@ -67,9 +67,14 @@ function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
   const normalizedCurrentHeaders = currentHeaders.map(h => h.toLowerCase());
   const headerIndexMap = {};
   let hasAmbiguousHeaders = false;
+  let hasBlankHeaders = false;
 
   normalizedCurrentHeaders.forEach((nh, idx) => {
-    if (!nh || headerIndexMap.hasOwnProperty(nh)) {
+    if (!nh) {
+      hasBlankHeaders = true;
+      return;
+    }
+    if (headerIndexMap.hasOwnProperty(nh)) {
       hasAmbiguousHeaders = true;
     } else {
       headerIndexMap[nh] = idx;
@@ -79,7 +84,7 @@ function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
   const hasTimestamp = headerIndexMap.hasOwnProperty("timestamp");
   const hasNameOrEmail = headerIndexMap.hasOwnProperty("name") || headerIndexMap.hasOwnProperty("email");
   const recognizedHeaders = Object.keys(headerIndexMap).filter(nh => expectedHeaders.some(eh => eh.toLowerCase() === nh));
-  const canMigrate = !hasAmbiguousHeaders && hasTimestamp && hasNameOrEmail && (recognizedHeaders.length >= Math.min(currentHeaders.length, expectedHeaders.length - 2));
+  const canMigrate = !hasAmbiguousHeaders && !(hasBlankHeaders && lastRow > 1) && hasTimestamp && hasNameOrEmail && (recognizedHeaders.length >= Math.min(currentHeaders.length, expectedHeaders.length - 2));
 
   if (!canMigrate) {
     return {
@@ -105,13 +110,36 @@ function ensureSheetHeadersAligned(sheet, expectedHeaders, sheetName) {
         return oldIdx !== undefined ? row[oldIdx] : "";
       });
     });
-    sheet.getRange(1, 1, 1, finalHeaders.length).setValues([finalHeaders]);
     sheet.getRange(2, 1, migratedData.length, finalHeaders.length).setValues(migratedData);
+    SpreadsheetApp.flush();
+    sheet.getRange(1, 1, 1, finalHeaders.length).setValues([finalHeaders]);
   } else {
     sheet.getRange(1, 1, 1, finalHeaders.length).setValues([finalHeaders]);
   }
 
   return { success: true };
+}
+
+function updateNotificationTimestamp(sheet, rowIndex, notificationCol, timestamp, context) {
+  const notifLock = LockService.getScriptLock();
+  const hasNotifLock = notifLock.tryLock(10000);
+  if (hasNotifLock) {
+    try {
+      // Revalidate that the row still represents the submitted record using its timestamp
+      const targetTs = sheet.getRange(rowIndex, 1).getValue();
+      const targetTsStr = (targetTs instanceof Date) ? targetTs.getTime() : String(targetTs);
+      const expectedTsStr = (timestamp instanceof Date) ? timestamp.getTime() : String(timestamp);
+      if (targetTsStr === expectedTsStr) {
+        sheet.getRange(rowIndex, notificationCol).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+      } else {
+        reportError(`${context}:notificationMismatch`, new Error(`Timestamp mismatch for row ${rowIndex}: expected ${expectedTsStr}, found ${targetTsStr}`), rowIndex);
+      }
+    } finally {
+      notifLock.releaseLock();
+    }
+  } else {
+    reportError(`${context}:notificationLock`, new Error('Could not acquire lock to write notification status'), rowIndex);
+  }
 }
 
 function handleAppointmentSubmission(data) {
@@ -182,7 +210,7 @@ function handleAppointmentSubmission(data) {
   try {
     notificationSuccess = sendAppointmentConfirmation(data.name, data.email, data.type, data.preferredTime);
     if (notificationSuccess) {
-      sheet.getRange(rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+      updateNotificationTimestamp(sheet, rowIndex, APPT_LAYOUT.NOTIFICATION_SENT + 1, timestamp, 'handleAppointmentSubmission');
     } else {
       reportError('handleAppointmentSubmission:notification', new Error('Failed to deliver appointment confirmation email'), rowIndex);
     }
@@ -230,11 +258,12 @@ function handleSickNoteSubmission(data) {
     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy, please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
+  let sheet;
   let rowIndex;
   const timestamp = new Date();
 
   try {
+    sheet = getOrCreateSheet(SICK_SHEET_NAME, headers);
     const alignment = ensureSheetHeadersAligned(sheet, headers, SICK_SHEET_NAME);
     if (!alignment.success) {
       return ContentService.createTextOutput(JSON.stringify({
@@ -277,7 +306,7 @@ function handleSickNoteSubmission(data) {
   try {
     notificationSuccess = sendSickNoteConfirmation(data.name, data.email);
     if (notificationSuccess) {
-      sheet.getRange(rowIndex, SICK_NOTE_LAYOUT.NOTIFICATION_SENT + 1).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+      updateNotificationTimestamp(sheet, rowIndex, SICK_NOTE_LAYOUT.NOTIFICATION_SENT + 1, timestamp, 'handleSickNoteSubmission');
     } else {
       reportError('handleSickNoteSubmission:notification', new Error('Failed to deliver sick note confirmation email'), rowIndex);
     }
@@ -371,7 +400,7 @@ function handlePrescriptionSubmission(data) {
   try {
     notificationSuccess = sendConfirmationNotification(details.name, details.email, normalizedCommPref);
     if (notificationSuccess) {
-      sheet.getRange(row, NOTIFICATION_COL).setValue(`Processed on ${Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy")}`);
+      updateNotificationTimestamp(sheet, row, NOTIFICATION_COL, timestamp, 'handlePrescriptionSubmission');
     } else {
       reportError('handlePrescriptionSubmission:notification', new Error('Failed to deliver prescription confirmation email'), row);
     }

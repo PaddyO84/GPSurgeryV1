@@ -5,4 +5,5 @@ Suggestions.txt
 .idea/caches/
 anonymize_local.json
 __pycache__/
+.anonymize_backup_*
 

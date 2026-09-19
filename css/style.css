@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
 :root {
     /* Design Tokens - HSL for easy variations */
     --primary-h: 210;
@@ -394,6 +396,7 @@ header {
     padding: 0.875rem 2rem;
     border-radius: var(--radius-full);
     font-weight: 600;
+    color: var(--text-main);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -1103,10 +1106,6 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
     box-shadow: var(--shadow-sm);
     white-space: nowrap;
     align-self: flex-end;
-}
-
-.add-med-group .form-group {
-    margin-bottom: 0;
 }
 
 .add-med-btn:hover {
