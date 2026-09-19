@@ -172,14 +172,23 @@ def main():
     committed_backups = []
     failed_idx = None
 
+    # Determine private backup directory outside REPO_ROOT on the same filesystem for os.replace rollback compatibility
+    repo_parent = os.path.dirname(os.path.abspath(REPO_ROOT))
+    backup_dir = os.path.join(repo_parent, ".anonymize_backups")
+    os.makedirs(backup_dir, exist_ok=True)
+    try:
+        os.chmod(backup_dir, 0o700)
+    except OSError:
+        pass
+
+    interrupted = False
     try:
         for i, (temp_p, dest_p, mode) in enumerate(staged_replacements):
             backup_p = None
             replace_succeeded = False
             try:
                 if os.path.exists(dest_p):
-                    dest_dir = os.path.dirname(dest_p) or "."
-                    bf = tempfile.NamedTemporaryFile(prefix=".anonymize_backup_", dir=dest_dir, delete=False)
+                    bf = tempfile.NamedTemporaryFile(prefix=".anonymize_backup_", dir=backup_dir, delete=False)
                     bf.close()
                     backup_p = bf.name
                     shutil.copyfile(dest_p, backup_p)
@@ -192,6 +201,16 @@ def main():
                 os.replace(temp_p, dest_p)
                 replace_succeeded = True
                 committed_backups.append((dest_p, backup_p, mode))
+            except KeyboardInterrupt:
+                interrupted = True
+                failed = True
+                failed_idx = i
+                if not replace_succeeded and backup_p and os.path.exists(backup_p):
+                    try:
+                        os.remove(backup_p)
+                    except OSError as err:
+                        print(f"Error removing unused backup file {backup_p}: {err}", file=sys.stderr)
+                break
             except Exception as e:
                 print(f"Error committing {dest_p}: {e}", file=sys.stderr)
                 failed = True
@@ -208,35 +227,35 @@ def main():
             except Exception as e:
                 print(f"Notice: failed to print update message for {dest_p}: {e}", file=sys.stderr)
     finally:
-        pass
-
-    if failed:
-        # Rollback all committed destinations
-        for dest_p, backup_p, orig_mode in reversed(committed_backups):
-            try:
-                if backup_p and os.path.exists(backup_p):
-                    os.replace(backup_p, dest_p)
-                    os.chmod(dest_p, orig_mode)
-                elif not backup_p and os.path.exists(dest_p):
-                    os.remove(dest_p)
-            except Exception as e:
-                print(f"Error rolling back {dest_p}: {e}", file=sys.stderr)
-
-        # Remove temporary files for failed and unprocessed entries
-        start_cleanup = failed_idx if failed_idx is not None else 0
-        for temp_p, _, _ in staged_replacements[start_cleanup:]:
-            if os.path.exists(temp_p):
-                try: os.remove(temp_p)
-                except OSError: pass
-        sys.exit(1)
-    else:
-        # Commit succeeded, clean up backup files
-        cleanup_failed = False
-        for _, backup_p, _ in committed_backups:
-            if backup_p and os.path.exists(backup_p):
+        if failed:
+            # Rollback all committed destinations
+            for dest_p, backup_p, orig_mode in reversed(committed_backups):
                 try:
-                    os.remove(backup_p)
-                except OSError as err:
+                    if backup_p and os.path.exists(backup_p):
+                        os.replace(backup_p, dest_p)
+                        os.chmod(dest_p, orig_mode)
+                    elif not backup_p and os.path.exists(dest_p):
+                        os.remove(dest_p)
+                except Exception as e:
+                    print(f"Error rolling back {dest_p}: {e}", file=sys.stderr)
+
+            # Remove temporary files for failed and unprocessed entries
+            start_cleanup = failed_idx if failed_idx is not None else 0
+            for temp_p, _, _ in staged_replacements[start_cleanup:]:
+                if os.path.exists(temp_p):
+                    try: os.remove(temp_p)
+                    except OSError: pass
+            if interrupted:
+                raise KeyboardInterrupt
+            sys.exit(1)
+
+    # Commit succeeded, clean up backup files
+    cleanup_failed = False
+    for _, backup_p, _ in committed_backups:
+        if backup_p and os.path.exists(backup_p):
+            try:
+                os.remove(backup_p)
+            except OSError as err:
                     print(f"Error removing backup file {backup_p}: {err}", file=sys.stderr)
                     cleanup_failed = True
         if cleanup_failed:

@@ -379,28 +379,6 @@ header {
     50% { transform: translateY(-20px); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    html {
-        scroll-behavior: auto;
-    }
-    .hero-logo,
-    .checkmark {
-        animation: none;
-    }
-    .checkmark__circle,
-    .checkmark__check {
-        animation: none;
-        stroke-dashoffset: 0;
-    }
-    .card:hover,
-    .btn-primary:hover,
-    .submit-btn:hover,
-    .add-med-btn:hover,
-    .sidebar button:hover {
-        transform: none;
-    }
-}
-
 /* Buttons */
 .btn {
     padding: 0.875rem 2rem;
@@ -1283,4 +1261,26 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="search"]):focus, sel
     line-height: 1.6;
     max-width: 520px;
     margin: 0 auto 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    .hero-logo,
+    .checkmark {
+        animation: none;
+    }
+    .checkmark__circle,
+    .checkmark__check {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+    .card:hover,
+    .btn-primary:hover,
+    .submit-btn:hover,
+    .add-med-btn:hover,
+    .sidebar button:hover {
+        transform: none;
+    }
 }

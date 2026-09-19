@@ -40,15 +40,26 @@ function hasEmailQuota(minReserve = 5) {
  * Receives JSON data from the frontend form and appends it to the spreadsheet.
  */
 function doPost(e) {
+  let data;
+  try {
+    const rawContents = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
+    data = JSON.parse(rawContents);
+  } catch (parseErr) {
+    Logger.log('doPost JSON parse error: ' + parseErr.toString());
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Rejected submission' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
   // Rate limiting abuse protection: per submission source and global window
   const windowBucket = Math.floor(Date.now() / 300000); // 5-minute fixed window bucket
-  const clientIdentifier = 'anonymous_sender';
+  const clientIdentifier = String((data && data.patientDetails && data.patientDetails.email) || (data && data.email) || 'anonymous_sender');
   const cache = CacheService.getScriptCache();
   const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
   const globalRateLimitKey = 'rl_global_' + windowBucket;
   const rateLock = LockService.getScriptLock();
+  if (!rateLock.tryLock(5000)) {
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Server is busy. Please try again shortly.' })).setMimeType(ContentService.MimeType.JSON);
+  }
   try {
-    rateLock.waitLock(5000);
     const recentCount = Number(cache.get(rateLimitKey) || '0');
     const globalCount = Number(cache.get(globalRateLimitKey) || '0');
     const MAX_RECENT_REQUESTS = 10;
@@ -70,15 +81,6 @@ function doPost(e) {
     try {
       rateLock.releaseLock();
     } catch (e) {}
-  }
-
-  let data;
-  try {
-    const rawContents = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
-    data = JSON.parse(rawContents);
-  } catch (parseErr) {
-    Logger.log('doPost JSON parse error: ' + parseErr.toString());
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Rejected submission' })).setMimeType(ContentService.MimeType.JSON);
   }
 
   try {

@@ -1,4 +1,5 @@
 node_modules/
+.clasprc.json
 .nyc_output/
 coverage/
 Suggestions.txt
