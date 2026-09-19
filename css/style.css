@@ -39,6 +39,16 @@
     --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+[data-theme="blue"] {
+    --primary-h: 220;
+    --accent-h: 195;
+}
+
+[data-theme="teal"] {
+    --primary-h: 175;
+    --accent-h: 150;
+}
+
 /* Modern Reset */
 *, *::before, *::after {
     box-sizing: border-box;

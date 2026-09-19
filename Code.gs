@@ -40,9 +40,48 @@ function hasEmailQuota(minReserve = 5) {
  * Receives JSON data from the frontend form and appends it to the spreadsheet.
  */
 function doPost(e) {
+  // Rate limiting abuse protection: per submission source and global window
+  const windowBucket = Math.floor(Date.now() / 300000); // 5-minute fixed window bucket
+  const clientIdentifier = 'anonymous_sender';
+  const cache = CacheService.getScriptCache();
+  const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
+  const globalRateLimitKey = 'rl_global_' + windowBucket;
+  const rateLock = LockService.getScriptLock();
   try {
-    const data = JSON.parse(e.postData.contents);
+    rateLock.waitLock(5000);
+    const recentCount = Number(cache.get(rateLimitKey) || '0');
+    const globalCount = Number(cache.get(globalRateLimitKey) || '0');
+    const MAX_RECENT_REQUESTS = 10;
+    const MAX_GLOBAL_REQUESTS = 150;
+    if (globalCount >= MAX_GLOBAL_REQUESTS) {
+      const globalAlertedKey = 'rl_alerted_' + windowBucket;
+      if (!cache.get(globalAlertedKey)) {
+        cache.put(globalAlertedKey, '1', 600);
+        reportError('doPost:rateLimit', new Error(`Global submission rate limit reached: ${globalCount} requests in 5-minute bucket`), null);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+    }
+    if (recentCount >= MAX_RECENT_REQUESTS) {
+      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
+    }
+    cache.put(rateLimitKey, String(recentCount + 1), 600); // 10-minute cache expiration covers current and adjacent bucket
+    cache.put(globalRateLimitKey, String(globalCount + 1), 600);
+  } finally {
+    try {
+      rateLock.releaseLock();
+    } catch (e) {}
+  }
 
+  let data;
+  try {
+    const rawContents = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
+    data = JSON.parse(rawContents);
+  } catch (parseErr) {
+    Logger.log('doPost JSON parse error: ' + parseErr.toString());
+    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Rejected submission' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
     // --- Submission token check ---
     // Public non-secret token for spam deterrence; does not authenticate callers.
     const expectedToken = PropertiesService.getScriptProperties().getProperty('SUBMISSION_TOKEN');
@@ -53,38 +92,6 @@ function doPost(e) {
     // Abuse controls: honeypot check
     if (data.website || data.honeypot || data.hp) {
       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Spam detected' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // Rate limiting abuse protection: per submission source and global window
-    const windowBucket = Math.floor(Date.now() / 300000); // 5-minute fixed window bucket
-    const clientIdentifier = String((data.patientDetails && data.patientDetails.email) || data.email || 'anonymous_sender');
-    const cache = CacheService.getScriptCache();
-    const rateLimitKey = 'rl_' + windowBucket + '_' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, clientIdentifier.toLowerCase().trim()));
-    const globalRateLimitKey = 'rl_global_' + windowBucket;
-    const rateLock = LockService.getScriptLock();
-    try {
-      rateLock.waitLock(5000);
-      const recentCount = Number(cache.get(rateLimitKey) || '0');
-      const globalCount = Number(cache.get(globalRateLimitKey) || '0');
-      const MAX_RECENT_REQUESTS = 10;
-      const MAX_GLOBAL_REQUESTS = 150;
-      if (globalCount >= MAX_GLOBAL_REQUESTS) {
-        const globalAlertedKey = 'rl_alerted_' + windowBucket;
-        if (!cache.get(globalAlertedKey)) {
-          cache.put(globalAlertedKey, '1', 600);
-          reportError('doPost:rateLimit', new Error(`Global submission rate limit reached: ${globalCount} requests in 5-minute bucket`), null);
-        }
-        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
-      }
-      if (recentCount >= MAX_RECENT_REQUESTS) {
-        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Too many requests. Please wait a few minutes before submitting again.' })).setMimeType(ContentService.MimeType.JSON);
-      }
-      cache.put(rateLimitKey, String(recentCount + 1), 600); // 10-minute cache expiration covers current and adjacent bucket
-      cache.put(globalRateLimitKey, String(globalCount + 1), 600);
-    } finally {
-      try {
-        rateLock.releaseLock();
-      } catch (e) {}
     }
 
     switch (data.formType) {

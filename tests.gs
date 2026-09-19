@@ -87,20 +87,29 @@ function testDoPostErrorPath() {
 
   try {
     console.log("Running testDoPostErrorPath...");
-    // Pass malformed JSON payload to trigger doPost catch block
-    const mockEvent = {
-      postData: {
-        contents: "invalid-json-{"
-      }
+    // Pass valid JSON with an unexpected error in processing to trigger reportError
+    const originalGetProperties = PropertiesService.getScriptProperties;
+    PropertiesService.getScriptProperties = function() {
+      throw new Error("Simulated PropertiesService failure");
     };
-    const response = doPost(mockEvent);
-    const content = JSON.parse(response.getContent());
 
-    if (!reportErrorCalled || reportedFn !== 'doPost') {
-      throw new Error(`Expected reportError to be called for 'doPost', got called: ${reportErrorCalled}, fn: ${reportedFn}`);
-    }
-    if (!content || content.result !== 'error') {
-      throw new Error(`Expected error JSON response from doPost, got: ${JSON.stringify(content)}`);
+    try {
+      const mockEvent = {
+        postData: {
+          contents: JSON.stringify({ formType: 'prescription', submissionToken: 'test' })
+        }
+      };
+      const response = doPost(mockEvent);
+      const content = JSON.parse(response.getContent());
+
+      if (!reportErrorCalled || reportedFn !== 'doPost') {
+        throw new Error(`Expected reportError to be called for 'doPost', got called: ${reportErrorCalled}, fn: ${reportedFn}`);
+      }
+      if (!content || content.result !== 'error') {
+        throw new Error(`Expected error JSON response from doPost, got: ${JSON.stringify(content)}`);
+      }
+    } finally {
+      PropertiesService.getScriptProperties = originalGetProperties;
     }
     console.log("testDoPostErrorPath completed successfully.");
   } finally {

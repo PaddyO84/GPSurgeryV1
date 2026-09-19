@@ -396,9 +396,17 @@
             btn.disabled = true;
             btn.textContent = "Processing...";
 
-            const isLiveDeployment = (typeof CONFIG !== 'undefined' && typeof CONFIG.isLive === 'function')
+            if (typeof CONFIG === 'undefined' || !CONFIG) {
+                console.error('Configuration error: CONFIG is unavailable.');
+                alert('An error occurred. Please try again or call reception: Configuration is unavailable.');
+                btn.disabled = false;
+                btn.textContent = "Confirm & Submit";
+                return;
+            }
+
+            const isLiveDeployment = (typeof CONFIG.isLive === 'function')
                 ? CONFIG.isLive()
-                : Boolean((typeof CONFIG !== 'undefined' && (CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE)) || window.IS_LIVE);
+                : Boolean(CONFIG.LIVE_DEPLOYMENT || CONFIG.IS_LIVE || (typeof window !== 'undefined' && window.IS_LIVE));
 
             if (!isLiveDeployment) {
                 setTimeout(() => {
