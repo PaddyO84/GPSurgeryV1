@@ -13,7 +13,23 @@ const NOTIFICATION_COL = 11; // Notification Sent is in Column K
 // --- SCRIPT SETTINGS ---
 const SENDER_NAME = "Example Health Centre";
 const YOUR_PHONE_NUMBER = "(01) 234 5679";
-const ADMIN_EMAIL = "admin@example.com";
+const DEFAULT_ADMIN_EMAIL = "admin@example.com";
+
+function getAdminEmail() {
+  if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) {
+    try {
+      const prop = PropertiesService.getScriptProperties().getProperty("ADMIN_EMAIL");
+      if (prop && prop.trim()) {
+        return prop.trim();
+      }
+    } catch (e) {
+      // Fallback if properties service is inaccessible
+    }
+  }
+  return DEFAULT_ADMIN_EMAIL;
+}
+
+const ADMIN_EMAIL = getAdminEmail();
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
