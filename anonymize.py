@@ -256,10 +256,10 @@ def main():
             try:
                 os.remove(backup_p)
             except OSError as err:
-                    print(f"Error removing backup file {backup_p}: {err}", file=sys.stderr)
-                    cleanup_failed = True
-        if cleanup_failed:
-            sys.exit(1)
+                print(f"Error removing backup file {backup_p}: {err}", file=sys.stderr)
+                cleanup_failed = True
+    if cleanup_failed:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

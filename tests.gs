@@ -303,8 +303,11 @@ function testSendWhatsAppLinkToStaff() {
   try {
     // 1. Valid patient phone
     const res = sendWhatsAppLinkToStaff(2, "staff@example.com", "Alice Brown", "0871234567", "Local Pharmacy");
-    if (!res && mailCalls.length === 0) {
-      throw new Error("Expected email to be sent to staff with WhatsApp link");
+    if (res !== true) {
+      throw new Error(`Expected sendWhatsAppLinkToStaff to return true, got: ${res}`);
+    }
+    if (mailCalls.length !== 1) {
+      throw new Error(`Expected exactly 1 email call, got: ${mailCalls.length}`);
     }
     if (mailCalls[0].to !== "staff@example.com") {
       throw new Error(`Expected recipient staff@example.com, got ${mailCalls[0].to}`);

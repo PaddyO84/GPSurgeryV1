@@ -11,7 +11,7 @@
     --primary-dark: hsl(var(--primary-h), var(--primary-s), 20%);
     
     --accent-h: 160;
-    --accent: hsl(var(--accent-h), 80%, 40%);
+    --accent: hsl(var(--accent-h), 80%, 28%);
     
     --bg-main: hsl(210, 20%, 98%);
     --bg-card: rgba(255, 255, 255, 0.8);
@@ -46,6 +46,7 @@
 
 [data-theme="teal"] {
     --primary-h: 175;
+    --primary-l: 25%;
     --accent-h: 150;
 }
 
