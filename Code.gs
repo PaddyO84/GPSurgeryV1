@@ -32,6 +32,7 @@ function getAdminEmail() {
 const ADMIN_EMAIL = getAdminEmail();
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
+const ARCHIVE_RETENTION_DAYS = 180;
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
 
 function getMainPrescriptionSheet() {
@@ -829,7 +830,7 @@ function archiveOldRequests() {
     const dataRange = sourceSheet.getRange(2, 1, lastRow - 1, sourceSheet.getLastColumn());
     const data = dataRange.getValues();
     const cutOffDate = new Date();
-    cutOffDate.setDate(cutOffDate.getDate() - 180);
+    cutOffDate.setDate(cutOffDate.getDate() - ARCHIVE_RETENTION_DAYS);
 
     const rowsToArchive = [];
     const rowsToKeep = [];
