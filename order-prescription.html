@@ -513,24 +513,27 @@
 
         function populateSelect(id, options) {
             const select = document.getElementById(id);
+            if (!select) return;
             if (id === 'chosenPharmacy') {
                 select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
             }
+            const fragment = document.createDocumentFragment();
             if (Array.isArray(options)) {
                 options.forEach(option => {
                     const optionElement = document.createElement('option');
                     optionElement.value = option;
                     optionElement.textContent = option;
-                    select.appendChild(optionElement);
+                    fragment.appendChild(optionElement);
                 });
             } else {
                 for (const [value, text] of Object.entries(options)) {
                     const optionElement = document.createElement('option');
                     optionElement.value = value;
                     optionElement.textContent = text;
-                    select.appendChild(optionElement);
+                    fragment.appendChild(optionElement);
                 }
             }
+            select.appendChild(fragment);
         }
 
         function getFormDataAsObject() {
@@ -912,16 +915,16 @@
         function validateForm() {
             let isValid = true;
             const fields = [
-                { id: 'patientName', msg: 'Name required' },
-                { id: 'patientEmail', msg: 'Email required' },
-                { id: 'patientPhone', msg: 'Phone required' },
-                { id: 'patientDOB', msg: 'DOB required' },
-                { id: 'patientAddress', msg: 'Address required' },
-                { id: 'chosenPharmacy', msg: 'Pharmacy required' }
+                { el: document.getElementById('patientName'), id: 'patientName', msg: 'Name required' },
+                { el: document.getElementById('patientEmail'), id: 'patientEmail', msg: 'Email required' },
+                { el: document.getElementById('patientPhone'), id: 'patientPhone', msg: 'Phone required' },
+                { el: document.getElementById('patientDOB'), id: 'patientDOB', msg: 'DOB required' },
+                { el: document.getElementById('patientAddress'), id: 'patientAddress', msg: 'Address required' },
+                { el: document.getElementById('chosenPharmacy'), id: 'chosenPharmacy', msg: 'Pharmacy required' }
             ];
 
             fields.forEach(f => {
-                const el = document.getElementById(f.id);
+                const el = f.el;
                 if (!el || !el.value) {
                     isValid = false;
                     showError(f.id, f.msg);

@@ -298,15 +298,18 @@
 
     function populateSelect(id, options) {
         const select = document.getElementById(id);
+        if (!select) return;
         if (id === 'chosenPharmacy') {
             select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
         }
+        const fragment = document.createDocumentFragment();
         for (const [value, text] of Object.entries(options)) {
             const optionElement = document.createElement('option');
             optionElement.value = value;
             optionElement.textContent = text;
-            select.appendChild(optionElement);
+            fragment.appendChild(optionElement);
         }
+        select.appendChild(fragment);
     }
 
     function getFormDataAsObject() {
@@ -524,19 +527,17 @@
     // --- UTILITY & HELPER FUNCTIONS ---
     function validateForm() {
         let isValid = true;
-        const details = getFormDataAsObject().patientDetails;
-        const fieldsToValidate = {
-            patientName: "Full Name is required.",
-            patientEmail: "A valid Email Address is required.",
-            patientPhone: "Phone Number is required.",
-            patientDOB: "Date of Birth is required.",
-            patientAddress: "Home Address is required.",
-            chosenPharmacy: "Please select a pharmacy."
-        };
+        const fieldsToValidate = [
+            { el: document.getElementById('patientName'), id: 'patientName', message: "Full Name is required." },
+            { el: document.getElementById('patientEmail'), id: 'patientEmail', message: "A valid Email Address is required." },
+            { el: document.getElementById('patientPhone'), id: 'patientPhone', message: "Phone Number is required." },
+            { el: document.getElementById('patientDOB'), id: 'patientDOB', message: "Date of Birth is required." },
+            { el: document.getElementById('patientAddress'), id: 'patientAddress', message: "Home Address is required." },
+            { el: document.getElementById('chosenPharmacy'), id: 'chosenPharmacy', message: "Please select a pharmacy." }
+        ];
 
-        for (const [id, message] of Object.entries(fieldsToValidate)) {
-            const element = document.getElementById(id);
-            if (!element.value) {
+        for (const { el, id, message } of fieldsToValidate) {
+            if (!el || !el.value) {
                 isValid = false;
                 showError(id, message);
             } else {
@@ -544,7 +545,8 @@
             }
         }
 
-        if (document.getElementById('medicationList').rows.length === 0) {
+        const medList = document.getElementById('medicationList');
+        if (!medList || medList.rows.length === 0) {
             isValid = false;
             showError('medication', "Please add at least one medication to the list.");
         } else {

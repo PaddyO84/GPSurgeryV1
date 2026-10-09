@@ -527,6 +527,22 @@ function sendEmailFromDialog(row) {
 }
 
 /**
+ * Returns plain text notification message for SMS/WhatsApp notifications.
+ * @param {string} status - Prescription status.
+ * @param {string} patientName - Patient's name.
+ * @param {string} pharmacy - Pharmacy name.
+ * @returns {string|null} Notification text or null if unsupported status.
+ */
+function getPatientNotificationText(status, patientName, pharmacy) {
+  if (status === STATUS_READY) {
+    return `Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`;
+  } else if (status === STATUS_QUERY) {
+    return `Hi ${patientName}, this is a message from ${SENDER_NAME}. We have a query about your recent prescription request. Please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.`;
+  }
+  return null;
+}
+
+/**
  * Generates and displays a WhatsApp "click to send" link for the currently selected row.
  */
 function generateWhatsAppLink(row) {
@@ -544,12 +560,8 @@ function generateWhatsAppLink(row) {
     return;
   }
 
-  let messageText = '';
-  if (status === STATUS_READY) {
-    messageText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`;
-  } else if (status === STATUS_QUERY) {
-    messageText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. We have a query about your recent prescription request. Please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.`;
-  } else {
+  const messageText = getPatientNotificationText(status, patientName, pharmacy);
+  if (!messageText) {
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }

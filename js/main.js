@@ -147,11 +147,10 @@
 
 function initAccordions() {
     // Accordion Functionality - closes open accordions when one is opened
-    const accordions = document.getElementsByClassName("accordion");
-    for (let i = 0; i < accordions.length; i++) {
-        const accordion = accordions[i];
+    const accordions = Array.from(document.getElementsByClassName("accordion"));
+    accordions.forEach((accordion, i) => {
         const panel = accordion.nextElementSibling;
-        if (!panel) continue;
+        if (!panel) return;
 
         const panelId = `panel-${i}`;
         panel.setAttribute('id', panelId);
@@ -163,8 +162,7 @@ function initAccordions() {
             const isCurrentlyActive = this.classList.contains("active");
 
             // Close all accordions
-            for (let j = 0; j < accordions.length; j++) {
-                const otherAcc = accordions[j];
+            for (const otherAcc of accordions) {
                 const otherPanel = otherAcc.nextElementSibling;
                 otherAcc.classList.remove("active");
                 otherAcc.setAttribute('aria-expanded', 'false');
@@ -182,11 +180,10 @@ function initAccordions() {
                 panel.style.maxHeight = panel.scrollHeight + "px";
             }
         });
-    }
+    });
 
     window.addEventListener('resize', function() {
-        for (let i = 0; i < accordions.length; i++) {
-            const accordion = accordions[i];
+        for (const accordion of accordions) {
             const panel = accordion.nextElementSibling;
             if (accordion.classList.contains("active") && panel) {
                 panel.style.maxHeight = panel.scrollHeight + "px";
