@@ -387,7 +387,7 @@
     <script src="js/main.js"></script>
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
-        // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
+        const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
         const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
         const pharmacyOptions = { "Tierney's Healthwise Pharmacy, Buncrana": "Tierney's Healthwise Pharmacy, Buncrana", "Inish Pharmacy, Buncrana": "Inish Pharmacy, Buncrana", "Duffy's Pharmacy, Buncrana": "Duffy's Pharmacy, Buncrana", "Brennan's Pharmacy, Buncrana": "Brennan's Pharmacy, Buncrana", "Hannon's Pharmacy, Moville": "Hannon's Pharmacy, Moville", "Foyle Pharmacy, Moville": "Foyle Pharmacy, Moville", "Brennan's Pharmacy, Clonmany": "Brennan's Pharmacy, Clonmany", "Inish Pharmacy, Muff": "Inish Pharmacy, Muff", "Mullans Pharmacy, Carndonagh": "Mullans Pharmacy, Carndonagh", "Carn Pharmacy, Carndonagh": "Carn Pharmacy, Carndonagh", "McNeill's Pharmacy, Carndonagh": "McNeill's Pharmacy, Carndonagh", "Inish Pharmacy, Carndonagh": "Inish Pharmacy, Carndonagh" };
         const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
@@ -419,15 +419,18 @@
 
         function populateSelect(id, options) {
             const select = document.getElementById(id);
+            if (!select) return;
             if (id === 'chosenPharmacy') {
                 select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
             }
+            const fragment = document.createDocumentFragment();
             for (const [value, text] of Object.entries(options)) {
                 const optionElement = document.createElement('option');
                 optionElement.value = value;
                 optionElement.textContent = text;
-                select.appendChild(optionElement);
+                fragment.appendChild(optionElement);
             }
+            select.appendChild(fragment);
         }
 
         function getFormDataAsObject() {
@@ -630,9 +633,6 @@
             const confirmBtn = document.querySelector('.btn-confirm');
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
-
-            // DEPLOYED URL
-            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
 
             const { patientDetails, medicationList } = getFormDataAsObject();
             // Added formType for Backend Discrimination

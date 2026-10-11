@@ -410,18 +410,53 @@
             };
 
             const container = document.getElementById('summaryDetails');
-            container.innerHTML = `
-                <p><strong>Name:</strong> ${data.name}</p>
-                <p><strong>DOB:</strong> ${data.dob}</p>
-                <p><strong>Phone:</strong> ${data.phone}</p>
-                <p><strong>Type:</strong> ${data.type}</p>
-                ${data.pps !== 'N/A' ? `<p><strong>PPSN:</strong> ${data.pps}</p>` : ''}
-                <p><strong>Condition:</strong> ${data.condition}</p>
-                <p><strong>Dates:</strong> ${data.dates}</p>
-                <p><strong>Return to Work:</strong> ${data.returnToWork}</p>
-                <p><strong>Signature:</strong> <span style="color:green">✔ Signed</span></p>
-                <p style="margin-top:10px; font-size:0.9rem; color:#666;"><i>Please ensure all details are correct.</i></p>
-            `;
+            container.textContent = '';
+
+            const items = [
+                { label: 'Name', value: data.name },
+                { label: 'DOB', value: data.dob },
+                { label: 'Phone', value: data.phone },
+                { label: 'Type', value: data.type }
+            ];
+
+            if (data.pps !== 'N/A') {
+                items.push({ label: 'PPSN', value: data.pps });
+            }
+
+            items.push(
+                { label: 'Condition', value: data.condition },
+                { label: 'Dates', value: data.dates },
+                { label: 'Return to Work', value: data.returnToWork }
+            );
+
+            items.forEach(item => {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = item.label + ': ';
+                p.appendChild(strong);
+                p.appendChild(document.createTextNode(item.value || ''));
+                container.appendChild(p);
+            });
+
+            const sigP = document.createElement('p');
+            const sigStrong = document.createElement('strong');
+            sigStrong.textContent = 'Signature: ';
+            sigP.appendChild(sigStrong);
+
+            const sigSpan = document.createElement('span');
+            sigSpan.style.color = 'green';
+            sigSpan.textContent = '✔ Signed';
+            sigP.appendChild(sigSpan);
+            container.appendChild(sigP);
+
+            const noteP = document.createElement('p');
+            noteP.style.marginTop = '10px';
+            noteP.style.fontSize = '0.9rem';
+            noteP.style.color = '#666';
+            const noteI = document.createElement('i');
+            noteI.textContent = 'Please ensure all details are correct.';
+            noteP.appendChild(noteI);
+            container.appendChild(noteP);
 
             document.getElementById('summaryModal').style.display = 'flex';
         }

@@ -274,7 +274,7 @@
     const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day" };
 
     // --- INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', () => {
+    function init() {
         populateDatalist('medication-list', commonMedications);
         populateSelect('chosenPharmacy', pharmacyOptions);
         populateSelect('medFreq', frequencyOptions);
@@ -286,7 +286,13 @@
                 saveToLocalStorage();
             });
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     // --- DOM & DATA POPULATION ---
     function populateDatalist(id, options) {
@@ -300,15 +306,18 @@
 
     function populateSelect(id, options) {
         const select = document.getElementById(id);
+        if (!select) return;
         if (id === 'chosenPharmacy') {
             select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
         }
+        const fragment = document.createDocumentFragment();
         for (const [value, text] of Object.entries(options)) {
             const optionElement = document.createElement('option');
             optionElement.value = value;
             optionElement.textContent = text;
-            select.appendChild(optionElement);
+            fragment.appendChild(optionElement);
         }
+        select.appendChild(fragment);
     }
 
     function getFormDataAsObject() {
@@ -409,8 +418,42 @@
         if (!validateForm()) return;
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        let summaryHTML = `<p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Email:</strong> ${patientDetails.email}</p><p><strong>Phone:</strong> ${patientDetails.phone}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><p><strong>Contact Preference:</strong> ${patientDetails.commPref}</p><hr><h3>Medications:</h3><ul>${medicationList.map(med => `<li>${med.name} - ${med.dosage} (${med.freq})</li>`).join('')}</ul>`;
-        document.getElementById('summaryDetails').innerHTML = summaryHTML;
+        const container = document.getElementById('summaryDetails');
+        container.textContent = '';
+
+        const details = [
+            { label: 'Name', value: patientDetails.name },
+            { label: 'Email', value: patientDetails.email },
+            { label: 'Phone', value: patientDetails.phone },
+            { label: 'Date of Birth', value: patientDetails.dob },
+            { label: 'Pharmacy', value: patientDetails.pharmacy },
+            { label: 'Contact Preference', value: patientDetails.commPref }
+        ];
+
+        details.forEach(item => {
+            const p = document.createElement('p');
+            const strong = document.createElement('strong');
+            strong.textContent = item.label + ': ';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(item.value || ''));
+            container.appendChild(p);
+        });
+
+        const hr = document.createElement('hr');
+        container.appendChild(hr);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Medications:';
+        container.appendChild(h3);
+
+        const ul = document.createElement('ul');
+        medicationList.forEach(med => {
+            const li = document.createElement('li');
+            li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+            ul.appendChild(li);
+        });
+        container.appendChild(ul);
+
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
@@ -493,7 +536,7 @@
 
         for (const [id, message] of Object.entries(fieldsToValidate)) {
             const element = document.getElementById(id);
-            if (!element.value) {
+            if (!element || !element.value.trim()) {
                 isValid = false;
                 showError(id, message);
             } else {
@@ -501,7 +544,8 @@
             }
         }
 
-        if (document.getElementById('medicationList').rows.length === 0) {
+        const medList = document.getElementById('medicationList');
+        if (!medList || medList.rows.length === 0) {
             isValid = false;
             showError('medication', "Please add at least one medication to the list.");
         } else {
@@ -524,7 +568,7 @@
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    <script src="js/theme.js"></script>
+        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    <script src="js/theme.js">\x3C/script>
 </head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${med.name}</td><td>${med.dosage}</td><td>${med.freq}</td></tr>`).join('')}</tbody></table></body></html>`);
         printWindow.document.close();
         printWindow.print();
