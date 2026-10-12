@@ -617,15 +617,13 @@ function archiveOldRequests() {
     const today = new Date();
     const cutOffDate = new Date(today.setDate(today.getDate() - 180));
 
-    const rowsToKeep = [];
-    const rowsToArchive = [];
-
-    for (let i = 0; i < data.length; i++) {
+    // Iterate backwards so deleting rows does not shift the indices of subsequent rows to check
+    let archivedCount = 0;
+    for (let i = data.length - 1; i >= 0; i--) {
       const rowData = data[i];
       const status = rowData[STATUS_COL - 1];
       const processedDateStr = rowData[NOTIFICATION_COL - 1]; // Expected format: "Processed on dd/MM/yyyy"
 
-      let isArchived = false;
       if (status === STATUS_READY && processedDateStr && typeof processedDateStr === 'string') {
         const match = processedDateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
         if (match) {
@@ -635,25 +633,17 @@ function archiveOldRequests() {
           const processedDate = new Date(year, monthIndex, day);
 
           if (processedDate < cutOffDate) {
-            rowsToArchive.push(rowData);
-            isArchived = true;
+            const rowNumber = i + 2; // 0-indexed data array starts at row 2 in sheet
+            archiveSheet.appendRow(rowData);
+            sourceSheet.deleteRow(rowNumber);
+            archivedCount++;
           }
         }
       }
-
-      if (!isArchived) {
-        rowsToKeep.push(rowData);
-      }
     }
 
-    if (rowsToArchive.length > 0) {
-      rowsToArchive.forEach(row => archiveSheet.appendRow(row));
-
-      sourceSheet.getRange(2, 1, data.length, sourceSheet.getLastColumn()).clearContent();
-      if (rowsToKeep.length > 0) {
-        sourceSheet.getRange(2, 1, rowsToKeep.length, rowsToKeep[0].length).setValues(rowsToKeep);
-      }
-      Logger.log(`Archived ${rowsToArchive.length} rows.`);
+    if (archivedCount > 0) {
+      Logger.log(`Archived ${archivedCount} rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

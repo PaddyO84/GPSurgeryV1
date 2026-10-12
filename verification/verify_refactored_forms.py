@@ -29,6 +29,13 @@ def run_verification(page):
     page.click("button:has-text('Review & Submit Request')")
     page.wait_for_timeout(1000)
 
+    # Confirm summary modal is visible and verified before screenshot
+    prescription_modal = page.locator("#summaryModal")
+    prescription_modal.wait_for(state="visible", timeout=5000)
+    summary_text = page.locator("#summaryDetails").inner_text()
+    assert "Test Patient" in summary_text, "Expected 'Test Patient' in summary"
+    assert "Amoxicillin" in summary_text, "Expected 'Amoxicillin' in summary"
+
     screenshots_dir = os.path.join(cwd, "verification", "screenshots")
     videos_dir = os.path.join(cwd, "verification", "videos")
     os.makedirs(screenshots_dir, exist_ok=True)
@@ -51,16 +58,31 @@ def run_verification(page):
     page.fill("#phone", "0889998888")
     page.fill("#email", "sick@example.com")
     page.fill("#address", "45 Park Ave")
+    page.check("input[name='certType'][value='Private']")
     page.fill("#condition", "Flu")
     page.fill("#startDate", "2026-10-01")
     page.fill("#endDate", "2026-10-05")
+    page.check("input[name='returnToWork'][value='No']")
     page.check("#declaration")
 
-    # Set signature flag in window
-    page.evaluate("window.hasSigned = true; document.getElementById('signatureData').value = 'data:image/png;base64,dummy';")
+    # Perform signature on canvas to trigger event listeners
+    page.evaluate("""() => {
+        const canvas = document.getElementById('signatureCanvas');
+        const rect = canvas.getBoundingClientRect();
+        canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: rect.left + 20, clientY: rect.top + 20, bubbles: true }));
+        canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: rect.left + 50, clientY: rect.top + 50, bubbles: true }));
+        canvas.dispatchEvent(new MouseEvent('mouseup', { clientX: rect.left + 50, clientY: rect.top + 50, bubbles: true }));
+    }""")
 
     page.click("button:has-text('Review & Submit')")
     page.wait_for_timeout(1000)
+
+    # Confirm summary modal is visible and verified before screenshot
+    sick_note_modal = page.locator("#summaryModal")
+    sick_note_modal.wait_for(state="visible", timeout=5000)
+    sick_note_text = page.locator("#summaryDetails").inner_text()
+    assert "John Sick" in sick_note_text, "Expected 'John Sick' in sick note summary"
+    assert "Flu" in sick_note_text, "Expected 'Flu' in sick note summary"
 
     page.screenshot(path=os.path.join(screenshots_dir, "sick_note_summary.png"))
 
