@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build and test artifacts
+.nyc_output/
+coverage/
+test-results/
+
+# Python cache and environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Verification artifacts
+verification/__pycache__/
+verification/screenshots/
+verification/videos/
+
+# Secrets and local configurations
+.clasprc.json
+anonymize_local.json
+.anonymize_backup_*
+
+# Local notes / suggestions
+Suggestions.txt
