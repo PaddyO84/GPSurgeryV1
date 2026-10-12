@@ -612,6 +612,11 @@ function archiveOldRequests() {
       Logger.log("Created 'Archive' sheet.");
     }
 
+    if (sourceSheet.getLastRow() < 2) {
+      Logger.log("No data rows to archive.");
+      return;
+    }
+
     const dataRange = sourceSheet.getRange(2, 1, sourceSheet.getLastRow() - 1, sourceSheet.getLastColumn());
     const data = dataRange.getValues();
     const today = new Date();

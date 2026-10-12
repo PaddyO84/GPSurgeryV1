@@ -326,3 +326,14 @@ test('Code.gs - archiveOldRequests moves old ready requests', () => {
   assert.strictEqual(mainSheet.rows.length, 2); // Header + 1 recent row remaining
   assert.strictEqual(mainSheet.rows[1][1], "recent@example.com");
 });
+
+test('Code.gs - archiveOldRequests returns early when sheet has no data rows', () => {
+  const env = createGasMockEnvironment();
+  // Form responses 1 only has header (1 row)
+  loadCodeGs(env);
+
+  globalThis.archiveOldRequests();
+
+  assert.strictEqual(env.sentEmails.length, 0, 'No error email should be sent');
+  assert.ok(env.logEntries.some(log => log.includes('No data rows to archive.')));
+});
