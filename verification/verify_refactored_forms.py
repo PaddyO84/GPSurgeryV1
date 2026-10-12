@@ -29,7 +29,12 @@ def run_verification(page):
     page.click("button:has-text('Review & Submit Request')")
     page.wait_for_timeout(1000)
 
-    page.screenshot(path="/home/jules/verification/screenshots/prescription_form_summary.png")
+    screenshots_dir = os.path.join(cwd, "verification", "screenshots")
+    videos_dir = os.path.join(cwd, "verification", "videos")
+    os.makedirs(screenshots_dir, exist_ok=True)
+    os.makedirs(videos_dir, exist_ok=True)
+
+    page.screenshot(path=os.path.join(screenshots_dir, "prescription_form_summary.png"))
 
     # 2. Verify sick-notes.html
     page.goto(f"file://{cwd}/sick-notes.html")
@@ -57,16 +62,19 @@ def run_verification(page):
     page.click("button:has-text('Review & Submit')")
     page.wait_for_timeout(1000)
 
-    page.screenshot(path="/home/jules/verification/screenshots/sick_note_summary.png")
+    page.screenshot(path=os.path.join(screenshots_dir, "sick_note_summary.png"))
 
 if __name__ == "__main__":
-    os.makedirs("/home/jules/verification/screenshots", exist_ok=True)
-    os.makedirs("/home/jules/verification/videos", exist_ok=True)
+    cwd = os.getcwd()
+    screenshots_dir = os.path.join(cwd, "verification", "screenshots")
+    videos_dir = os.path.join(cwd, "verification", "videos")
+    os.makedirs(screenshots_dir, exist_ok=True)
+    os.makedirs(videos_dir, exist_ok=True)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
-            record_video_dir="/home/jules/verification/videos"
+            record_video_dir=videos_dir
         )
         page = context.new_page()
         try:
