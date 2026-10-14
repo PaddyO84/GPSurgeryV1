@@ -248,7 +248,7 @@ nav a:hover::after {
 }
 
 .dropdown:hover .dropdown-content,
-.dropdown:focus-within .dropdown-content,
+.dropdown-content:focus-within,
 .dropdown-content.show {
     display: block;
     animation: slideDown 0.2s ease-out;

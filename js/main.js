@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile Dropdown Interactions
     const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
     dropdownTriggers.forEach(trigger => {
+        if (!trigger.hasAttribute('aria-expanded')) {
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
         trigger.addEventListener('click', (e) => {
             // Only toggle on mobile or keyboard interaction
             if (window.innerWidth <= 768) {
@@ -43,10 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const content = trigger.nextElementSibling;
                 // Close other dropdowns
                 document.querySelectorAll('.dropdown-content').forEach(d => {
-                    if (d !== content) d.classList.remove('show');
+                    if (d !== content) {
+                        d.classList.remove('show');
+                        const prev = d.previousElementSibling;
+                        if (prev && prev.classList.contains('dropdown-trigger')) {
+                            prev.setAttribute('aria-expanded', 'false');
+                        }
+                    }
                 });
 
-                content.classList.toggle('show');
+                if (content) {
+                    const isExpanded = content.classList.toggle('show');
+                    trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                }
             }
         });
 
@@ -55,7 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 const content = trigger.nextElementSibling;
-                content.classList.toggle('show');
+                if (content) {
+                    const isExpanded = content.classList.toggle('show');
+                    trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                }
             }
         });
     });
