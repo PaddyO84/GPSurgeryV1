@@ -12,7 +12,8 @@ const NOTIFICATION_COL = 11; // Notification Sent is in Column K
 // --- SCRIPT SETTINGS ---
 const SENDER_NAME = "Carndonagh Health Centre";
 const YOUR_PHONE_NUMBER = "074-93-74242";
-const ADMIN_EMAIL = "patricknoone+surgery@gmail.com";
+const DEFAULT_ADMIN_EMAIL = "patricknoone+surgery@gmail.com";
+const ADMIN_EMAIL = (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties && PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL')) || DEFAULT_ADMIN_EMAIL;
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
@@ -23,6 +24,44 @@ const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is 
  * Handles HTTP POST requests to the script (Web App).
  * Receives JSON data from the frontend form and appends it to the spreadsheet.
  */
+/**
+ * Handles prescription form submissions.
+ */
+function handlePrescriptionSubmission(data) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+  if (!data.patientDetails || !data.patientDetails.name || !data.patientDetails.email) {
+     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const timestamp = new Date();
+
+  let medicationString = "";
+  if (data.medicationList && Array.isArray(data.medicationList)) {
+     medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
+  }
+
+  const newRow = [];
+  newRow[0] = timestamp; // Col A
+  newRow[EMAIL_COL - 1] = data.patientDetails.email;
+  newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
+  newRow[NAME_COL - 1] = data.patientDetails.name;
+  newRow[4] = data.patientDetails.address; // Col E (Index 4)
+  newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
+  newRow[6] = data.patientDetails.dob; // Col G (Index 6)
+  newRow[MEDS_COL - 1] = medicationString;
+  newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
+  newRow[STATUS_COL - 1] = ""; // Initial Status Empty
+  newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+
+  sheet.appendRow(newRow);
+  const row = sheet.getLastRow();
+
+  sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.tryLock(10000);
@@ -36,58 +75,7 @@ function doPost(e) {
     }
 
     // Default: Prescription Handling
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-
-    // Validate essential data
-    if (!data.patientDetails.name || !data.patientDetails.email) {
-       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const timestamp = new Date();
-
-    // Format Medication List
-    let medicationString = "";
-    if (data.medicationList && Array.isArray(data.medicationList)) {
-       medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
-    }
-
-    // Append to Sheet (Order must match Columns defined at top, roughly)
-    // Sheet Structure assumed: Timestamp, Email, Pharmacy, Name, Address, Phone, DOB, Meds, CommPref, Status, Notification
-    // Note: The original Google Form might have had a specific column order. We will map to the known columns constants.
-    // However, appendRow adds to the end. We need to respect the visual layout.
-    // Based on constants:
-    // A(1): Timestamp (Standard form)
-    // B(2): Email (EMAIL_COL)
-    // C(3): Pharmacy (PHARMACY_COL)
-    // D(4): Name (NAME_COL)
-    // E(5): Address (Assumed based on HTML form, but not in constants)
-    // F(6): Phone (PHONE_COL)
-    // G(7): DOB (Assumed)
-    // H(8): Meds (MEDS_COL)
-    // I(9): CommPref (COMM_PREF_COL)
-    // J(10): Status (STATUS_COL)
-    // K(11): Notification (NOTIFICATION_COL)
-
-    const newRow = [];
-    newRow[0] = timestamp; // Col A
-    newRow[EMAIL_COL - 1] = data.patientDetails.email;
-    newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
-    newRow[NAME_COL - 1] = data.patientDetails.name;
-    newRow[4] = data.patientDetails.address; // Col E (Index 4)
-    newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
-    newRow[6] = data.patientDetails.dob; // Col G (Index 6)
-    newRow[MEDS_COL - 1] = medicationString;
-    newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
-    newRow[STATUS_COL - 1] = ""; // Initial Status Empty
-    newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
-
-    sheet.appendRow(newRow);
-    const row = sheet.getLastRow();
-
-    // Send Confirmation
-    sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
-
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
+    return handlePrescriptionSubmission(data);
 
   } catch (err) {
     reportError('doPost', err, null);
@@ -166,9 +154,10 @@ function onEdit(e) {
 
     if (status === STATUS_QUERY) {
       if (!patientEmail) return;
-      const subject = "Action Required: Query Regarding Your Prescription Request";
-      const body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-      MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+      const template = getMessageTemplate(STATUS_QUERY, patientName, '');
+      if (template) {
+        MailApp.sendEmail({ to: patientEmail, subject: template.subject, htmlBody: template.bodyHtml, name: SENDER_NAME });
+      }
 
     } else if (status === STATUS_READY) {
       const commPref = sheet.getRange(row, COMM_PREF_COL).getValue().toLowerCase();
@@ -375,17 +364,8 @@ function showEmailDialog(row) {
     return;
   }
 
-  let subject = '';
-  let body = '';
-
-  if (status === STATUS_READY) {
-    subject = `Your Prescription has been sent to ${pharmacy}`;
-    body = `Dear ${patientName},<br><br>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.<br><br>Please contact your pharmacy directly to confirm when your medication will be ready for collection.<br><br>Thank you,<br><strong>${SENDER_NAME}</strong>`;
-  } else if (status === STATUS_QUERY) {
-    subject = "Action Required: Query Regarding Your Prescription Request";
-    body = `Dear ${patientName},<br><br>Regarding your prescription request, we have a query that needs to be resolved.<br><br>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.<br><br>Thank you,<br><strong>${SENDER_NAME}</strong>`;
-  } else {
-    // This case is already handled in sendDynamicNotification, but as a fallback:
+  const template = getMessageTemplate(status, patientName, pharmacy);
+  if (!template) {
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }
@@ -394,9 +374,9 @@ function showEmailDialog(row) {
     <div style="font-family: sans-serif;">
       <h3>Preview Email to ${patientName}</h3>
       <p><b>To:</b> ${patientEmail}</p>
-      <p><b>Subject:</b> ${subject}</p>
+      <p><b>Subject:</b> ${template.subject}</p>
       <hr>
-      <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color:#f9f9f9;">${body}</div>
+      <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color:#f9f9f9;">${template.bodyHtml}</div>
       <br><br>
       <button onclick="google.script.run.withSuccessHandler(google.script.host.close).sendEmailFromDialog(${row});" style="background-color:#28a745;color:white;padding:8px 15px;border:none;border-radius:4px;font-size:14px;cursor:pointer;">Send Email</button>
       <button onclick="google.script.host.close()" style="padding:8px 15px;border:1px solid #ccc;border-radius:4px;font-size:14px;cursor:pointer;">Cancel</button>
@@ -418,21 +398,13 @@ function sendEmailFromDialog(row) {
     const patientEmail = sheet.getRange(row, EMAIL_COL).getValue();
     const pharmacy = sheet.getRange(row, PHARMACY_COL).getValue();
 
-    let subject = '';
-    let body = '';
-
-    if (status === STATUS_READY) {
-      subject = `Your Prescription has been sent to ${pharmacy}`;
-      body = `<p>Dear ${patientName},</p><p>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.</p><p>Please contact your pharmacy directly to confirm when your medication will be ready for collection.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-    } else if (status === STATUS_QUERY) {
-      subject = "Action Required: Query Regarding Your Prescription Request";
-      body = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
-    } else {
+    const template = getMessageTemplate(status, patientName, pharmacy);
+    if (!template) {
       Logger.log(`Email not sent from dialog for row ${row} because status was not recognized: ${status}`);
-      return; // Or alert the user
+      return;
     }
 
-    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+    MailApp.sendEmail({ to: patientEmail, subject: template.subject, htmlBody: template.bodyHtml, name: SENDER_NAME });
   } catch (e) {
     Logger.log(`Error sending email from dialog for row ${row}: ${e.toString()}`);
     SpreadsheetApp.getUi().alert("Failed to send email. Please check the logs for details.");
@@ -456,16 +428,13 @@ function generateWhatsAppLink(row) {
     return;
   }
 
-  let messageText = '';
-  if (status === STATUS_READY) {
-    messageText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`;
-  } else if (status === STATUS_QUERY) {
-    messageText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. We have a query about your recent prescription request. Please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.`;
-  } else {
-    // This case is already handled in sendDynamicNotification, but as a fallback:
+  const template = getMessageTemplate(status, patientName, pharmacy);
+  if (!template) {
     ui.alert(`No notification template for status: "${status}".`);
     return;
   }
+
+  const messageText = template.whatsappText;
 
   const whatsappNumber = "353" + patientPhone.toString().replace(/\s/g, '').substring(1);
   const prefilledMessage = encodeURIComponent(messageText);
@@ -478,6 +447,29 @@ function generateWhatsAppLink(row) {
 }
 
 // --- HELPER FUNCTIONS (called by automated triggers) ---
+
+/**
+ * Returns message templates for a given status.
+ * @param {string} status - The prescription request status.
+ * @param {string} patientName - The patient's full name.
+ * @param {string} pharmacy - The patient's chosen pharmacy.
+ * @returns {{subject: string, bodyHtml: string, whatsappText: string}|null}
+ */
+function getMessageTemplate(status, patientName, pharmacy) {
+  if (status === STATUS_READY) {
+    const subject = `Your Prescription has been sent to ${pharmacy}`;
+    const bodyHtml = `<p>Dear ${patientName},</p><p>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.</p><p>Please contact your pharmacy directly to confirm when your medication will be ready for collection.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+    const whatsappText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. Your prescription has been sent to ${pharmacy}. Please contact them directly to arrange collection.`;
+    return { subject, bodyHtml, whatsappText };
+  }
+  if (status === STATUS_QUERY) {
+    const subject = "Action Required: Query Regarding Your Prescription Request";
+    const bodyHtml = `<p>Dear ${patientName},</p><p>Regarding your prescription request, we have a query that needs to be resolved.</p><p>Please contact the surgery by phone at <strong>${YOUR_PHONE_NUMBER}</strong>.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+    const whatsappText = `Hi ${patientName}, this is a message from ${SENDER_NAME}. We have a query about your recent prescription request. Please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.`;
+    return { subject, bodyHtml, whatsappText };
+  }
+  return null;
+}
 
 /**
  * Sends an initial confirmation email to the patient when their form is submitted.
@@ -528,11 +520,11 @@ function sendReadyEmail(row) {
     return;
   }
 
-  const subject = `Your Prescription has been sent to ${pharmacy}`;
-  const body = `<p>Dear ${patientName},</p><p>This is a message to let you know that your recent prescription request has been processed and sent to your chosen pharmacy: <strong>${pharmacy}</strong>.</p><p>Please contact your pharmacy directly to confirm when your medication will be ready for collection.</p><p>Thank you,</p><p><strong>${SENDER_NAME}</strong></p><hr>${FOOTER}`;
+  const template = getMessageTemplate(STATUS_READY, patientName, pharmacy);
+  if (!template) return;
 
   try {
-    MailApp.sendEmail({ to: patientEmail, subject: subject, htmlBody: body, name: SENDER_NAME });
+    MailApp.sendEmail({ to: patientEmail, subject: template.subject, htmlBody: template.bodyHtml, name: SENDER_NAME });
   } catch (e) {
     Logger.log(`Error sending READY email for row ${row}: ${e.toString()}`);
   }
@@ -620,33 +612,43 @@ function archiveOldRequests() {
       Logger.log("Created 'Archive' sheet.");
     }
 
+    if (sourceSheet.getLastRow() < 2) {
+      Logger.log("No data rows to archive.");
+      return;
+    }
+
     const dataRange = sourceSheet.getRange(2, 1, sourceSheet.getLastRow() - 1, sourceSheet.getLastColumn());
     const data = dataRange.getValues();
     const today = new Date();
     const cutOffDate = new Date(today.setDate(today.getDate() - 180));
 
-    // Iterate backwards to safely delete rows
+    // Iterate backwards so deleting rows does not shift the indices of subsequent rows to check
+    let archivedCount = 0;
     for (let i = data.length - 1; i >= 0; i--) {
       const rowData = data[i];
       const status = rowData[STATUS_COL - 1];
       const processedDateStr = rowData[NOTIFICATION_COL - 1]; // Expected format: "Processed on dd/MM/yyyy"
 
-      if (status === STATUS_READY && processedDateStr && processedDateStr.startsWith("Processed on ")) {
-        const dateStr = processedDateStr.replace("Processed on ", ""); // "dd/MM/yyyy"
-        const dateParts = dateStr.split('/'); // ["dd", "MM", "yyyy"]
-
-        if (dateParts.length === 3) {
-          // new Date(year, monthIndex, day)
-          const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
+      if (status === STATUS_READY && processedDateStr && typeof processedDateStr === 'string') {
+        const match = processedDateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (match) {
+          const day = parseInt(match[1], 10);
+          const monthIndex = parseInt(match[2], 10) - 1;
+          const year = parseInt(match[3], 10);
+          const processedDate = new Date(year, monthIndex, day);
 
           if (processedDate < cutOffDate) {
-            const rowToDelete = i + 2; // +2 because data is 0-indexed and sheet is 1-indexed from row 2
+            const rowNumber = i + 2; // 0-indexed data array starts at row 2 in sheet
             archiveSheet.appendRow(rowData);
-            sourceSheet.deleteRow(rowToDelete);
-            Logger.log(`Archived row ${rowToDelete}.`);
+            sourceSheet.deleteRow(rowNumber);
+            archivedCount++;
           }
         }
       }
+    }
+
+    if (archivedCount > 0) {
+      Logger.log(`Archived ${archivedCount} rows.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);

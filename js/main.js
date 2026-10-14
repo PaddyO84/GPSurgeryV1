@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Accordion Functionality
     const accordions = document.getElementsByClassName("accordion");
-    for (let i = 0; i < accordions.length; i++) {
-        accordions[i].addEventListener("click", function() {
+    for (const accordion of accordions) {
+        accordion.addEventListener("click", function() {
             this.classList.toggle("active");
             const panel = this.nextElementSibling;
             if (panel.style.maxHeight) {
@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile Dropdown Interactions
     const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
     dropdownTriggers.forEach(trigger => {
+        if (!trigger.hasAttribute('aria-expanded')) {
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
         trigger.addEventListener('click', (e) => {
             // Only toggle on mobile or keyboard interaction
             if (window.innerWidth <= 768) {
@@ -43,10 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const content = trigger.nextElementSibling;
                 // Close other dropdowns
                 document.querySelectorAll('.dropdown-content').forEach(d => {
-                    if (d !== content) d.style.display = 'none';
+                    if (d !== content) {
+                        d.classList.remove('show');
+                        const prev = d.previousElementSibling;
+                        if (prev && prev.classList.contains('dropdown-trigger')) {
+                            prev.setAttribute('aria-expanded', 'false');
+                        }
+                    }
                 });
 
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                if (content) {
+                    const isExpanded = content.classList.toggle('show');
+                    trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                }
             }
         });
 
@@ -55,7 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 const content = trigger.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                if (content) {
+                    const isExpanded = content.classList.toggle('show');
+                    trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                }
             }
         });
     });

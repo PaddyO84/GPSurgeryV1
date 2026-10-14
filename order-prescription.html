@@ -387,7 +387,7 @@
     <script src="js/main.js"></script>
     <script>
         // --- LOGIC FROM ORIGINAL FORM (ADAPTED) ---
-        // const SCRIPT_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // TO DO: Replace with actual URL
+        const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
         const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
         const pharmacyOptions = { "Tierney's Healthwise Pharmacy, Buncrana": "Tierney's Healthwise Pharmacy, Buncrana", "Inish Pharmacy, Buncrana": "Inish Pharmacy, Buncrana", "Duffy's Pharmacy, Buncrana": "Duffy's Pharmacy, Buncrana", "Brennan's Pharmacy, Buncrana": "Brennan's Pharmacy, Buncrana", "Hannon's Pharmacy, Moville": "Hannon's Pharmacy, Moville", "Foyle Pharmacy, Moville": "Foyle Pharmacy, Moville", "Brennan's Pharmacy, Clonmany": "Brennan's Pharmacy, Clonmany", "Inish Pharmacy, Muff": "Inish Pharmacy, Muff", "Mullans Pharmacy, Carndonagh": "Mullans Pharmacy, Carndonagh", "Carn Pharmacy, Carndonagh": "Carn Pharmacy, Carndonagh", "McNeill's Pharmacy, Carndonagh": "McNeill's Pharmacy, Carndonagh", "Inish Pharmacy, Carndonagh": "Inish Pharmacy, Carndonagh" };
         const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day", "As needed": "As needed" };
@@ -419,15 +419,18 @@
 
         function populateSelect(id, options) {
             const select = document.getElementById(id);
+            if (!select) return;
             if (id === 'chosenPharmacy') {
                 select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
             }
+            const fragment = document.createDocumentFragment();
             for (const [value, text] of Object.entries(options)) {
                 const optionElement = document.createElement('option');
                 optionElement.value = value;
                 optionElement.textContent = text;
-                select.appendChild(optionElement);
+                fragment.appendChild(optionElement);
             }
+            select.appendChild(fragment);
         }
 
         function getFormDataAsObject() {
@@ -631,9 +634,6 @@
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
 
-            // DEPLOYED URL
-            const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
-
             const { patientDetails, medicationList } = getFormDataAsObject();
             // Added formType for Backend Discrimination
             const payload = {
@@ -731,18 +731,27 @@
             return `CHC-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
         }
 
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function printSummary() {
             const { patientDetails, medicationList } = getFormDataAsObject();
             const w = window.open('', '_blank');
             w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
 </head><body>
             <h1>Prescription Request</h1>
-            <p><strong>Name:</strong> ${patientDetails.name}</p>
-            <p><strong>DOB:</strong> ${patientDetails.dob}</p>
-            <p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p>
+            <p><strong>Name:</strong> ${escapeHtml(patientDetails.name)}</p>
+            <p><strong>DOB:</strong> ${escapeHtml(patientDetails.dob)}</p>
+            <p><strong>Pharmacy:</strong> ${escapeHtml(patientDetails.pharmacy)}</p>
             <h3>Medications</h3>
             <table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>
-            ${medicationList.map(m => `<tr><td>${m.name}</td><td>${m.dosage}</td><td>${m.freq}</td></tr>`).join('')}
+            ${medicationList.map(m => `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.dosage)}</td><td>${escapeHtml(m.freq)}</td></tr>`).join('')}
             </tbody></table></body></html>`);
             w.document.close();
             w.print();
