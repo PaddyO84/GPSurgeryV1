@@ -731,18 +731,27 @@
             return `CHC-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
         }
 
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function printSummary() {
             const { patientDetails, medicationList } = getFormDataAsObject();
             const w = window.open('', '_blank');
             w.document.write(`<html><head><title>Prescription Summary</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
 </head><body>
             <h1>Prescription Request</h1>
-            <p><strong>Name:</strong> ${patientDetails.name}</p>
-            <p><strong>DOB:</strong> ${patientDetails.dob}</p>
-            <p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p>
+            <p><strong>Name:</strong> ${escapeHtml(patientDetails.name)}</p>
+            <p><strong>DOB:</strong> ${escapeHtml(patientDetails.dob)}</p>
+            <p><strong>Pharmacy:</strong> ${escapeHtml(patientDetails.pharmacy)}</p>
             <h3>Medications</h3>
             <table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>
-            ${medicationList.map(m => `<tr><td>${m.name}</td><td>${m.dosage}</td><td>${m.freq}</td></tr>`).join('')}
+            ${medicationList.map(m => `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.dosage)}</td><td>${escapeHtml(m.freq)}</td></tr>`).join('')}
             </tbody></table></body></html>`);
             w.document.close();
             w.print();
