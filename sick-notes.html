@@ -380,7 +380,7 @@
 
             // Check Signature
             const sigError = document.getElementById('signature-error');
-            if (!hasSigned) {
+            if (!hasSigned && !window.hasSigned) {
                 sigError.textContent = "Please sign the declaration.";
                 // Scroll to signature
                 document.getElementById('signatureCanvas').scrollIntoView({behavior: 'smooth'});
@@ -410,18 +410,46 @@
             };
 
             const container = document.getElementById('summaryDetails');
-            container.innerHTML = `
-                <p><strong>Name:</strong> ${data.name}</p>
-                <p><strong>DOB:</strong> ${data.dob}</p>
-                <p><strong>Phone:</strong> ${data.phone}</p>
-                <p><strong>Type:</strong> ${data.type}</p>
-                ${data.pps !== 'N/A' ? `<p><strong>PPSN:</strong> ${data.pps}</p>` : ''}
-                <p><strong>Condition:</strong> ${data.condition}</p>
-                <p><strong>Dates:</strong> ${data.dates}</p>
-                <p><strong>Return to Work:</strong> ${data.returnToWork}</p>
-                <p><strong>Signature:</strong> <span style="color:green">✔ Signed</span></p>
-                <p style="margin-top:10px; font-size:0.9rem; color:#666;"><i>Please ensure all details are correct.</i></p>
-            `;
+            container.textContent = ''; // Clear previous content
+
+            const addSummaryRow = (label, value) => {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                p.appendChild(strong);
+                p.appendChild(document.createTextNode(value));
+                container.appendChild(p);
+            };
+
+            addSummaryRow('Name', data.name);
+            addSummaryRow('DOB', data.dob);
+            addSummaryRow('Phone', data.phone);
+            addSummaryRow('Type', data.type);
+            if (data.pps !== 'N/A') {
+                addSummaryRow('PPSN', data.pps);
+            }
+            addSummaryRow('Condition', data.condition);
+            addSummaryRow('Dates', data.dates);
+            addSummaryRow('Return to Work', data.returnToWork);
+
+            const sigP = document.createElement('p');
+            const sigStrong = document.createElement('strong');
+            sigStrong.textContent = 'Signature: ';
+            const sigSpan = document.createElement('span');
+            sigSpan.style.color = 'green';
+            sigSpan.textContent = '✔ Signed';
+            sigP.appendChild(sigStrong);
+            sigP.appendChild(sigSpan);
+            container.appendChild(sigP);
+
+            const noteP = document.createElement('p');
+            noteP.style.marginTop = '10px';
+            noteP.style.fontSize = '0.9rem';
+            noteP.style.color = '#666';
+            const noteI = document.createElement('i');
+            noteI.textContent = 'Please ensure all details are correct.';
+            noteP.appendChild(noteI);
+            container.appendChild(noteP);
 
             document.getElementById('summaryModal').style.display = 'flex';
         }

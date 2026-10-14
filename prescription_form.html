@@ -188,17 +188,17 @@
 <body>
     <header class="site-header">
         <h1>Carndonagh Health Centre</h1>
-        <button class="mobile-menu-icon" onclick="toggleMobileMenu(true)">&#9776;</button>
+        <button class="mobile-menu-icon" id="openMobileMenuBtn">&#9776;</button>
     </header>
 
     <div class="mobile-menu-overlay" id="mobile-menu">
-        <button class="mobile-menu-close" onclick="toggleMobileMenu(false)">&times;</button>
+        <button class="mobile-menu-close" id="closeMobileMenuBtn">&times;</button>
         <div class="sidebar">
             <h3>Actions</h3>
-            <button type="button" title="Load a previously saved prescription list from a file on your device." onclick="document.getElementById('loadFile').click(); toggleMobileMenu(false);">Load My Prescriptions</button>
-            <button type="button" title="Save your current prescription list to a file on your device." onclick="saveRequestToFile(); toggleMobileMenu(false);">Save My Prescriptions</button>
-            <button type="button" class="print-btn" onclick="printSummary(); toggleMobileMenu(false);">Print Summary</button>
-            <button type="button" class="clear-btn" onclick="clearAllFields(); toggleMobileMenu(false);">Clear All Fields</button>
+            <button type="button" id="mobileLoadBtn" title="Load a previously saved prescription list from a file on your device.">Load My Prescriptions</button>
+            <button type="button" id="mobileSaveBtn" title="Save your current prescription list to a file on your device.">Save My Prescriptions</button>
+            <button type="button" id="mobilePrintBtn" class="print-btn">Print Summary</button>
+            <button type="button" id="mobileClearBtn" class="clear-btn">Clear All Fields</button>
             <div class="notification" id="mobile-notification-area"></div>
         </div>
     </div>
@@ -206,11 +206,11 @@
     <div class="main-wrapper">
         <div class="sidebar" id="desktop-sidebar">
             <h3>Actions</h3>
-            <button type="button" title="Load a previously saved prescription list from a file on your device." onclick="document.getElementById('loadFile').click()">Load My Prescriptions</button>
-            <button type="button" title="Save your current prescription list to a file on your device." onclick="saveRequestToFile()">Save My Prescriptions</button>
-            <button type="button" class="print-btn" onclick="printSummary()">Print Summary</button>
-            <button type="button" class="clear-btn" onclick="clearAllFields()">Clear Form</button>
-            <input type="file" id="loadFile" onchange="loadRequestFromFile(event)" accept=".json">
+            <button type="button" id="desktopLoadBtn" title="Load a previously saved prescription list from a file on your device.">Load My Prescriptions</button>
+            <button type="button" id="desktopSaveBtn" title="Save your current prescription list to a file on your device.">Save My Prescriptions</button>
+            <button type="button" id="desktopPrintBtn" class="print-btn">Print Summary</button>
+            <button type="button" id="desktopClearBtn" class="clear-btn">Clear Form</button>
+            <input type="file" id="loadFile" accept=".json">
             <div class="notification" id="desktop-notification-area"></div>
         </div>
         <div class="form-content" id="formContainer">
@@ -240,7 +240,7 @@
                 <div><label for="medName">Name of Medication</label><input type="text" id="medName" list="medication-list" placeholder="Start typing..."></div>
                 <div><label for="medDosage">Dosage</label><input type="text" id="medDosage" placeholder="e.g., 20mg"></div>
                 <div><label for="medFreq">Frequency</label><select id="medFreq"></select></div>
-                <div><button type="button" onclick="addMedication()">+ Add</button></div>
+                <div><button type="button" id="addMedBtn">+ Add</button></div>
             </div>
             <div class="error-message" id="medication-error"></div>
             <h3>Your Current Medication List</h3>
@@ -249,7 +249,7 @@
                 <tbody id="medicationList"></tbody>
             </table>
             <br>
-            <button class="submit-btn" onclick="showSummary()">Review & Submit Request</button>
+            <button class="submit-btn" id="reviewSubmitBtn">Review & Submit Request</button>
             </div>
             <div id="successMessage" style="display: none;"></div>
         </div>
@@ -259,8 +259,8 @@
             <h3 id="summaryModalTitle">Confirm Your Request</h3>
             <div id="summaryDetails"></div>
             <div class="modal-buttons">
-                <button onclick="submitToGoogleForm()" class="btn-confirm">Confirm & Submit</button>
-                <button onclick="document.getElementById('summaryModal').style.display='none'" class="btn-cancel">Cancel</button>
+                <button id="modalConfirmBtn" class="btn-confirm">Confirm & Submit</button>
+                <button id="modalCancelBtn" class="btn-cancel">Cancel</button>
             </div>
         </div>
     </div>
@@ -285,6 +285,66 @@
                 clearError(input.id);
                 saveToLocalStorage();
             });
+        });
+
+        // Event listeners replacing inline handlers
+        const openMobileMenuBtn = document.getElementById('openMobileMenuBtn');
+        if (openMobileMenuBtn) openMobileMenuBtn.addEventListener('click', () => toggleMobileMenu(true));
+
+        const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
+        if (closeMobileMenuBtn) closeMobileMenuBtn.addEventListener('click', () => toggleMobileMenu(false));
+
+        const loadFile = document.getElementById('loadFile');
+        if (loadFile) loadFile.addEventListener('change', loadRequestFromFile);
+
+        const desktopLoadBtn = document.getElementById('desktopLoadBtn');
+        if (desktopLoadBtn) desktopLoadBtn.addEventListener('click', () => document.getElementById('loadFile').click());
+
+        const mobileLoadBtn = document.getElementById('mobileLoadBtn');
+        if (mobileLoadBtn) mobileLoadBtn.addEventListener('click', () => {
+            document.getElementById('loadFile').click();
+            toggleMobileMenu(false);
+        });
+
+        const desktopSaveBtn = document.getElementById('desktopSaveBtn');
+        if (desktopSaveBtn) desktopSaveBtn.addEventListener('click', saveRequestToFile);
+
+        const mobileSaveBtn = document.getElementById('mobileSaveBtn');
+        if (mobileSaveBtn) mobileSaveBtn.addEventListener('click', () => {
+            saveRequestToFile();
+            toggleMobileMenu(false);
+        });
+
+        const desktopPrintBtn = document.getElementById('desktopPrintBtn');
+        if (desktopPrintBtn) desktopPrintBtn.addEventListener('click', printSummary);
+
+        const mobilePrintBtn = document.getElementById('mobilePrintBtn');
+        if (mobilePrintBtn) mobilePrintBtn.addEventListener('click', () => {
+            printSummary();
+            toggleMobileMenu(false);
+        });
+
+        const desktopClearBtn = document.getElementById('desktopClearBtn');
+        if (desktopClearBtn) desktopClearBtn.addEventListener('click', clearAllFields);
+
+        const mobileClearBtn = document.getElementById('mobileClearBtn');
+        if (mobileClearBtn) mobileClearBtn.addEventListener('click', () => {
+            clearAllFields();
+            toggleMobileMenu(false);
+        });
+
+        const addMedBtn = document.getElementById('addMedBtn');
+        if (addMedBtn) addMedBtn.addEventListener('click', addMedication);
+
+        const reviewSubmitBtn = document.getElementById('reviewSubmitBtn');
+        if (reviewSubmitBtn) reviewSubmitBtn.addEventListener('click', showSummary);
+
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        if (modalConfirmBtn) modalConfirmBtn.addEventListener('click', submitToGoogleForm);
+
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        if (modalCancelBtn) modalCancelBtn.addEventListener('click', () => {
+            document.getElementById('summaryModal').style.display = 'none';
         });
     });
 
@@ -409,8 +469,40 @@
         if (!validateForm()) return;
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        let summaryHTML = `<p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Email:</strong> ${patientDetails.email}</p><p><strong>Phone:</strong> ${patientDetails.phone}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><p><strong>Contact Preference:</strong> ${patientDetails.commPref}</p><hr><h3>Medications:</h3><ul>${medicationList.map(med => `<li>${med.name} - ${med.dosage} (${med.freq})</li>`).join('')}</ul>`;
-        document.getElementById('summaryDetails').innerHTML = summaryHTML;
+        const container = document.getElementById('summaryDetails');
+        container.textContent = ''; // Clear previous content
+
+        const addDetail = (label, value) => {
+            const p = document.createElement('p');
+            const strong = document.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(value || ''));
+            container.appendChild(p);
+        };
+
+        addDetail('Name', patientDetails.name);
+        addDetail('Email', patientDetails.email);
+        addDetail('Phone', patientDetails.phone);
+        addDetail('Date of Birth', patientDetails.dob);
+        addDetail('Pharmacy', patientDetails.pharmacy);
+        addDetail('Contact Preference', patientDetails.commPref);
+
+        const hr = document.createElement('hr');
+        container.appendChild(hr);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Medications:';
+        container.appendChild(h3);
+
+        const ul = document.createElement('ul');
+        medicationList.forEach(med => {
+            const li = document.createElement('li');
+            li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+            ul.appendChild(li);
+        });
+        container.appendChild(ul);
+
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
@@ -459,10 +551,12 @@
                    <p>Your reference number is: <strong>${ref}</strong></p>
                    <p>Please keep this for your records.</p>
                    <br>
-                   <button onclick="resetForNewSubmission()">Submit Another Prescription</button>
+                   <button id="resetBtn">Submit Another Prescription</button>
                </div>
            `;
            successDiv.style.display = 'block';
+           const resetBtn = document.getElementById('resetBtn');
+           if (resetBtn) resetBtn.addEventListener('click', resetForNewSubmission);
            localStorage.removeItem('prescriptionFormData');
         })
         .catch(error => {
@@ -521,11 +615,20 @@
         if (errorDiv) errorDiv.textContent = '';
     }
 
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    <script src="js/theme.js"></script>
-</head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${med.name}</td><td>${med.dosage}</td><td>${med.freq}</td></tr>`).join('')}</tbody></table></body></html>`);
+</head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${escapeHtml(patientDetails.name)}</p><p><strong>Date of Birth:</strong> ${escapeHtml(patientDetails.dob)}</p><p><strong>Pharmacy:</strong> ${escapeHtml(patientDetails.pharmacy)}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${escapeHtml(med.name)}</td><td>${escapeHtml(med.dosage)}</td><td>${escapeHtml(med.freq)}</td></tr>`).join('')}</tbody></table></body></html>`);
         printWindow.document.close();
         printWindow.print();
     }

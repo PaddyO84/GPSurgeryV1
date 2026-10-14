@@ -43,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const content = trigger.nextElementSibling;
                 // Close other dropdowns
                 document.querySelectorAll('.dropdown-content').forEach(d => {
-                    if (d !== content) d.style.display = 'none';
+                    if (d !== content) d.classList.remove('show');
                 });
 
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                content.classList.toggle('show');
             }
         });
 
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 const content = trigger.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                content.classList.toggle('show');
             }
         });
     });
