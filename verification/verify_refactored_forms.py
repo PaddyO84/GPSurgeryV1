@@ -1,10 +1,12 @@
 import os
 from playwright.sync_api import sync_playwright
 
+from pathlib import Path
+
 def run_verification(page):
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     # 1. Verify prescription_form.html
-    page.goto(f"file://{cwd}/prescription_form.html")
+    page.goto((cwd / "prescription_form.html").resolve().as_uri())
     page.wait_for_timeout(500)
 
     # Dismiss welcome modal if present
@@ -44,7 +46,7 @@ def run_verification(page):
     page.screenshot(path=os.path.join(screenshots_dir, "prescription_form_summary.png"))
 
     # 2. Verify sick-notes.html
-    page.goto(f"file://{cwd}/sick-notes.html")
+    page.goto((cwd / "sick-notes.html").resolve().as_uri())
     page.wait_for_timeout(500)
 
     welcome_btn = page.query_selector(".welcome-modal button, #welcomeModal button")

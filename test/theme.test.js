@@ -86,3 +86,21 @@ test('Theme JS - reads theme from URL parameter', () => {
   assert.strictEqual(env.attributes.get('data-theme'), 'teal');
   assert.strictEqual(env.store.get('siteTheme'), 'teal');
 });
+
+test('Theme JS - setTheme("default") removes data-theme attribute', () => {
+  const env = createMockEnvironment();
+  global.window = env.window;
+  global.document = env.window.document;
+  global.localStorage = env.window.localStorage;
+  global.URLSearchParams = URLSearchParams;
+  global.URL = URL;
+
+  const code = fs.readFileSync(path.resolve('./js/theme.js'), 'utf8');
+  eval(code);
+
+  env.window.setTheme('blue');
+  assert.strictEqual(env.attributes.get('data-theme'), 'blue');
+
+  env.window.setTheme('default');
+  assert.strictEqual(env.attributes.get('data-theme'), undefined);
+});

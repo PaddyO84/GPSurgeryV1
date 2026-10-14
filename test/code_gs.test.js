@@ -100,6 +100,21 @@ function createGasMockEnvironment() {
     ["Timestamp", "Patient Email", "Chosen Pharmacy", "Patient Full Name", "Home Address", "Contact Number", "Date of Birth", "Medication List", "Communication Preference", "Status", "Notification Sent"]
   ]));
 
+  const uiAlerts = [];
+  const ui = {
+    alert: (title, message) => uiAlerts.push({ title, message }),
+    createMenu: () => {
+      const menu = {
+        addItem: () => menu,
+        addSeparator: () => menu,
+        addSubMenu: () => menu,
+        addToUi: () => {}
+      };
+      return menu;
+    },
+    ButtonSet: { OK: 'OK' }
+  };
+
   const spreadsheet = {
     getSheetByName: (name) => sheets.get(name) || null,
     insertSheet: (name) => {
@@ -110,17 +125,23 @@ function createGasMockEnvironment() {
   };
 
   const SpreadsheetApp = {
-    getActiveSpreadsheet: () => spreadsheet
+    getActiveSpreadsheet: () => spreadsheet,
+    getUi: () => ui
   };
 
+  let mailShouldThrow = false;
   const MailApp = {
     sendEmail: (toOrObj, subject, body, options) => {
+      if (mailShouldThrow) {
+        throw new Error('MailApp service error');
+      }
       if (typeof toOrObj === 'object') {
         sentEmails.push(toOrObj);
       } else {
         sentEmails.push({ to: toOrObj, subject, body, ...options });
       }
-    }
+    },
+    setShouldThrow: (val) => { mailShouldThrow = val; }
   };
 
   const LockService = {
@@ -164,6 +185,23 @@ function createGasMockEnvironment() {
     })
   };
 
+  const triggers = [];
+  const ScriptApp = {
+    getProjectTriggers: () => triggers,
+    newTrigger: (functionName) => ({
+      timeBased: function() { return this; },
+      onWeekDay: function() { return this; },
+      atHour: function() { return this; },
+      create: function() {
+        const trig = { getHandlerFunction: () => functionName };
+        triggers.push(trig);
+        return trig;
+      }
+    }),
+    WeekDay: { MONDAY: 1 },
+    resetTriggers: () => { triggers.length = 0; }
+  };
+
   const Logger = {
     log: (msg) => logEntries.push(msg)
   };
@@ -175,11 +213,13 @@ function createGasMockEnvironment() {
     ContentService,
     Utilities,
     PropertiesService,
+    ScriptApp,
     Logger,
     sheets,
     sentEmails,
     logEntries,
-    properties
+    properties,
+    uiAlerts
   };
 }
 
@@ -191,6 +231,7 @@ function loadCodeGs(env) {
     ContentService: env.ContentService,
     Utilities: env.Utilities,
     PropertiesService: env.PropertiesService,
+    ScriptApp: env.ScriptApp,
     Logger: env.Logger
   });
 
@@ -336,4 +377,85 @@ test('Code.gs - archiveOldRequests returns early when sheet has no data rows', (
 
   assert.strictEqual(env.sentEmails.length, 0, 'No error email should be sent');
   assert.ok(env.logEntries.some(log => log.includes('No data rows to archive.')));
+});
+
+test('Code.gs - sendReadyEmail handles email errors gracefully', () => {
+  const env = createGasMockEnvironment();
+  env.MailApp.setShouldThrow(true);
+
+  env.sheets.get("Form responses 1").rows = [
+    ["Timestamp", "Patient Email", "Chosen Pharmacy", "Patient Full Name", "Home Address", "Contact Number", "Date of Birth", "Medication List", "Communication Preference", "Status", "Notification Sent"],
+    ["2026-10-15", "patient@example.com", "Main Pharmacy", "John Doe", "123 St", "0871234567", "1990-01-01", "Paracetamol", "Email", "Sent to Pharmacy", "Processed on 15/10/2026"]
+  ];
+
+  loadCodeGs(env);
+  globalThis.sendReadyEmail(2);
+
+  assert.ok(env.logEntries.some(log => log.includes('Error sending READY email for row 2')));
+});
+
+test('Code.gs - reportError falls back to logging if email sending throws', () => {
+  const env = createGasMockEnvironment();
+  env.MailApp.setShouldThrow(true);
+  loadCodeGs(env);
+
+  globalThis.reportError("testFunc", new Error("test error"), 5);
+
+  assert.ok(env.logEntries.some(log => log.includes('Could not send error report email')));
+});
+
+test('Code.gs - sendConfirmationNotification handles email errors gracefully', () => {
+  const env = createGasMockEnvironment();
+  env.MailApp.setShouldThrow(true);
+  loadCodeGs(env);
+
+  globalThis.sendConfirmationNotification("Jane Doe", "jane@example.com", "Email");
+
+  assert.ok(env.logEntries.some(log => log.includes('Failed to send confirmation email to jane@example.com')));
+});
+
+test('Code.gs - archiveOldRequests handles invalid date strings gracefully', () => {
+  const env = createGasMockEnvironment();
+  const mainSheetRows = [
+    ["Timestamp", "Patient Email", "Chosen Pharmacy", "Patient Full Name", "Home Address", "Contact Number", "Date of Birth", "Medication List", "Communication Preference", "Status", "Notification Sent"],
+    [new Date(), "a@example.com", "Pharm", "Alice", "Addr", "087111", "1990", "Med", "Email", "Sent to Pharmacy", "Processed on invalid-date"],
+    [new Date(), "b@example.com", "Pharm", "Bob", "Addr", "087222", "1990", "Med", "Email", "Sent to Pharmacy", "Not processed yet"]
+  ];
+  env.sheets.get("Form responses 1").rows = mainSheetRows;
+  loadCodeGs(env);
+
+  globalThis.archiveOldRequests();
+
+  const sourceRows = env.sheets.get("Form responses 1");
+  assert.strictEqual(sourceRows.getLastRow(), 3);
+});
+
+test('Code.gs - setupSystem creates Archive sheet and time trigger', () => {
+  const env = createGasMockEnvironment();
+  loadCodeGs(env);
+
+  globalThis.setupSystem();
+
+  assert.ok(env.uiAlerts.some(a => a.title === 'Setup Complete'));
+  assert.strictEqual(env.ScriptApp.getProjectTriggers().length, 1);
+  assert.ok(env.sheets.has('Archive'));
+});
+
+test('Code.gs - sendWhatsAppLinkToStaff handles valid and missing phone numbers', () => {
+  const env = createGasMockEnvironment();
+  const mainSheetRows = [
+    ["Timestamp", "Patient Email", "Chosen Pharmacy", "Patient Full Name", "Home Address", "Contact Number", "Date of Birth", "Medication List", "Communication Preference", "Status", "Notification Sent"],
+    [new Date(), "p1@example.com", "Pharm A", "Patient One", "Addr", "", "1990", "Med", "WhatsApp", "Sent to Pharmacy", "Processed"],
+    [new Date(), "p2@example.com", "Pharm B", "Patient Two", "Addr", "0879998888", "1990", "Med", "WhatsApp", "Sent to Pharmacy", "Processed"]
+  ];
+  env.sheets.get("Form responses 1").rows = mainSheetRows;
+  loadCodeGs(env);
+
+  globalThis.sendWhatsAppLinkToStaff(2, "staff@example.com");
+  globalThis.sendWhatsAppLinkToStaff(3, "staff@example.com");
+
+  assert.strictEqual(env.sentEmails.length, 2);
+  assert.strictEqual(env.sentEmails[0].subject, "Action Required: Missing Phone Number");
+  assert.strictEqual(env.sentEmails[1].subject, "Action Required: Send WhatsApp to Patient Two");
+  assert.ok(env.sentEmails[1].htmlBody.includes("wa.me/353879998888"));
 });
