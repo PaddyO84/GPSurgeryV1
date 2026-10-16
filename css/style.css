@@ -248,9 +248,22 @@ nav a:hover::after {
 }
 
 .dropdown:hover .dropdown-content,
-.dropdown:focus-within .dropdown-content {
+.dropdown:focus-within .dropdown-content,
+.dropdown-content.open {
     display: block;
     animation: slideDown 0.2s ease-out;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #ffeeba;
+}
+
+.mb-2 {
+    margin-bottom: 2rem !important;
 }
 
 @keyframes slideDown {

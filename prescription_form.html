@@ -195,7 +195,7 @@
         <button class="mobile-menu-close" onclick="toggleMobileMenu(false)">&times;</button>
         <div class="sidebar">
             <h3>Actions</h3>
-            <button type="button" title="Load a previously saved prescription list from a file on your device." onclick="document.getElementById('loadFile').click(); toggleMobileMenu(false);">Load My Prescriptions</button>
+            <button type="button" id="mobileLoadBtn" title="Load a previously saved prescription list from a file on your device.">Load My Prescriptions</button>
             <button type="button" title="Save your current prescription list to a file on your device." onclick="saveRequestToFile(); toggleMobileMenu(false);">Save My Prescriptions</button>
             <button type="button" class="print-btn" onclick="printSummary(); toggleMobileMenu(false);">Print Summary</button>
             <button type="button" class="clear-btn" onclick="clearAllFields(); toggleMobileMenu(false);">Clear All Fields</button>
@@ -206,7 +206,7 @@
     <div class="main-wrapper">
         <div class="sidebar" id="desktop-sidebar">
             <h3>Actions</h3>
-            <button type="button" title="Load a previously saved prescription list from a file on your device." onclick="document.getElementById('loadFile').click()">Load My Prescriptions</button>
+            <button type="button" id="desktopLoadBtn" title="Load a previously saved prescription list from a file on your device.">Load My Prescriptions</button>
             <button type="button" title="Save your current prescription list to a file on your device." onclick="saveRequestToFile()">Save My Prescriptions</button>
             <button type="button" class="print-btn" onclick="printSummary()">Print Summary</button>
             <button type="button" class="clear-btn" onclick="clearAllFields()">Clear Form</button>
@@ -286,6 +286,20 @@
                 saveToLocalStorage();
             });
         });
+
+        const mobileLoadBtn = document.getElementById('mobileLoadBtn');
+        if (mobileLoadBtn) {
+            mobileLoadBtn.addEventListener('click', () => {
+                document.getElementById('loadFile').click();
+                toggleMobileMenu(false);
+            });
+        }
+        const desktopLoadBtn = document.getElementById('desktopLoadBtn');
+        if (desktopLoadBtn) {
+            desktopLoadBtn.addEventListener('click', () => {
+                document.getElementById('loadFile').click();
+            });
+        }
     });
 
     // --- DOM & DATA POPULATION ---
@@ -409,8 +423,44 @@
         if (!validateForm()) return;
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        let summaryHTML = `<p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Email:</strong> ${patientDetails.email}</p><p><strong>Phone:</strong> ${patientDetails.phone}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><p><strong>Contact Preference:</strong> ${patientDetails.commPref}</p><hr><h3>Medications:</h3><ul>${medicationList.map(med => `<li>${med.name} - ${med.dosage} (${med.freq})</li>`).join('')}</ul>`;
-        document.getElementById('summaryDetails').innerHTML = summaryHTML;
+        const container = document.getElementById('summaryDetails');
+        container.innerHTML = '';
+
+        const div = document.createElement('div');
+        div.style.textAlign = 'left';
+
+        const addDetail = (label, value) => {
+            const p = document.createElement('p');
+            const strong = document.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(value || ''));
+            div.appendChild(p);
+        };
+
+        addDetail('Name', patientDetails.name);
+        addDetail('Email', patientDetails.email);
+        addDetail('Phone', patientDetails.phone);
+        addDetail('Date of Birth', patientDetails.dob);
+        addDetail('Pharmacy', patientDetails.pharmacy);
+        addDetail('Contact Preference', patientDetails.commPref);
+
+        const hr = document.createElement('hr');
+        div.appendChild(hr);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Medications:';
+        div.appendChild(h3);
+
+        const ul = document.createElement('ul');
+        medicationList.forEach(med => {
+            const li = document.createElement('li');
+            li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+            ul.appendChild(li);
+        });
+        div.appendChild(ul);
+
+        container.appendChild(div);
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
@@ -521,11 +571,21 @@
         if (errorDiv) errorDiv.textContent = '';
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    <script src="js/theme.js"></script>
-</head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${med.name}</td><td>${med.dosage}</td><td>${med.freq}</td></tr>`).join('')}</tbody></table></body></html>`);
+        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    \x3Cscript src="js/theme.js">\x3C/script>
+</head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${escapeHtml(patientDetails.name)}</p><p><strong>Date of Birth:</strong> ${escapeHtml(patientDetails.dob)}</p><p><strong>Pharmacy:</strong> ${escapeHtml(patientDetails.pharmacy)}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${escapeHtml(med.name)}</td><td>${escapeHtml(med.dosage)}</td><td>${escapeHtml(med.freq)}</td></tr>`).join('')}</tbody></table></body></html>`);
         printWindow.document.close();
         printWindow.print();
     }
