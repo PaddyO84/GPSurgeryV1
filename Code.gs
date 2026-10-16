@@ -12,7 +12,8 @@ const NOTIFICATION_COL = 11; // Notification Sent is in Column K
 // --- SCRIPT SETTINGS ---
 const SENDER_NAME = "Carndonagh Health Centre";
 const YOUR_PHONE_NUMBER = "074-93-74242";
-const ADMIN_EMAIL = "patricknoone+surgery@gmail.com";
+const DEFAULT_ADMIN_EMAIL = "admin@example.com";
+const ADMIN_EMAIL = (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) ? (PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL') || DEFAULT_ADMIN_EMAIL) : DEFAULT_ADMIN_EMAIL;
 const STATUS_QUERY = "Query - Please Contact Us";
 const STATUS_READY = "Sent to Pharmacy";
 const FOOTER = `<p style="font-size:0.9em; color:#666;"><i>Please note: This is an automated message and this email address is not monitored. For any queries, please contact the surgery by phone at ${YOUR_PHONE_NUMBER}.</i></p>`;
@@ -36,58 +37,7 @@ function doPost(e) {
     }
 
     // Default: Prescription Handling
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-
-    // Validate essential data
-    if (!data.patientDetails.name || !data.patientDetails.email) {
-       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const timestamp = new Date();
-
-    // Format Medication List
-    let medicationString = "";
-    if (data.medicationList && Array.isArray(data.medicationList)) {
-       medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
-    }
-
-    // Append to Sheet (Order must match Columns defined at top, roughly)
-    // Sheet Structure assumed: Timestamp, Email, Pharmacy, Name, Address, Phone, DOB, Meds, CommPref, Status, Notification
-    // Note: The original Google Form might have had a specific column order. We will map to the known columns constants.
-    // However, appendRow adds to the end. We need to respect the visual layout.
-    // Based on constants:
-    // A(1): Timestamp (Standard form)
-    // B(2): Email (EMAIL_COL)
-    // C(3): Pharmacy (PHARMACY_COL)
-    // D(4): Name (NAME_COL)
-    // E(5): Address (Assumed based on HTML form, but not in constants)
-    // F(6): Phone (PHONE_COL)
-    // G(7): DOB (Assumed)
-    // H(8): Meds (MEDS_COL)
-    // I(9): CommPref (COMM_PREF_COL)
-    // J(10): Status (STATUS_COL)
-    // K(11): Notification (NOTIFICATION_COL)
-
-    const newRow = [];
-    newRow[0] = timestamp; // Col A
-    newRow[EMAIL_COL - 1] = data.patientDetails.email;
-    newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
-    newRow[NAME_COL - 1] = data.patientDetails.name;
-    newRow[4] = data.patientDetails.address; // Col E (Index 4)
-    newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
-    newRow[6] = data.patientDetails.dob; // Col G (Index 6)
-    newRow[MEDS_COL - 1] = medicationString;
-    newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
-    newRow[STATUS_COL - 1] = ""; // Initial Status Empty
-    newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
-
-    sheet.appendRow(newRow);
-    const row = sheet.getLastRow();
-
-    // Send Confirmation
-    sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
-
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
+    return handlePrescriptionSubmission(data);
 
   } catch (err) {
     reportError('doPost', err, null);
@@ -95,6 +45,47 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * Handles prescription submission processing and sheet appending.
+ */
+function handlePrescriptionSubmission(data) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+  // Validate essential data
+  if (!data.patientDetails || !data.patientDetails.name || !data.patientDetails.email) {
+     return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'message': 'Missing Name or Email' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const timestamp = new Date();
+
+  // Format Medication List
+  let medicationString = "";
+  if (data.medicationList && Array.isArray(data.medicationList)) {
+     medicationString = data.medicationList.map(m => `${m.name} - ${m.dosage} (${m.freq})`).join("\n");
+  }
+
+  const newRow = [];
+  newRow[0] = timestamp; // Col A
+  newRow[EMAIL_COL - 1] = data.patientDetails.email;
+  newRow[PHARMACY_COL - 1] = data.patientDetails.pharmacy;
+  newRow[NAME_COL - 1] = data.patientDetails.name;
+  newRow[4] = data.patientDetails.address; // Col E (Index 4)
+  newRow[PHONE_COL - 1] = "'" + data.patientDetails.phone; // Force string for phone
+  newRow[6] = data.patientDetails.dob; // Col G (Index 6)
+  newRow[MEDS_COL - 1] = medicationString;
+  newRow[COMM_PREF_COL - 1] = data.patientDetails.commPref;
+  newRow[STATUS_COL - 1] = ""; // Initial Status Empty
+  newRow[NOTIFICATION_COL - 1] = "Processed on " + Utilities.formatDate(timestamp, "Europe/Dublin", "dd/MM/yyyy");
+
+  sheet.appendRow(newRow);
+  const row = sheet.getLastRow();
+
+  // Send Confirmation
+  sendConfirmationNotification(data.patientDetails.name, data.patientDetails.email, data.patientDetails.commPref);
+
+  return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'row': row })).setMimeType(ContentService.MimeType.JSON);
 }
 
 // --- CORE, AUTOMATED FUNCTIONS ---
@@ -610,6 +601,8 @@ function archiveOldRequests() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sourceSheet = ss.getSheetByName(SHEET_NAME);
+    if (!sourceSheet || sourceSheet.getLastRow() < 2) return;
+
     let archiveSheet = ss.getSheetByName("Archive");
 
     // Create archive sheet if it doesn't exist
@@ -620,33 +613,53 @@ function archiveOldRequests() {
       Logger.log("Created 'Archive' sheet.");
     }
 
-    const dataRange = sourceSheet.getRange(2, 1, sourceSheet.getLastRow() - 1, sourceSheet.getLastColumn());
+    const lastRow = sourceSheet.getLastRow();
+    const lastCol = sourceSheet.getLastColumn();
+    const dataRange = sourceSheet.getRange(2, 1, lastRow - 1, lastCol);
     const data = dataRange.getValues();
     const today = new Date();
-    const cutOffDate = new Date(today.setDate(today.getDate() - 180));
+    const cutOffDate = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000);
 
-    // Iterate backwards to safely delete rows
+    const rowsToArchive = [];
+    const rowIndicesToDelete = [];
+
+    // Iterate backwards to identify rows for batch operation
     for (let i = data.length - 1; i >= 0; i--) {
       const rowData = data[i];
       const status = rowData[STATUS_COL - 1];
       const processedDateStr = rowData[NOTIFICATION_COL - 1]; // Expected format: "Processed on dd/MM/yyyy"
 
-      if (status === STATUS_READY && processedDateStr && processedDateStr.startsWith("Processed on ")) {
-        const dateStr = processedDateStr.replace("Processed on ", ""); // "dd/MM/yyyy"
+      if (status === STATUS_READY && typeof processedDateStr === 'string' && processedDateStr.startsWith("Processed on ")) {
+        const dateStr = processedDateStr.replace("Processed on ", "").trim(); // "dd/MM/yyyy"
         const dateParts = dateStr.split('/'); // ["dd", "MM", "yyyy"]
 
         if (dateParts.length === 3) {
-          // new Date(year, monthIndex, day)
-          const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
 
-          if (processedDate < cutOffDate) {
-            const rowToDelete = i + 2; // +2 because data is 0-indexed and sheet is 1-indexed from row 2
-            archiveSheet.appendRow(rowData);
-            sourceSheet.deleteRow(rowToDelete);
-            Logger.log(`Archived row ${rowToDelete}.`);
+          if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year > 1900 && month >= 0 && month < 12 && day >= 1 && day <= 31) {
+            const processedDate = new Date(year, month, day);
+
+            if (!isNaN(processedDate.getTime()) && processedDate < cutOffDate) {
+              const sheetRowIndex = i + 2; // 0-indexed data -> 1-indexed sheet starting at row 2
+              rowsToArchive.push(rowData);
+              rowIndicesToDelete.push(sheetRowIndex);
+            }
           }
         }
       }
+    }
+
+    if (rowsToArchive.length > 0) {
+      // Batch append archived rows
+      archiveSheet.getRange(archiveSheet.getLastRow() + 1, 1, rowsToArchive.length, lastCol).setValues(rowsToArchive);
+
+      // Delete rows backwards to maintain index integrity
+      for (let k = 0; k < rowIndicesToDelete.length; k++) {
+        sourceSheet.deleteRow(rowIndicesToDelete[k]);
+      }
+      Logger.log(`Archived ${rowsToArchive.length} row(s).`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);
