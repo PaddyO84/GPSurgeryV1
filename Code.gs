@@ -631,22 +631,28 @@ function archiveOldRequests() {
       const status = rowData[STATUS_COL - 1];
       const processedDateStr = rowData[NOTIFICATION_COL - 1]; // Expected format: "Processed on dd/MM/yyyy"
 
-      if (status === STATUS_READY && processedDateStr && processedDateStr.startsWith("Processed on ")) {
-        const dateStr = processedDateStr.replace("Processed on ", ""); // "dd/MM/yyyy"
-        const dateParts = dateStr.split('/'); // ["dd", "MM", "yyyy"]
-
-        if (dateParts.length === 3) {
-          // new Date(year, monthIndex, day)
-          const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
-
-          if (processedDate < cutOffDate) {
-            const rowToDelete = i + 2; // +2 because data is 0-indexed and sheet is 1-indexed from row 2
-            archiveSheet.appendRow(rowData);
-            sourceSheet.deleteRow(rowToDelete);
-            Logger.log(`Archived row ${rowToDelete}.`);
-          }
-        }
+      if (status !== STATUS_READY || !processedDateStr || !processedDateStr.startsWith("Processed on ")) {
+        continue;
       }
+
+      const dateStr = processedDateStr.replace("Processed on ", ""); // "dd/MM/yyyy"
+      const dateParts = dateStr.split('/'); // ["dd", "MM", "yyyy"]
+
+      if (dateParts.length !== 3) {
+        continue;
+      }
+
+      // new Date(year, monthIndex, day)
+      const processedDate = new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10));
+
+      if (!(processedDate < cutOffDate)) {
+        continue;
+      }
+
+      const rowToDelete = i + 2; // +2 because data is 0-indexed and sheet is 1-indexed from row 2
+      archiveSheet.appendRow(rowData);
+      sourceSheet.deleteRow(rowToDelete);
+      Logger.log(`Archived row ${rowToDelete}.`);
     }
   } catch (err) {
     reportError('archiveOldRequests', err, null);
