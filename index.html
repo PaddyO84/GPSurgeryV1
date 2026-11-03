@@ -3,239 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Carndonagh Health Centre - Providing quality healthcare to the Inishowen community. Appointments, prescriptions, and patient services.">
-    <title>Carndonagh Health Centre - GP Practice Donegal</title>
+    <meta name="description" content="Example Health Centre - Providing premium healthcare to our community. Book appointments and order prescriptions online.">
+    <title>Example Health Centre | Modern GP Practice</title>
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- Schema.org Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "MedicalClinic",
-      "name": "Carndonagh Health Centre",
-      "image": "https://carndonaghhealthcentre.ie/images/logo.png",
-      "telephone": "074-93-74262",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Derry Rd",
-        "addressLocality": "Carndonagh",
-        "addressRegion": "Co. Donegal",
-        "postalCode": "F93 EW7T",
-        "addressCountry": "IE"
-      },
-      "openingHoursSpecification": [
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          "opens": "09:00",
-          "closes": "12:30"
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          "opens": "14:00",
-          "closes": "16:30"
-        }
-      ],
-      "department": {
-        "@type": "EmergencyService",
-        "name": "NowDoc",
-        "telephone": "0818-400-911",
-        "description": "Out of Hours Emergency Service"
-      }
-    }
-    </script>
     <script src="js/theme.js"></script>
 </head>
 <body>
-    <header>
-        <div class="top-bar">
-            <div class="top-bar-content">
-                <div class="contact-top">
-                    <span>📞 (074) 93 74262</span> |
-                    <span>📍 Derry Rd, Carndonagh, Co. Donegal</span>
-                </div>
-                <div class="emergency-top">
-                    Out of Hours (NowDoc): <strong>(0818) 400 911</strong>
-                </div>
-            </div>
-        </div>
-        <div class="nav-container">
-            <div class="logo">
-                <a href="index.html" aria-label="Carndonagh Health Centre Home">
-                    <img src="images/logo.png" alt="Carndonagh Health Centre Logo">
-                </a>
-            </div>
-            <button class="menu-toggle" aria-label="Toggle navigation menu">☰</button>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li class="dropdown">
-                        <span class="dropdown-trigger" tabindex="0">Patient Info ▾</span>
-                        <div class="dropdown-content">
-                            <a href="appointments.html">Appointments</a>
-                            <a href="prices.html">Fees & Payment</a>
-                            <a href="prescriptions.html">Prescriptions</a>
-                            <a href="test-results.html">Test Results</a>
-                            <a href="new-patients.html">New Patients</a>
-                            <a href="sick-notes.html">Sick Notes/Certification</a>
-                            <a href="confidentiality.html">Confidentiality</a>
-                            <a href="zero-tolerance.html">Unacceptable Behaviour</a>
-                        </div>
-                    </li>
-                    <li class="dropdown">
-                        <span class="dropdown-trigger" tabindex="0">Online Services ▾</span>
-                        <div class="dropdown-content">
-                            <a href="order-prescription.html">Repeat Prescriptions</a>
-                            <a href="sick-notes.html">Sickness Certification</a>
-                        </div>
-                    </li>
-                    <li><a href="forms.html">Useful Forms</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <header id="header-placeholder"></header>
 
     <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Carndonagh Health Centre</h1>
-                <p>Providing quality healthcare to the Inishowen community.</p>
-                <div style="margin-top: 1.5rem;">
-                   <a href="appointments.html" class="btn">Book Appointment</a>
-                   <a href="order-prescription.html" class="btn btn-outline" style="margin-left: 1rem; color: white; border-color: white;">Order Prescriptions</a>
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container hero-layout">
+                <div class="hero-text">
+                    <h1 id="hero-title">Your Health, <span class="accent">Our Priority</span></h1>
+                    <p class="hero-subtitle">Providing quality healthcare to our local community for decades with a modern, patient-first approach.</p>
+                    <div class="hero-actions">
+                       <a href="appointments.html" class="btn btn-primary">Book Appointment</a>
+                       <a href="order-prescription.html" class="btn btn-outline-light">Order Prescriptions</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <img src="images/logo.png" alt="Example Health Centre Logo" class="hero-logo">
                 </div>
             </div>
         </section>
 
-        <!-- Important Alerts -->
-        <section class="alert-section">
-            <article class="alert-card">
-                <h3>❄️ Winter Overflow Clinic</h3>
-                <p><strong>For acute respiratory illnesses or urgent matters only.</strong></p>
-                <p>By appointment only. Please call reception.</p>
-                <p style="margin-top:5px; font-size: 0.9em; color: var(--text-muted);">(Effective from Monday 8th December, 5pm)</p>
-            </article>
-
-            <article class="alert-card">
-                <h3>⚠️ Fee Update</h3>
-                <p>Private fees were updated on 1st January 2024.</p>
-                <a href="prices.html" style="font-weight: 600; margin-top: 0.5rem; display: inline-block;">View current price list &rarr;</a>
-            </article>
-
-            <article class="alert-card">
-                <h3>📞 Urgent Appointments</h3>
-                <p>Please call between <strong>9am - 10am</strong> for urgent requests.</p>
-                <p style="margin-top:5px; font-size: 0.9em; color: var(--text-muted);">Please reserve this time for urgent matters only.</p>
-            </article>
-        </section>
-
-        <section class="container section">
-            <h2 class="section-title">Welcome to Our Practice</h2>
-            <div class="grid-3">
-                <article class="card">
-                    <h3>Opening Hours</h3>
-                    <p><strong>Monday - Friday:</strong></p>
-                    <p>9:00am - 12:30pm</p>
-                    <p>2:00pm - 4:30pm</p>
-                    <br>
-                    <p><strong>Out of Hours (NowDoc):</strong></p>
-                    <p>Weeknights & Weekends: <a href="tel:0818400911" style="font-weight:bold;">0818 400 911</a></p>
+        <div class="container">
+            <section class="alert-section" aria-label="Important Alerts">
+                <article class="alert-card glass" role="article">
+                    <h3><span class="icon">❄️</span> Winter Clinic</h3>
+                    <p>For <strong>acute respiratory illnesses</strong> only. By appointment - please call reception.</p>
+                    <small>(Service starts December 8, 2026)</small>
                 </article>
-
-                <article class="card">
-                    <h3>Contact Us</h3>
-                    <p><strong>Phone:</strong></p>
-                    <p><a href="tel:0749374208">(074) 93 74208</a></p>
-                    <p><a href="tel:0749374262">(074) 93 74262</a></p>
-                    <br>
-                    <p><strong>Email:</strong></p>
-                    <p><a href="mailto:reception@carndonaghhealthcentre.ie">reception@carndonaghhealthcentre.ie</a></p>
+                <article class="alert-card glass" role="article">
+                    <h3><span class="icon">⚠️</span> Fee Update</h3>
+                    <p>Private fees were updated on January 1, 2026. Please review our latest pricing.</p>
+                    <a href="prices.html" class="alert-link">View Details &rarr;</a>
                 </article>
-
-                <article class="card">
-                    <h3>Quick Links</h3>
-                    <ul style="list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <li><a href="order-prescription.html" class="btn" style="width: 100%;">Order Repeat Prescription</a></li>
-                        <li><a href="appointments.html" style="display: block; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100);">Book an Appointment</a></li>
-                        <li><a href="prices.html" style="display: block; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-100);">View Price List</a></li>
-                        <li><a href="forms.html" style="display: block; padding: 0.5rem 0;">Download Forms</a></li>
-                    </ul>
+                <article class="alert-card glass" role="article">
+                    <h3><span class="icon">📞</span> Urgent Care</h3>
+                    <p>Call between <strong>9am - 10am</strong> for same-day urgent appointment requests.</p>
                 </article>
+            </section>
+        </div>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Comprehensive Care</h2>
+                <p class="section-subtitle">We offer a wide range of services tailored to your health and well-being.</p>
+                
+                <div class="grid-3">
+                    <article class="card glass">
+                        <h3>Opening Hours</h3>
+                        <ul class="info-list">
+                            <li><strong>Mon - Fri:</strong> <span id="hours-weekday">9:00am - 12:30pm</span></li>
+                            <li><strong>Mon - Fri:</strong> <span id="hours-afternoon">2:00pm - 4:30pm</span></li>
+                            <li><strong>Weekend:</strong> <span id="hours-weekend">Consult NowDoc</span></li>
+                        </ul>
+                    </article>
+                    <article class="card glass">
+                        <h3>Contact Us</h3>
+                         <ul class="info-list">
+                            <li><strong>Phone:</strong> <a id="contact-phone" href="tel:012345679">(01) 234 5679</a></li>
+                            <li><strong>Email:</strong> <a id="contact-email" href="mailto:reception@examplehealthcentre.ie">reception@examplehealthcentre.ie</a></li>
+                            <li><strong>NowDoc:</strong> <a id="contact-nowdoc" href="tel:019876543">(01) 987 6543</a></li>
+                        </ul>
+                    </article>
+                    <article class="card card-accent">
+                        <h3>Quick Access</h3>
+                        <ul class="quick-links">
+                            <li><a href="order-prescription.html">Order Prescription</a></li>
+                            <li><a href="appointments.html">Appointments</a></li>
+                            <li><a href="prices.html">Fees & Pricing</a></li>
+                            <li><a href="forms.html">Patient Forms</a></li>
+                        </ul>
+                    </article>
+                </div>
             </div>
         </section>
 
-        <section class="container section">
-            <h2 class="section-title">Our Team</h2>
-            <div class="grid-3">
-                <div class="card staff-category">
-                    <h4>General Practitioners</h4>
-                    <p>Dr. C. Falls</p>
-                    <p>Dr. T. Downey</p>
-                    <p>Dr. A. McNutt</p>
+        <section class="section container">
+            <div class="cta-section">
+                <div class="cta-card zero-tolerance-card glass">
+                    <img src="images/zero_tolerance.png" alt="Zero Tolerance" class="cta-icon">
+                    <div class="cta-content">
+                        <h3>Dignity & Respect</h3>
+                        <p>We operate a <strong>Zero Tolerance Policy</strong>. Our staff deserve a safe work environment.</p>
+                        <a href="zero-tolerance.html" class="accent-link">Full Policy &rarr;</a>
+                    </div>
                 </div>
-                <div class="card staff-category">
-                    <h4>Practice Nurse</h4>
-                    <p>Nurse C. Gibbons</p>
-                    <h4>Phlebotomist</h4>
-                    <p>Karen Cullen</p>
+                 <div class="cta-card online-payments-card glass">
+                    <img src="images/billink_logo.png" alt="Billink" class="cta-icon">
+                    <div class="cta-content">
+                        <h3>Online Payments</h3>
+                        <p>Secure online payments via Billink for all practice services.</p>
+                         <a href="https://billinkpayments.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">Pay Online</a>
+                    </div>
                 </div>
-                <div class="card staff-category">
-                    <h4>Administration</h4>
-                    <p><strong>Practice Manager:</strong> Cassie Owens</p>
-                    <p><strong>Reception:</strong> Anne McGuinness, Deborah McLaughlin, Nicola Kelly</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="container" style="margin-bottom: 4rem;">
-            <div class="card" style="border-left: 5px solid var(--error-color); background-color: #fff5f5; flex-direction: row; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                <img src="https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/bb6e21ba-f29c-46be-a8ea-cde0752e187c/Zero_Tol.png" alt="Zero Tolerance" style="height: 80px; width: auto;">
-                <div style="flex: 1;">
-                    <h3 style="color: var(--error-color); margin-bottom: 0.5rem;">Dignity and Respect at Work</h3>
-                    <p>Carndonagh Health Centre operates a <strong>Zero Tolerance Policy</strong> in accordance with HSE guidelines. Our staff have the right to work in an environment free from violence, abuse, and intimidation.</p>
-                    <p style="margin-top: 1rem;"><a href="zero-tolerance.html" style="color: var(--error-color); font-weight: bold; text-decoration: underline;">Read our full Zero Tolerance Policy &rarr;</a></p>
-                </div>
-            </div>
-        </section>
-
-        <section class="container">
-            <div class="card" style="text-align: center; align-items: center;">
-                <img src="https://images.squarespace-cdn.com/content/v1/5f7f0586bc20b071daab8716/88984eb8-d63f-496f-9afd-6d09b13c1b23/billink+logo.png" alt="Billink" style="max-width: 150px; margin-bottom: 1.5rem;">
-                <h3>Online Payments</h3>
-                <p style="margin-bottom: 1.5rem;">We now accept secure online payments via Billink.</p>
-                <a href="https://billinkpayments.com/" target="_blank" class="btn">Pay Online Now</a>
             </div>
         </section>
     </main>
 
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Carndonagh Health Centre</h4>
-                <p>Derry Rd, Carndonagh</p>
-                <p>Co. Donegal</p>
-                <p>F93 EW7T</p>
-            </div>
-            <div class="footer-section">
-                <h4>Contact</h4>
-                <p><a href="tel:0749374208">(074) 93 74208</a></p>
-                <p><a href="tel:0749374262">(074) 93 74262</a></p>
-                <p><a href="mailto:reception@carndonaghhealthcentre.ie">reception@carndonaghhealthcentre.ie</a></p>
-            </div>
-            <div class="footer-section">
-                <h4>Links</h4>
-                <a href="confidentiality.html">Privacy Policy</a>
-                <a href="confidentiality.html">Cookie Policy</a>
-                <a href="#">Accessibility</a>
-            </div>
-        </div>
-        <div class="copyright">
-            <p>&copy; 2024 Carndonagh Health Centre. All Rights Reserved.</p>
-        </div>
-    </footer>
+    <footer id="footer-placeholder"></footer>
 
+    <script src="js/siteData.js"></script>
+    <script src="js/dynamicContent.js"></script>
+    <script src="js/loadComponents.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/welcome.js"></script>
 </body>
 </html>

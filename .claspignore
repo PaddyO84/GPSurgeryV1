@@ -1,0 +1,9 @@
+# Clasp ignore file
+**/**
+!appsscript.json
+!Code.gs
+!handlers.gs
+!utils.gs
+!tests.gs
+!email_confirmation.html
+!email_ready.html

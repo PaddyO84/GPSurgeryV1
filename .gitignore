@@ -1,0 +1,10 @@
+node_modules/
+.clasprc.json
+.nyc_output/
+coverage/
+Suggestions.txt
+.idea/caches/
+anonymize_local.json
+__pycache__/
+.anonymize_backup_*
+

@@ -1,0 +1,180 @@
+(function() {
+    // Return immediately if live deployment is active
+    try {
+        const config = (typeof CONFIG !== 'undefined') ? CONFIG : (typeof window !== 'undefined' ? window.CONFIG : null);
+        const isLive = (config && typeof config.isLive === 'function')
+            ? config.isLive()
+            : Boolean(config && config.LIVE_DEPLOYMENT);
+        if (isLive) {
+            return;
+        }
+    } catch (e) {}
+
+    // Check if the user has already seen the welcome message
+    try {
+        if (localStorage.getItem('demo_welcome_seen') === 'true') {
+            return;
+        }
+    } catch (e) {}
+
+    // Save currently focused element to restore upon dismissal
+    const previouslyFocusedElement = document.activeElement;
+
+    // Create the modal container
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = 'demo-welcome-modal';
+    modalOverlay.setAttribute('role', 'dialog');
+    modalOverlay.setAttribute('aria-modal', 'true');
+    modalOverlay.setAttribute('aria-labelledby', 'demo-welcome-title');
+    modalOverlay.style.position = 'fixed';
+    modalOverlay.style.top = '0';
+    modalOverlay.style.left = '0';
+    modalOverlay.style.width = '100%';
+    modalOverlay.style.height = '100%';
+    modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    modalOverlay.style.display = 'flex';
+    modalOverlay.style.justifyContent = 'center';
+    modalOverlay.style.alignItems = 'center';
+    modalOverlay.style.zIndex = '9999';
+    modalOverlay.style.padding = '20px';
+    modalOverlay.style.overflowY = 'auto';
+
+    // Create the modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.backgroundColor = '#fff';
+    modalContent.style.padding = '30px';
+    modalContent.style.borderRadius = '8px';
+    modalContent.style.maxWidth = '500px';
+    modalContent.style.maxHeight = 'calc(100vh - 40px)';
+    modalContent.style.overflowY = 'auto';
+    modalContent.style.textAlign = 'center';
+    modalContent.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+    modalContent.style.fontFamily = '"Segoe UI", system-ui, sans-serif';
+
+    // Title
+    const title = document.createElement('h2');
+    title.id = 'demo-welcome-title';
+    title.textContent = 'Welcome to the Demo Site';
+    title.style.color = '#d32f2f'; // Warning red
+    title.style.marginTop = '0';
+
+    // Message
+    const message = document.createElement('div');
+    message.innerHTML = `
+        <p>This is a <strong>demonstration website</strong> and is not a real medical practice.</p>
+        <p>The prescription ordering system and sick note forms are <strong>NOT LIVE</strong>. No requests will be processed.</p>
+        <p style="margin-top: 20px;">If you require medical assistance or need to order a real prescription, please <strong>contact your healthcare provider directly</strong>.</p>
+    `;
+    message.style.lineHeight = '1.6';
+    message.style.color = '#333';
+
+    // Close Button
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'I Understand';
+    closeBtn.style.backgroundColor = '#106b40'; // Primary green
+    closeBtn.style.color = 'white';
+    closeBtn.style.border = 'none';
+    closeBtn.style.padding = '12px 24px';
+    closeBtn.style.fontSize = '16px';
+    closeBtn.style.borderRadius = '4px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.marginTop = '20px';
+    closeBtn.style.fontWeight = 'bold';
+
+    const originalInertStates = [];
+
+    function closeModal() {
+        document.removeEventListener('keydown', handleKeyDown);
+        // Restore background elements' inert state
+        originalInertStates.forEach(({ element, wasInert }) => {
+            if (wasInert) {
+                element.setAttribute('inert', '');
+            } else {
+                element.removeAttribute('inert');
+            }
+        });
+        originalInertStates.length = 0;
+
+        modalOverlay.style.display = 'none';
+        modalOverlay.remove();
+        if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+            previouslyFocusedElement.focus();
+        }
+        try {
+            localStorage.setItem('demo_welcome_seen', 'true');
+        } catch (e) {}
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+
+    closeBtn.addEventListener('mouseover', function() {
+        closeBtn.style.backgroundColor = '#05220e';
+    });
+    closeBtn.addEventListener('mouseout', function() {
+        closeBtn.style.backgroundColor = '#106b40';
+    });
+
+    // Keyboard navigation and focus trap
+    function handleKeyDown(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+            return;
+        }
+        if (e.key === 'Tab') {
+            const rawFocusable = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const focusable = Array.from(rawFocusable).filter(el => {
+                return !el.disabled &&
+                       el.getAttribute('aria-hidden') !== 'true' &&
+                       el.offsetParent !== null &&
+                       window.getComputedStyle(el).visibility !== 'hidden';
+            });
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            const firstElement = focusable[0];
+            const lastElement = focusable[focusable.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement ||
+                    !modalOverlay.contains(document.activeElement)) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastElement ||
+                    !modalOverlay.contains(document.activeElement)) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Assemble
+    modalContent.appendChild(title);
+    modalContent.appendChild(message);
+    modalContent.appendChild(closeBtn);
+    modalOverlay.appendChild(modalContent);
+
+    // Set background body children inert while modal is open
+    Array.from(document.body.children).forEach(child => {
+        if (child !== modalOverlay) {
+            originalInertStates.push({
+                element: child,
+                wasInert: child.hasAttribute('inert')
+            });
+            child.setAttribute('inert', '');
+        }
+    });
+
+    // Add to DOM
+    document.body.appendChild(modalOverlay);
+
+    // Focus close button initially
+    setTimeout(() => {
+        closeBtn.focus();
+    }, 50);
+})();

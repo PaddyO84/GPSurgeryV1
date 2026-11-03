@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prescription Request Form - Carndonagh Health Centre</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <title>Prescription Request Form - Example Health Centre</title>
     <style>
         :root {
             --primary-text: #1c1c1c;
@@ -187,7 +184,7 @@
 </head>
 <body>
     <header class="site-header">
-        <h1>Carndonagh Health Centre</h1>
+        <h1>Example Health Centre</h1>
         <button class="mobile-menu-icon" onclick="toggleMobileMenu(true)">&#9776;</button>
     </header>
 
@@ -265,13 +262,14 @@
         </div>
     </div>
     <datalist id="medication-list"></datalist>
+<script src="js/config.js"></script>
+<script src="js/siteData.js"></script>
 <script>
     // --- CONFIGURATION ---------
-    const SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJqid8iaWeVppJjnBeyk11nKFj-2EWLuDLCZNlG9wbJ8eHDOo_zD3g65qHP0n7-tcL/exec";
-
+    const SCRIPT_WEB_APP_URL = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.SCRIPT_WEB_APP_URL) ? CONFIG.SCRIPT_WEB_APP_URL : '';
     const commonMedications = ["Atorvastatin", "Ramipril", "Amlodipine", "Lansoprazole", "Salbutamol", "Metformin", "Sertraline", "Colecalciferol", "Levothyroxine", "Aspirin", "Bisoprolol", "Paracetamol", "Ibuprofen"];
-    const pharmacyOptions = { "Tierney's Healthwise Pharmacy, Buncrana": "Tierney's Healthwise Pharmacy, Buncrana", "Inish Pharmacy, Buncrana": "Inish Pharmacy, Buncrana", "Duffy's Pharmacy, Buncrana": "Duffy's Pharmacy, Buncrana", "Brennan's Pharmacy, Buncrana": "Brennan's Pharmacy, Buncrana", "Hannon's Pharmacy, Moville": "Hannon's Pharmacy, Moville", "Foyle Pharmacy, Moville": "Foyle Pharmacy, Moville", "Brennan's Pharmacy, Clonmany": "Brennan's Pharmacy, Clonmany", "Inish Pharmacy, Muff": "Inish Pharmacy, Muff", "Mullans Pharmacy, Carndonagh": "Mullans Pharmacy, Carndonagh", "Carn Pharmacy, Carndonagh": "Carn Pharmacy, Carndonagh", "McNeill's Pharmacy, Carndonagh": "McNeill's Pharmacy, Carndonagh", "Inish Pharmacy, Carndonagh": "Inish Pharmacy, Carndonagh" };
-    const frequencyOptions = { "Once a day": "Once a day", "Twice a day": "Twice a day", "Three times a day": "Three times a day", "Four times a day": "Four times a day" };
+    const pharmacyOptions = siteData.pharmacyOptions;
+    const frequencyOptions = siteData.frequencyOptions;
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -300,15 +298,18 @@
 
     function populateSelect(id, options) {
         const select = document.getElementById(id);
+        if (!select) return;
         if (id === 'chosenPharmacy') {
             select.innerHTML = '<option value="" disabled selected>Please select a pharmacy...</option>';
         }
+        const fragment = document.createDocumentFragment();
         for (const [value, text] of Object.entries(options)) {
             const optionElement = document.createElement('option');
             optionElement.value = value;
             optionElement.textContent = text;
-            select.appendChild(optionElement);
+            fragment.appendChild(optionElement);
         }
+        select.appendChild(fragment);
     }
 
     function getFormDataAsObject() {
@@ -409,8 +410,45 @@
         if (!validateForm()) return;
 
         const { patientDetails, medicationList } = getFormDataAsObject();
-        let summaryHTML = `<p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Email:</strong> ${patientDetails.email}</p><p><strong>Phone:</strong> ${patientDetails.phone}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><p><strong>Contact Preference:</strong> ${patientDetails.commPref}</p><hr><h3>Medications:</h3><ul>${medicationList.map(med => `<li>${med.name} - ${med.dosage} (${med.freq})</li>`).join('')}</ul>`;
-        document.getElementById('summaryDetails').innerHTML = summaryHTML;
+        const container = document.getElementById('summaryDetails');
+        container.innerHTML = '';
+
+        const div = document.createElement('div');
+        div.style.textAlign = 'left';
+
+        const addDetail = (label, value) => {
+            const p = document.createElement('p');
+            const strong = document.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(value || ''));
+            div.appendChild(p);
+        };
+
+        addDetail('Name', patientDetails.name);
+        addDetail('Email', patientDetails.email);
+        addDetail('Phone', patientDetails.phone);
+        addDetail('Date of Birth', patientDetails.dob);
+        addDetail('Address', patientDetails.address);
+        addDetail('Pharmacy', patientDetails.pharmacy);
+        addDetail('Contact Preference', patientDetails.commPref);
+
+        const hr = document.createElement('hr');
+        div.appendChild(hr);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Medications:';
+        div.appendChild(h3);
+
+        const ul = document.createElement('ul');
+        medicationList.forEach(med => {
+            const li = document.createElement('li');
+            li.textContent = `${med.name} - ${med.dosage} (${med.freq})`;
+            ul.appendChild(li);
+        });
+        div.appendChild(ul);
+
+        container.appendChild(div);
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
@@ -422,6 +460,7 @@
 
         const { patientDetails, medicationList } = getFormDataAsObject();
         const payload = {
+            submissionToken: (typeof CONFIG !== 'undefined' && CONFIG.SUBMISSION_TOKEN) ? CONFIG.SUBMISSION_TOKEN : '',
             patientDetails: patientDetails,
             medicationList: medicationList
         };
@@ -431,6 +470,13 @@
         if(confirmBtn) {
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Sending...";
+        }
+
+        if (!SCRIPT_WEB_APP_URL) {
+            console.error('Error: CONFIG.SCRIPT_WEB_APP_URL is not configured.');
+            showNotification('An error occurred. Please try again or call reception: Submission URL is not configured.');
+            if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = "Confirm & Submit"; }
+            return;
         }
 
         fetch(SCRIPT_WEB_APP_URL, {
@@ -481,19 +527,17 @@
     // --- UTILITY & HELPER FUNCTIONS ---
     function validateForm() {
         let isValid = true;
-        const details = getFormDataAsObject().patientDetails;
-        const fieldsToValidate = {
-            patientName: "Full Name is required.",
-            patientEmail: "A valid Email Address is required.",
-            patientPhone: "Phone Number is required.",
-            patientDOB: "Date of Birth is required.",
-            patientAddress: "Home Address is required.",
-            chosenPharmacy: "Please select a pharmacy."
-        };
+        const fieldsToValidate = [
+            { el: document.getElementById('patientName'), id: 'patientName', message: "Full Name is required." },
+            { el: document.getElementById('patientEmail'), id: 'patientEmail', message: "A valid Email Address is required." },
+            { el: document.getElementById('patientPhone'), id: 'patientPhone', message: "Phone Number is required." },
+            { el: document.getElementById('patientDOB'), id: 'patientDOB', message: "Date of Birth is required." },
+            { el: document.getElementById('patientAddress'), id: 'patientAddress', message: "Home Address is required." },
+            { el: document.getElementById('chosenPharmacy'), id: 'chosenPharmacy', message: "Please select a pharmacy." }
+        ];
 
-        for (const [id, message] of Object.entries(fieldsToValidate)) {
-            const element = document.getElementById(id);
-            if (!element.value) {
+        for (const { el, id, message } of fieldsToValidate) {
+            if (!el || !el.value) {
                 isValid = false;
                 showError(id, message);
             } else {
@@ -501,7 +545,8 @@
             }
         }
 
-        if (document.getElementById('medicationList').rows.length === 0) {
+        const medList = document.getElementById('medicationList');
+        if (!medList || medList.rows.length === 0) {
             isValid = false;
             showError('medication', "Please add at least one medication to the list.");
         } else {
@@ -524,9 +569,61 @@
     function printSummary() {
         const { patientDetails, medicationList } = getFormDataAsObject();
         const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style>    <script src="js/theme.js"></script>
-</head><body><h1>Prescription Request</h1><p><strong>Name:</strong> ${patientDetails.name}</p><p><strong>Date of Birth:</strong> ${patientDetails.dob}</p><p><strong>Pharmacy:</strong> ${patientDetails.pharmacy}</p><h3>Medications</h3><table><thead><tr><th>Name</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${medicationList.map(med => `<tr><td>${med.name}</td><td>${med.dosage}</td><td>${med.freq}</td></tr>`).join('')}</tbody></table></body></html>`);
-        printWindow.document.close();
+        if (!printWindow || !printWindow.document) {
+            alert('Could not open print window. Please allow popups for this website.');
+            return;
+        }
+        const doc = printWindow.document;
+        doc.open();
+        doc.write('<!DOCTYPE html><html><head><title>Prescription Request Summary</title><style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ccc; padding:8px; text-align:left;}</style></head><body></body></html>');
+        doc.close();
+
+        const body = doc.body;
+        const h1 = doc.createElement('h1');
+        h1.textContent = 'Prescription Request';
+        body.appendChild(h1);
+
+        const createDetailP = (label, value) => {
+            const p = doc.createElement('p');
+            const strong = doc.createElement('strong');
+            strong.textContent = label + ': ';
+            p.appendChild(strong);
+            p.appendChild(doc.createTextNode(value || ''));
+            return p;
+        };
+
+        body.appendChild(createDetailP('Name', patientDetails.name));
+        body.appendChild(createDetailP('Date of Birth', patientDetails.dob));
+        body.appendChild(createDetailP('Pharmacy', patientDetails.pharmacy));
+
+        const h3 = doc.createElement('h3');
+        h3.textContent = 'Medications';
+        body.appendChild(h3);
+
+        const table = doc.createElement('table');
+        const thead = doc.createElement('thead');
+        const headRow = doc.createElement('tr');
+        ['Name', 'Dosage', 'Frequency'].forEach(headerText => {
+            const th = doc.createElement('th');
+            th.textContent = headerText;
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = doc.createElement('tbody');
+        medicationList.forEach(med => {
+            const row = doc.createElement('tr');
+            ['name', 'dosage', 'freq'].forEach(prop => {
+                const td = doc.createElement('td');
+                td.textContent = med[prop] || '';
+                row.appendChild(td);
+            });
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        body.appendChild(table);
+
         printWindow.print();
     }
     
@@ -600,5 +697,6 @@
         event.target.value = null;
     }
 </script>
+<script src="js/welcome.js"></script>
 </body>
 </html>
