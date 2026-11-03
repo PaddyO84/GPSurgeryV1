@@ -91,39 +91,43 @@ function isRowArchivable(status, notificationDateStr, cutOffDate, readyStatus = 
     dateStr = notificationDateStr.replace("Processed on ", "").trim();
   }
 
-  if (dateStr) {
-    const parts = dateStr.split(' ');
-    const dateParts = parts[0].split('/');
-    if (dateParts.length === 3) {
-      const day = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10);
-      const year = parseInt(dateParts[2], 10);
-      let hours = 0, minutes = 0, seconds = 0;
-      if (parts.length > 1 && parts[1]) {
-        const timeParts = parts[1].split(':');
-        if (timeParts.length < 2 || timeParts.length > 3) {
-          return false;
-        }
-        for (let tp of timeParts) {
-          if (!/^\d+$/.test(tp)) return false;
-        }
-        hours = parseInt(timeParts[0], 10);
-        minutes = parseInt(timeParts[1], 10);
-        seconds = timeParts.length === 3 ? parseInt(timeParts[2], 10) : 0;
-        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-          return false;
-        }
-      }
-      const processedDate = new Date(year, month - 1, day, hours, minutes, seconds);
-      if (
-        !isNaN(processedDate.getTime()) &&
-        processedDate.getDate() === day &&
-        processedDate.getMonth() === month - 1 &&
-        processedDate.getFullYear() === year
-      ) {
-        return processedDate < cutOffDate;
-      }
+  if (!dateStr) {
+    return false;
+  }
+
+  const parts = dateStr.split(' ');
+  const dateParts = parts[0].split('/');
+  if (dateParts.length !== 3) {
+    return false;
+  }
+
+  const day = parseInt(dateParts[0], 10);
+  const month = parseInt(dateParts[1], 10);
+  const year = parseInt(dateParts[2], 10);
+  let hours = 0, minutes = 0, seconds = 0;
+  if (parts.length > 1 && parts[1]) {
+    const timeParts = parts[1].split(':');
+    if (timeParts.length < 2 || timeParts.length > 3) {
+      return false;
     }
+    for (let tp of timeParts) {
+      if (!/^\d+$/.test(tp)) return false;
+    }
+    hours = parseInt(timeParts[0], 10);
+    minutes = parseInt(timeParts[1], 10);
+    seconds = timeParts.length === 3 ? parseInt(timeParts[2], 10) : 0;
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+      return false;
+    }
+  }
+  const processedDate = new Date(year, month - 1, day, hours, minutes, seconds);
+  if (
+    !isNaN(processedDate.getTime()) &&
+    processedDate.getDate() === day &&
+    processedDate.getMonth() === month - 1 &&
+    processedDate.getFullYear() === year
+  ) {
+    return processedDate < cutOffDate;
   }
   return false;
 }
